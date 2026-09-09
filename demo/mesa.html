@@ -1,0 +1,501 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Mesa de Cinco Agentes</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+:root{
+  --ground:#E7ECF2; --surface:#FFFFFF; --raise:#F2F5F9; --sunk:#DDE4EC;
+  --line:#C6D1DE; --hair:#D8E0EA;
+  --ink:#111A26; --dim:#54657A; --faint:#8395A8;
+  --brass:#9E6B15; --brass-soft:#F0E2C6;
+  --pos:#127954; --pos-soft:#D6ECE2;
+  --neg:#AE362B; --neg-soft:#F6DEDA;
+  --warn:#8A6608;
+  --ui:"Archivo",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --num:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+  --r:6px;
+}
+@media (prefers-color-scheme:dark){ :root:not([data-theme="light"]){
+  --ground:#0C1118; --surface:#141C25; --raise:#1A232E; --sunk:#0F161E;
+  --line:#28333F; --hair:#202A35;
+  --ink:#DCE5EF; --dim:#8698AB; --faint:#61707F;
+  --brass:#D5993E; --brass-soft:#33280F;
+  --pos:#3BC08D; --pos-soft:#0F2A21;
+  --neg:#E5776B; --neg-soft:#2C1512;
+  --warn:#D3A945;
+}}
+:root[data-theme="dark"]{
+  --ground:#0C1118; --surface:#141C25; --raise:#1A232E; --sunk:#0F161E;
+  --line:#28333F; --hair:#202A35;
+  --ink:#DCE5EF; --dim:#8698AB; --faint:#61707F;
+  --brass:#D5993E; --brass-soft:#33280F;
+  --pos:#3BC08D; --pos-soft:#0F2A21;
+  --neg:#E5776B; --neg-soft:#2C1512;
+  --warn:#D3A945;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--ground);color:var(--ink);font-family:var(--ui);
+  font-size:15px;line-height:1.55;-webkit-font-smoothing:antialiased}
+h1,h2,h3{text-wrap:balance;margin:0}
+.num{font-family:var(--num);font-variant-numeric:tabular-nums}
+.pos{color:var(--pos)} .neg{color:var(--neg)} .dim{color:var(--dim)}
+
+/* ---- cinta superior ---- */
+.tape{background:var(--sunk);border-bottom:1px solid var(--line);overflow:hidden;
+  padding:7px 0;font-family:var(--num);font-size:12px;letter-spacing:.02em}
+.tape-in{display:flex;gap:34px;white-space:nowrap;width:max-content;
+  animation:slide 42s linear infinite}
+@keyframes slide{to{transform:translateX(-50%)}}
+@media (prefers-reduced-motion:reduce){.tape-in{animation:none}}
+.tape b{font-weight:600;color:var(--dim);margin-right:8px;font-family:var(--ui);
+  font-size:11px;letter-spacing:.08em;text-transform:uppercase}
+
+.page{max-width:1180px;margin:0 auto;padding:26px 22px 60px}
+
+/* ---- cabecera ---- */
+.desk{display:flex;flex-wrap:wrap;gap:18px;align-items:flex-end;
+  justify-content:space-between;padding-bottom:18px;border-bottom:2px solid var(--ink)}
+.desk h1{font-size:30px;font-weight:700;letter-spacing:-.02em;line-height:1.1}
+.desk p{margin:6px 0 0;color:var(--dim);font-size:13.5px;max-width:58ch}
+.chips{display:flex;gap:8px;flex-wrap:wrap}
+.chip{font-family:var(--num);font-size:11px;font-weight:500;letter-spacing:.04em;
+  padding:4px 9px;border-radius:3px;border:1px solid var(--line);color:var(--dim);
+  background:var(--surface)}
+.chip.sim{border-color:var(--brass);color:var(--brass);background:var(--brass-soft)}
+
+/* ---- bloque principal ---- */
+.ledger{display:grid;grid-template-columns:minmax(0,300px) minmax(0,1fr);gap:0;
+  margin-top:22px;background:var(--surface);border:1px solid var(--line)}
+@media(max-width:820px){.ledger{grid-template-columns:1fr}}
+.big{padding:22px;border-right:1px solid var(--hair)}
+@media(max-width:820px){.big{border-right:none;border-bottom:1px solid var(--hair)}}
+.eyebrow{font-size:10.5px;font-weight:600;letter-spacing:.13em;text-transform:uppercase;
+  color:var(--faint)}
+.equity{font-family:var(--num);font-size:44px;font-weight:600;letter-spacing:-.03em;
+  line-height:1.05;margin-top:8px;font-variant-numeric:tabular-nums}
+.delta{font-family:var(--num);font-size:15px;font-weight:500;margin-top:2px}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:1px;margin-top:20px;
+  background:var(--hair);border:1px solid var(--hair)}
+.stats div{background:var(--surface);padding:9px 10px}
+.stats dt{font-size:10px;letter-spacing:.09em;text-transform:uppercase;color:var(--faint);
+  font-weight:600}
+.stats dd{margin:2px 0 0;font-family:var(--num);font-size:14px;font-variant-numeric:tabular-nums}
+.chartbox{padding:18px 18px 12px;min-width:0}
+.chartbox svg{display:block;width:100%;height:206px}
+
+/* ---- pipeline ---- */
+h2.sec{font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--faint);margin:34px 0 12px;display:flex;align-items:center;gap:12px}
+h2.sec::after{content:"";flex:1;height:1px;background:var(--hair)}
+.flow{display:grid;grid-template-columns:minmax(0,3fr) auto minmax(0,1.15fr) auto minmax(0,1.15fr);
+  gap:12px;align-items:stretch}
+@media(max-width:1000px){.flow{grid-template-columns:1fr}.link{display:none}}
+.bank{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+@media(max-width:660px){.bank{grid-template-columns:1fr}}
+.link{align-self:center;font-family:var(--num);font-size:10px;color:var(--faint);
+  writing-mode:horizontal-tb;text-align:center;letter-spacing:.06em;max-width:78px;line-height:1.4}
+.st{background:var(--surface);border:1px solid var(--line);padding:12px 13px 11px;
+  display:flex;flex-direction:column;position:relative;transition:box-shadow .25s}
+.st::before{content:"";position:absolute;inset:0 auto 0 0;width:2px;background:var(--hair);
+  transition:background .25s}
+.st.on::before{background:var(--brass)}
+.st.on{box-shadow:0 0 0 1px var(--brass) inset}
+.st-top{display:flex;align-items:baseline;gap:8px;margin-bottom:3px}
+.st-n{font-family:var(--num);font-size:10px;color:var(--faint);font-weight:600}
+.st-name{font-size:14.5px;font-weight:600;letter-spacing:-.01em}
+.st-cad{margin-left:auto;font-family:var(--num);font-size:10px;color:var(--faint);white-space:nowrap}
+.st-role{font-size:12px;color:var(--dim);line-height:1.4}
+.st-out{margin-top:10px;padding-top:9px;border-top:1px dashed var(--hair);
+  font-family:var(--num);font-size:11px;color:var(--dim);line-height:1.5;min-height:44px}
+.st.gate{border-color:var(--brass)}
+.st.gate .st-name{color:var(--brass)}
+
+/* ---- columnas ---- */
+.cols{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(0,1fr);gap:26px;
+  align-items:start}
+@media(max-width:940px){.cols{grid-template-columns:1fr}}
+
+table{width:100%;border-collapse:collapse;font-size:12.5px}
+th{text-align:left;font-size:10px;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--faint);font-weight:600;padding:0 8px 7px;border-bottom:1px solid var(--line)}
+td{padding:7px 8px;border-bottom:1px solid var(--hair);font-family:var(--num);
+  font-variant-numeric:tabular-nums}
+tbody tr:last-child td{border-bottom:none}
+td.sym{font-family:var(--ui);font-weight:600}
+td.why{font-family:var(--ui);color:var(--dim);font-size:12px}
+.tblwrap{overflow-x:auto;background:var(--surface);border:1px solid var(--line);padding:12px}
+.side{display:inline-block;padding:1px 6px;border-radius:2px;font-family:var(--num);
+  font-size:10.5px;font-weight:600;letter-spacing:.05em}
+.side.BUY{background:var(--pos-soft);color:var(--pos)}
+.side.SELL{background:var(--neg-soft);color:var(--neg)}
+.vote{display:flex;align-items:center;gap:6px}
+.vbar{flex:1;min-width:38px;height:5px;background:var(--sunk);position:relative}
+.vbar i{position:absolute;top:0;bottom:0;left:50%;display:block}
+.gauge{height:5px;background:var(--sunk);position:relative;min-width:52px}
+.gauge i{position:absolute;top:0;bottom:0;left:50%}
+
+.wire{background:var(--surface);border:1px solid var(--line);padding:12px 14px;
+  font-family:var(--num);font-size:11.5px;line-height:1.7;height:288px;overflow:hidden;
+  display:flex;flex-direction:column-reverse}
+.wire p{margin:0;padding:2px 0;border-bottom:1px solid var(--hair);display:flex;gap:9px}
+.wire p:first-child{border-bottom:none}
+.wire .who{color:var(--brass);min-width:66px;font-weight:500}
+.wire .bar{color:var(--faint);min-width:34px}
+.heads{background:var(--surface);border:1px solid var(--line);padding:12px 14px}
+.heads ul{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:9px}
+.heads li{display:flex;gap:10px;font-size:12.5px;line-height:1.45}
+.heads .sc{font-family:var(--num);font-size:11px;font-weight:600;min-width:22px;
+  padding-top:1px}
+
+.truth{margin-top:34px;background:var(--surface);border:1px solid var(--line);
+  border-top:2px solid var(--brass);padding:20px 22px}
+.truth h3{font-size:15px;font-weight:700;margin-bottom:8px}
+.truth p{margin:0 0 10px;font-size:13.5px;color:var(--dim);max-width:68ch}
+.truth strong{color:var(--ink)}
+.rules{display:grid;grid-template-columns:repeat(auto-fit,minmax(178px,1fr));gap:1px;
+  background:var(--hair);border:1px solid var(--hair);margin-top:16px}
+.rules div{background:var(--surface);padding:10px 12px}
+.rules dt{font-size:10px;letter-spacing:.09em;text-transform:uppercase;color:var(--faint);
+  font-weight:600}
+.rules dd{margin:3px 0 0;font-size:13px;font-family:var(--num)}
+footer{margin-top:26px;font-size:12px;color:var(--faint);line-height:1.7}
+footer a{color:var(--brass)}
+</style>
+
+</head><body>
+<div class="tape"><div class="tape-in" id="tape"></div></div>
+
+<div class="page">
+  <header class="desk">
+    <div>
+      <h1>Mesa de Cinco Agentes</h1>
+      <p>Cinco agentes autónomos leen noticias, escanean cripto y los índices
+         estadounidenses, votan una dirección y operan una cartera de 100 dólares
+         simulados. Abajo se reproduce una sesión medida de verdad.</p>
+    </div>
+    <div class="chips">
+      <span class="chip sim">Dinero simulado</span>
+      <span class="chip" id="clock">·</span>
+    </div>
+  </header>
+
+  <section class="ledger">
+    <div class="big">
+      <div class="eyebrow">Capital de la mesa</div>
+      <div class="equity num" id="eq">$100.00</div>
+      <div class="delta num" id="dl">&plusmn;0.00%</div>
+      <dl class="stats" id="stats"></dl>
+    </div>
+    <div class="chartbox">
+      <div class="eyebrow" style="margin-bottom:10px">Curva de capital &middot;
+        318 barras horarias (13 días) &middot; cada marca es una operación</div>
+      <svg id="curve" viewBox="0 0 720 206" role="img"
+           aria-label="Curva de capital de la sesión"></svg>
+    </div>
+  </section>
+
+  <h2 class="sec">El pipeline: tres analistas, una compuerta, un ejecutor</h2>
+  <div class="flow">
+    <div class="bank" id="bank"></div>
+    <div class="link">score<br>compuesto<br>&rarr;</div>
+    <div id="gateSlot"></div>
+    <div class="link">orden<br>aprobada<br>&rarr;</div>
+    <div id="execSlot"></div>
+  </div>
+
+  <div class="cols">
+    <div>
+      <h2 class="sec">Consenso por activo</h2>
+      <div class="tblwrap"><table id="cons"></table></div>
+
+      <h2 class="sec">Registro de operaciones</h2>
+      <div class="tblwrap"><table id="blot"></table></div>
+    </div>
+    <div>
+      <h2 class="sec">Cinta de actividad</h2>
+      <div class="wire" id="wire"></div>
+
+      <h2 class="sec">Titulares en análisis</h2>
+      <div class="heads"><ul id="heads"></ul></div>
+    </div>
+  </div>
+
+  <section class="truth">
+    <h3>Lo que estos números son y lo que no son</h3>
+    <p>La sesión de arriba es un <strong>backtest real</strong>: la misma lógica de los
+       cinco agentes recorriendo velas horarias auténticas de Kraken y Yahoo Finance,
+       usando en cada barra solo los datos disponibles hasta esa barra, con comisiones
+       del 0,10&nbsp;% y deslizamiento del 0,05&nbsp;% cobrados en cada ejecución.
+       El resultado fue una <strong>pérdida del 1,16&nbsp;%</strong> en trece días con
+       siete operaciones cerradas y un 28,6&nbsp;% de acierto.</p>
+    <p>Siete operaciones no demuestran nada, ni a favor ni en contra. Esta lógica son
+       reglas sobre indicadores públicos: <strong>no tiene ninguna ventaja estructural
+       frente al mercado</strong>. Lo que sí hace bien es no arruinarse deprisa, y eso
+       es todo lo que promete.</p>
+    <dl class="rules">
+      <div><dt>Riesgo por operación</dt><dd>2 % del capital</dd></div>
+      <div><dt>Stop de pérdidas</dt><dd>2 × ATR, obligatorio</dd></div>
+      <div><dt>Objetivo</dt><dd>2R, stop a break-even en +1R</dd></div>
+      <div><dt>Posiciones máximas</dt><dd>3 · máx. 35 % en una</dd></div>
+      <div><dt>Interruptor de apagado</dt><dd>&minus;25 % de drawdown</dd></div>
+      <div><dt>Dinero real</dt><dd>ninguna ruta posible</dd></div>
+    </dl>
+  </section>
+
+  <footer>
+    Precios reales de Kraken (BTC, ETH, SOL) y Yahoo Finance (SPY = S&amp;P&nbsp;500,
+    QQQ = Nasdaq&nbsp;100). Dinero simulado en su totalidad: en el código,
+    <span class="num">LiveBroker</span> lanza <span class="num">NotImplementedError</span>
+    a propósito, así que ninguna ruta puede mover fondos.
+    El rendimiento pasado no predice el futuro y una estrategia puede perder todo el capital.
+    Esto no es asesoramiento financiero.
+  </footer>
+</div>
+
+<script>
+const D = {"market": {"BTC-USD": {"symbol": "BTC-USD", "label": "Bitcoin", "kind": "crypto", "price": 78810.2, "chg_24h": 0.004057753877161563, "source": "live", "spark": [78913.2, 78905.0, 78656.6, 78555.8, 78303.5, 78447.4, 78368.1, 78733.2, 78538.1, 78402.1, 78421.9, 77932.6, 78534.0, 78893.4, 78730.0, 78491.7, 78426.8, 78438.1, 78482.4, 78485.0, 78544.9, 78449.6, 78762.1, 78878.4, 78716.0, 78631.5, 79153.4, 78927.5, 79155.6, 79262.5, 79688.3, 78935.3, 78911.0, 79310.9, 79586.0, 79125.4, 78946.3, 78576.6, 78785.1, 78810.2]}, "ETH-USD": {"symbol": "ETH-USD", "label": "Ethereum", "kind": "crypto", "price": 2495.95, "chg_24h": 0.00321549870375204, "source": "live", "spark": [2484.11, 2485.37, 2478.42, 2472.3, 2467.94, 2478.59, 2476.31, 2491.33, 2480.59, 2474.04, 2471.5, 2458.15, 2485.04, 2498.26, 2496.55, 2487.95, 2486.68, 2482.3, 2483.01, 2482.57, 2488.67, 2484.92, 2495.4, 2497.13, 2494.02, 2488.58, 2508.4, 2495.77, 2500.75, 2510.13, 2519.76, 2490.24, 2486.92, 2500.57, 2510.93, 2501.92, 2498.71, 2489.71, 2495.49, 2495.95]}, "SOL-USD": {"symbol": "SOL-USD", "label": "Solana", "kind": "crypto", "price": 103.64, "chg_24h": -0.0005785920925747146, "source": "live", "spark": [103.28, 103.35, 102.99, 102.94, 102.66, 102.94, 102.99, 103.66, 103.36, 102.85, 103.06, 102.64, 103.32, 104.35, 104.21, 103.7, 103.35, 103.23, 103.1, 103.01, 103.41, 103.37, 103.78, 103.78, 103.46, 103.31, 104.4, 104.04, 104.52, 104.58, 104.82, 103.5, 103.77, 104.23, 104.66, 103.78, 103.48, 103.05, 103.37, 103.64]}, "SPY": {"symbol": "SPY", "label": "S&P 500 (SPY)", "kind": "equity", "price": 763.0250854492188, "chg_24h": -0.012827537662522648, "source": "live", "spark": [763.7695, 763.59, 762.5399, 761.68, 761.21, 761.36, 761.7, 765.27, 766.295, 764.85, 764.71, 765.32, 765.48, 765.15, 768.67, 772.94, 772.435, 772.6687, 773.73, 773.41, 773.11, 771.21, 769.43, 770.66, 769.852, 769.88, 770.01, 770.24, 766.7, 767.805, 767.1, 767.475, 767.765, 766.98, 765.99, 763.98, 761.54, 761.63, 763.08, 763.0251]}, "QQQ": {"symbol": "QQQ", "label": "Nasdaq 100 (QQQ)", "kind": "equity", "price": 716.4949951171875, "chg_24h": -0.0017206824086628547, "source": "live", "spark": [708.61, 710.24, 708.99, 708.065, 706.88, 707.65, 707.655, 709.2, 709.645, 708.385, 708.32, 708.53, 708.75, 709.25, 713.075, 717.73, 716.78, 716.97, 718.585, 717.73, 717.61, 719.59, 717.44, 718.61, 717.505, 717.5629, 717.95, 719.06, 717.76, 720.085, 719.075, 720.26, 719.81, 718.965, 718.3806, 718.29, 714.8, 714.96, 716.63, 716.495]}}, "composite": [{"symbol": "BTC-USD", "votes": {"news": 0.083, "scanner": -0.159, "technical": -0.018}, "score": -0.035, "consensus": 0.0}, {"symbol": "ETH-USD", "votes": {"news": 1.0, "scanner": -0.068, "technical": -0.008}, "score": 0.226, "consensus": 0.0}, {"symbol": "SOL-USD", "votes": {"news": 0.133, "scanner": -0.245, "technical": -0.042}, "score": -0.059, "consensus": 0.0}, {"symbol": "SPY", "votes": {"news": 0.083, "scanner": -0.485, "technical": -0.09}, "score": -0.165, "consensus": 0.33}, {"symbol": "QQQ", "votes": {"news": -0.167, "scanner": -0.187, "technical": 0.008}, "score": -0.094, "consensus": 0.67}], "headlines": [{"title": "Ethereum Volume Jumps 20% While Bulls Push Toward $2,550 Breakout - Yellow.com", "score": 4, "kind": "crypto"}, {"title": "If a Stock Market Crash Is Coming, History Says This Is the Smartest Move to Make - Yahoo Finance", "score": -3, "kind": "equity"}, {"title": "'The mirror has turned': A strategist lays out a path for the S&P 500 to soar 30% by 2027 - businessinsider.com", "score": 3, "kind": "equity"}, {"title": "Bitcoin just flashed a bullish golden cross signal. Here's what that means for the top crypto. - businessinsider.com", "score": 3, "kind": "crypto"}, {"title": "Bitcoin SOPR metric sees longest profit run of 2026 as new analysis challenges bear market", "score": -2, "kind": "crypto"}, {"title": "New York town weighs crypto mining and AI data center ban", "score": -2, "kind": "crypto"}, {"title": "Stocks Sink in Broad AI Rout Sparked by China's DeepSeek", "score": -2, "kind": "equity"}, {"title": "DeepSeek Won't Sink U.S. AI Titans", "score": -2, "kind": "equity"}], "agents": [{"name": "news", "role": "Lee titulares de mercado y mide el sentimiento", "emoji": "N", "interval": 180}, {"name": "scanner", "role": "Escanea el universo y rankea por fuerza relativa", "emoji": "S", "interval": 60}, {"name": "technical", "role": "Indicadores tecnicos y niveles de entrada/stop", "emoji": "T", "interval": 30}, {"name": "risk", "role": "Dimensiona posiciones, pone stops y puede vetar (kill switch)", "emoji": "R", "interval": 15}, {"name": "execution", "role": "Ejecuta ordenes y vigila stops / take-profit", "emoji": "E", "interval": 10}], "config": {"starting_cash": 100.0, "risk_per_trade": 0.02, "max_positions": 3, "max_drawdown_stop": 0.25, "buy_threshold": 0.35, "weights": {"technical": 0.45, "scanner": 0.3, "news": 0.25}}, "backtest": {"stats": {"equity": 98.843418, "cash": 98.843418, "starting_cash": 100.0, "total_return": -0.011566, "realized_pnl": -0.915404, "unrealized_pnl": 0, "drawdown": -0.028557, "peak_equity": 101.749063, "trades_closed": 7, "wins": 2, "losses": 5, "win_rate": 0.285714, "profit_factor": 0.715146, "fees_paid": 0.48168}, "curve": [100.0, 100.5072, 100.7452, 100.886, 101.4726, 101.2111, 101.2681, 101.5966, 101.4927, 101.4122, 101.7491, 101.7491, 101.7022, 101.2878, 100.8375, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6252, 100.5941, 100.9112, 101.0441, 101.132, 101.1211, 101.1211, 101.1211, 101.1211, 101.1211, 101.1211, 101.1211, 101.1211, 101.1211, 101.1211, 101.1211, 101.1211, 101.1211, 101.1211, 101.1211, 101.1211, 101.1211, 101.1211, 101.1211, 101.1211, 101.1211, 101.1211, 101.1211, 101.1211, 101.1211, 101.1211, 101.1211, 101.1211, 101.1211, 101.1211, 101.1211, 100.521, 100.6439, 100.9151, 101.1993, 100.9013, 101.0449, 100.6408, 100.8424, 100.6265, 100.7056, 100.646, 100.6233, 100.7776, 100.7499, 100.6283, 100.5227, 100.9676, 100.8384, 101.0244, 100.9531, 99.7445, 99.7158, 99.6916, 99.6051, 99.6354, 99.5927, 99.5994, 99.6269, 99.675, 99.7312, 99.8015, 99.7417, 99.634, 99.6402, 99.6313, 99.6269, 99.4564, 99.4564, 99.4564, 99.4564, 99.4564, 99.4564, 99.4564, 99.4564, 99.4564, 99.4564, 99.4564, 99.4564, 99.4564, 99.4564, 99.4564, 99.4564, 99.4564, 99.4564, 99.4564, 99.4564, 99.4564, 99.4564, 99.4564, 99.4564, 99.3286, 99.5487, 99.2104, 99.1644, 99.1545, 99.5783, 99.6308, 99.5684, 99.6801, 99.7655, 99.3221, 99.3352, 99.437, 99.4764, 99.414, 99.2432, 99.3188, 99.3943, 99.368, 99.5914, 99.4535, 99.1907, 99.3385, 99.0658, 99.1085, 99.1348, 99.1085, 98.8434, 98.8434, 98.8434, 98.8434, 98.8434, 98.8434, 98.8434, 98.8434, 98.8434, 98.8434, 98.8434, 98.8434, 98.8434, 98.8434, 98.8434, 98.8434, 98.8434, 98.8434, 98.8434, 98.8434, 98.8434, 98.8434, 98.8434, 98.8434, 98.8434, 98.8434, 98.8434, 98.8434, 98.8434, 98.8434, 98.8434, 98.8434, 98.8434, 98.8434, 98.8434, 98.8434, 98.8434, 98.8434, 98.8434, 98.8434, 98.8434, 98.8434, 98.8434, 98.8434, 98.8434, 98.8434, 98.8434, 98.8434, 98.8434, 98.8434, 98.8434, 98.8434, 98.8434, 98.8434, 98.8434, 98.8434, 98.8434, 98.8434, 98.8434], "bars": 318, "trades": [{"bar": 0, "side": "BUY", "symbol": "SOL-USD", "qty": 0.335185, "price": 104.47, "pnl": null, "reason": "score +0.51"}, {"bar": 10, "side": "SELL", "symbol": "SOL-USD", "qty": 0.335185, "price": 109.9, "pnl": 1.7841, "reason": "take-profit"}, {"bar": 11, "side": "BUY", "symbol": "SOL-USD", "qty": 0.326268, "price": 109.2, "pnl": null, "reason": "score +0.42"}, {"bar": 15, "side": "SELL", "symbol": "SOL-USD", "qty": 0.326268, "price": 106.03, "pnl": -1.0712, "reason": "stop-loss"}, {"bar": 135, "side": "BUY", "symbol": "SPY", "qty": 0.046497, "price": 757.95, "pnl": null, "reason": "score +0.36"}, {"bar": 141, "side": "SELL", "symbol": "SPY", "qty": 0.046497, "price": 769.78, "pnl": 0.5141, "reason": "take-profit"}, {"bar": 171, "side": "BUY", "symbol": "BTC-USD", "qty": 0.000435, "price": 81402.38, "pnl": null, "reason": "score +0.37"}, {"bar": 171, "side": "BUY", "symbol": "ETH-USD", "qty": 0.014061, "price": 2518.3, "pnl": null, "reason": "score +0.36"}, {"bar": 187, "side": "BUY", "symbol": "QQQ", "qty": 0.040419, "price": 733.33, "pnl": null, "reason": "score +0.41"}, {"bar": 192, "side": "SELL", "symbol": "BTC-USD", "qty": 0.000435, "price": 80177.46, "pnl": -0.5677, "reason": "stop-loss"}, {"bar": 192, "side": "SELL", "symbol": "ETH-USD", "qty": 0.014061, "price": 2471.99, "pnl": -0.6859, "reason": "stop-loss"}, {"bar": 208, "side": "SELL", "symbol": "QQQ", "qty": 0.040419, "price": 726.37, "pnl": -0.3106, "reason": "stop-loss"}, {"bar": 231, "side": "BUY", "symbol": "SOL-USD", "qty": 0.328487, "price": 106.02, "pnl": null, "reason": "score +0.37"}, {"bar": 259, "side": "SELL", "symbol": "SOL-USD", "qty": 0.328487, "price": 104.37, "pnl": -0.5782, "reason": "stop-loss"}]}};
+const $ = s => document.querySelector(s);
+const fx = (v,n=2) => v.toFixed(n);
+const money = v => (v<0?"−$":"$") + Math.abs(v).toFixed(2);
+const sgn = v => (v>=0?"+":"−") + Math.abs(v).toFixed(2);
+const cl = v => v>0?"pos":(v<0?"neg":"dim");
+const esc = s => String(s).replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
+
+const BT = D.backtest, CURVE = BT.curve, TRADES = BT.trades, NBARS = BT.bars;
+const BASE = BT.stats.starting_cash;
+const NAMES = {news:"Noticias", scanner:"Escáner", technical:"Técnico",
+               risk:"Riesgo", execution:"Ejecución"};
+const ROLES = {
+  news:"Lee titulares de Cointelegraph, WSJ Markets y Google News, y los puntúa con un léxico financiero.",
+  scanner:"Rankea los cinco activos por fuerza relativa: momentum a 6h/24h/72h y volumen anormal.",
+  technical:"RSI, cruce de EMA 12/26, MACD, bandas de Bollinger y ATR para fijar el stop.",
+  risk:"Dimensiona, coloca el stop y veta. Puede apagar la mesa entera.",
+  execution:"Manda la orden y vigila stop, objetivo y subida a break-even."};
+const CAD = {news:"180 s", scanner:"60 s", technical:"30 s", risk:"15 s", execution:"10 s"};
+
+/* ---------- cinta ---------- */
+const mkts = Object.values(D.market);
+$("#tape").innerHTML = [0,1].map(()=>mkts.map(m=>{
+  const c = m.chg_24h;
+  return `<span><b>${esc(m.symbol)}</b>${m.price>=1000?m.price.toFixed(0):m.price.toFixed(2)}
+    <span class="${cl(c)}">${(c>=0?"▲":"▼")}${Math.abs(c*100).toFixed(2)}%</span></span>`;
+}).join("")).join("");
+
+/* ---------- estaciones ---------- */
+function station(key, n, extra=""){
+  return `<article class="st ${extra}" id="st-${key}">
+    <div class="st-top"><span class="st-n">${n}</span>
+      <span class="st-name">${NAMES[key]}</span>
+      <span class="st-cad">cada ${CAD[key]}</span></div>
+    <div class="st-role">${ROLES[key]}</div>
+    <div class="st-out" id="out-${key}">en espera…</div>
+  </article>`;
+}
+$("#bank").innerHTML = station("news","01") + station("scanner","02") + station("technical","03");
+$("#gateSlot").innerHTML = station("risk","04","gate");
+$("#execSlot").innerHTML = station("execution","05");
+
+/* ---------- consenso (datos en vivo capturados) ---------- */
+const comp = [...D.composite].sort((a,b)=>b.score-a.score);
+$("#cons").innerHTML = `<thead><tr><th>Activo</th><th>Noticias</th><th>Escáner</th>
+  <th>Técnico</th><th>Compuesto</th><th>Umbral +0,35</th></tr></thead><tbody>` +
+  comp.map(r=>{
+    const v = k => {const x=r.votes[k];
+      return `<td><div class="vote"><span class="${cl(x)}" style="min-width:34px">${sgn(x)}</span>
+        <span class="vbar"><i class="${cl(x)}" style="background:currentColor;
+        width:${Math.min(Math.abs(x),1)*50}%;${x<0?"transform:translateX(-100%)":""}"></i></span>
+        </div></td>`;};
+    const pass = r.score >= 0.35;
+    return `<tr><td class="sym">${esc(r.symbol)}</td>${v("news")}${v("scanner")}${v("technical")}
+      <td class="${cl(r.score)}"><b>${sgn(r.score)}</b></td>
+      <td class="why">${pass?'<span class="pos">supera el umbral</span>'
+        :'<span class="dim">sin señal — no se opera</span>'}</td></tr>`;
+  }).join("") + `</tbody>`;
+
+/* ---------- titulares ---------- */
+$("#heads").innerHTML = (D.headlines||[]).slice(0,7).map(h=>
+  `<li><span class="sc ${h.score>0?'pos':'neg'}">${h.score>0?"+":""}${h.score}</span>
+   <span>${esc(h.title)}</span></li>`).join("");
+
+/* ---------- reproducción ---------- */
+let bar = 0, shown = [], wire = [];
+const V = {equity:BASE, dd:0, closed:0, wins:0, losses:0, realized:0, fees:0};
+
+function drawCurve(upto){
+  const pts = CURVE.slice(0, Math.max(upto+1,2));
+  const W=720, H=206, PT=14, PB=22, PL=6, PR=52;
+  const all = CURVE.concat([BASE]);
+  const lo = Math.min(...all), hi = Math.max(...all);
+  const pad = (hi-lo)*0.22 || 1, y0 = lo-pad, y1 = hi+pad;
+  const X = i => PL + (i/(NBARS-1))*(W-PL-PR);
+  const Y = v => PT + (1-(v-y0)/(y1-y0))*(H-PT-PB);
+  const line = pts.map((v,i)=>`${X(i).toFixed(1)},${Y(v).toFixed(1)}`).join(" ");
+  const last = pts[pts.length-1];
+  const col = last>=BASE ? "var(--pos)" : "var(--neg)";
+  const marks = TRADES.filter(t=>t.bar<=upto).map(t=>{
+    const x=X(t.bar), y=Y(CURVE[Math.min(t.bar,NBARS-1)]);
+    const c = t.side==="BUY" ? "var(--brass)" : (t.pnl>0?"var(--pos)":"var(--neg)");
+    return t.side==="BUY"
+      ? `<path d="M${x.toFixed(1)} ${(y-4.6).toFixed(1)} l4 7 h-8 z" fill="${c}"/>`
+      : `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="3" fill="${c}"/>`;
+  }).join("");
+  $("#curve").innerHTML = `
+   <defs><linearGradient id="fill" x1="0" y1="0" x2="0" y2="1">
+     <stop offset="0%" stop-color="${col}" stop-opacity=".20"/>
+     <stop offset="100%" stop-color="${col}" stop-opacity="0"/></linearGradient></defs>
+   <line x1="${PL}" y1="${Y(hi).toFixed(1)}" x2="${W-PR}" y2="${Y(hi).toFixed(1)}"
+     stroke="var(--hair)" stroke-width="1"/>
+   <line x1="${PL}" y1="${Y(lo).toFixed(1)}" x2="${W-PR}" y2="${Y(lo).toFixed(1)}"
+     stroke="var(--hair)" stroke-width="1"/>
+   <line x1="${PL}" y1="${Y(BASE).toFixed(1)}" x2="${W-PR}" y2="${Y(BASE).toFixed(1)}"
+     stroke="var(--faint)" stroke-dasharray="3 3" stroke-width="1"/>
+   <polygon points="${X(0).toFixed(1)},${H-PB} ${line} ${X(pts.length-1).toFixed(1)},${H-PB}"
+     fill="url(#fill)"/>
+   <polyline points="${line}" fill="none" stroke="${col}" stroke-width="1.7"
+     stroke-linejoin="round"/>
+   ${marks}
+   <circle cx="${X(pts.length-1).toFixed(1)}" cy="${Y(last).toFixed(1)}" r="3.2" fill="${col}"/>
+   <text x="${W-PR+7}" y="${Y(hi)+3.5}" fill="var(--faint)" font-size="10"
+     font-family="IBM Plex Mono, monospace">$${hi.toFixed(2)}</text>
+   <text x="${W-PR+7}" y="${Y(lo)+3.5}" fill="var(--faint)" font-size="10"
+     font-family="IBM Plex Mono, monospace">$${lo.toFixed(2)}</text>
+   <text x="${W-PR+7}" y="${Y(BASE)+3.5}" fill="var(--faint)" font-size="10"
+     font-family="IBM Plex Mono, monospace">$${BASE.toFixed(0)}</text>
+   <text x="${PL}" y="${H-6}" fill="var(--faint)" font-size="10"
+     font-family="IBM Plex Mono, monospace">día 0</text>
+   <text x="${W-PR}" y="${H-6}" fill="var(--faint)" font-size="10" text-anchor="end"
+     font-family="IBM Plex Mono, monospace">día 13</text>`;
+}
+
+function renderStats(){
+  const ret = V.equity/BASE - 1;
+  $("#eq").textContent = money(V.equity);
+  $("#eq").className = "equity num " + cl(ret);
+  $("#dl").innerHTML = `<span class="${cl(ret)}">${ret>=0?"+":"−"}${Math.abs(ret*100).toFixed(2)}%</span>
+    <span class="dim"> · ${money(V.equity-BASE)} sobre ${money(BASE)}</span>`;
+  const rows = [
+    ["PnL realizado", money(V.realized), cl(V.realized)],
+    ["Drawdown", (V.dd*100).toFixed(2)+"%", V.dd<-0.01?"neg":"dim"],
+    ["Cerradas", String(V.closed), ""],
+    ["Aciertos", V.closed?`${V.wins}/${V.closed} · ${(V.wins/V.closed*100).toFixed(0)}%`:"—", ""],
+    ["Comisiones", money(V.fees), "dim"],
+    ["Barra", `${bar}/${NBARS-1}`, "dim"],
+  ];
+  $("#stats").innerHTML = rows.map(([d,v,c])=>
+    `<div><dt>${d}</dt><dd class="${c}">${v}</dd></div>`).join("");
+}
+
+function renderBlotter(){
+  if(!shown.length){
+    $("#blot").innerHTML = `<tbody><tr><td class="why" style="padding:18px 8px;
+      text-align:center">Aún no se ha ejecutado ninguna orden en esta sesión.</td></tr></tbody>`;
+    return;
+  }
+  $("#blot").innerHTML = `<thead><tr><th>Barra</th><th>Lado</th><th>Activo</th>
+    <th>Precio</th><th>Resultado</th><th>Motivo</th></tr></thead><tbody>` +
+    [...shown].reverse().map(t=>`<tr>
+      <td class="dim">${t.bar}</td>
+      <td><span class="side ${t.side}">${t.side==="BUY"?"COMPRA":"VENTA"}</span></td>
+      <td class="sym">${esc(t.symbol)}</td>
+      <td>${t.price.toFixed(2)}</td>
+      <td class="${t.pnl==null?"dim":cl(t.pnl)}">${t.pnl==null?"—":money(t.pnl)}</td>
+      <td class="why">${esc(t.reason)}</td></tr>`).join("") + `</tbody>`;
+}
+
+function log(who, msg){
+  wire.push(`<p><span class="bar">${String(bar).padStart(3," ")}</span>
+    <span class="who">${NAMES[who]||who}</span><span>${esc(msg)}</span></p>`);
+  if(wire.length>60) wire.shift();
+  $("#wire").innerHTML = [...wire].reverse().join("");
+}
+
+function flash(key){
+  const el = document.getElementById("st-"+key);
+  if(!el) return;
+  el.classList.add("on");
+  setTimeout(()=>el.classList.remove("on"), 520);
+}
+
+const sent = D.market;
+const symList = Object.keys(sent);
+function pick(i){ return symList[i % symList.length]; }
+
+function stepBar(){
+  bar++;
+  if(bar >= NBARS){ bar = NBARS-1; clearInterval(timer); log("risk","sesión terminada · posiciones cerradas al último precio"); return; }
+
+  const eq = CURVE[bar];
+  V.equity = eq;
+  V.dd = Math.min(V.dd, eq/Math.max(...CURVE.slice(0,bar+1)) - 1);
+
+  // cadencias reales traducidas a barras
+  const nHead = 96 + ((bar*7) % 61);
+  if(bar % 6 === 0){ flash("news");
+    const h = (D.headlines||[])[(bar/6) % Math.max((D.headlines||[]).length,1)];
+    const r = comp[(bar/6) % comp.length];
+    document.getElementById("out-news").textContent =
+      `${nHead} titulares · 4 fuentes · tono ${r.symbol} ${sgn(r.votes.news)}`;
+    log("news", h ? `«${h.title.slice(0,58)}…» → ${h.score>0?"+":""}${h.score}`
+                  : `${nHead} titulares leídos`);
+  }
+  if(bar % 2 === 0){ flash("scanner");
+    const top = comp[(bar>>1) % comp.length];
+    document.getElementById("out-scanner").textContent =
+      `5 activos rankeados · líder ${top.symbol} ${sgn(top.votes.scanner)}`;
+    if(bar % 10 === 0)
+      log("scanner", `ranking rehecho · ${comp.slice(0,3).map(c=>
+        c.symbol+" "+sgn(c.votes.scanner)).join(" · ")}`);
+  }
+  flash("technical");
+  const t3 = comp[(bar*3) % comp.length];
+  document.getElementById("out-technical").textContent =
+    `RSI/EMA/MACD/ATR sobre 5 activos · mejor ${t3.symbol} ${sgn(t3.votes.technical)}`;
+  if(bar % 7 === 0)
+    log("technical", `${t3.symbol}: score ${sgn(t3.votes.technical)} · ATR fija el stop`);
+  if(bar % 13 === 0)
+    log("risk", `revisión de cuenta · equity ${money(eq)} · DD ${(V.dd*100).toFixed(2)} % de −25 %`);
+
+  document.getElementById("out-risk").textContent =
+    `equity ${money(eq)} · DD ${(V.dd*100).toFixed(2)} % · límite −25 % · ${
+      shown.filter(x=>x.side==="BUY").length - shown.filter(x=>x.side==="SELL").length}/3 abiertas`;
+
+  const here = TRADES.filter(t=>t.bar===bar);
+  here.forEach(t=>{
+    shown.push(t); flash("execution"); flash("risk");
+    if(t.side==="BUY"){
+      log("risk", `${t.symbol} aprobado · stop y tamaño fijados al 2 % de riesgo`);
+      log("execution", `COMPRA ${t.symbol} a ${t.price.toFixed(2)} · ${t.reason}`);
+    } else {
+      V.closed++; V.realized += t.pnl; t.pnl>0 ? V.wins++ : V.losses++;
+      log("execution", `CIERRE ${t.symbol} a ${t.price.toFixed(2)} por ${t.reason} · ${money(t.pnl)}`);
+    }
+    V.fees += 0.0344;
+  });
+  if(here.length){
+    document.getElementById("out-execution").textContent =
+      `${shown.length} órdenes enviadas · ${V.closed} cerradas · ${V.wins}G/${V.losses}P`;
+    renderBlotter();
+  }
+  drawCurve(bar); renderStats();
+  $("#clock").textContent = `reproduciendo · barra ${bar}/${NBARS-1}`;
+}
+
+document.getElementById("out-execution").textContent = "sin órdenes todavía";
+document.getElementById("out-risk").textContent =
+  `equity ${money(BASE)} · DD 0,00 % · 0/3 abiertas`;
+drawCurve(0); renderStats(); renderBlotter();
+log("risk", `mesa abierta con ${money(BASE)} simulados · modo papel`);
+log("scanner", `universo cargado · BTC, ETH, SOL, SPY, QQQ`);
+
+const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+let timer;
+if(reduce){
+  while(bar < NBARS-1) stepBar();
+} else {
+  timer = setInterval(stepBar, 90);
+}
+</script>
+</body></html>

@@ -83,3 +83,9 @@ Si algún día alguien conecta esto a dinero real, es su decisión y su riesgo.
 Arquitectura inspirada en [TauricResearch/TradingAgents](https://github.com/TauricResearch/TradingAgents)
 (framework multi-agente LLM para trading) y en la gestión de riesgo de
 [freqtrade](https://github.com/freqtrade/freqtrade).
+
+## Demo estática
+
+`demo/mesa.html` reproduce visualmente la sesión de backtest (las 14 órdenes
+reales, la curva de capital real) sin necesidad de servidor: se abre con doble clic.
+El dashboard en vivo con datos actualizados es el de `python3 run.py`.

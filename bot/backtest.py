@@ -66,6 +66,12 @@ def run(cfg=CONFIG, warmup=100, verbose=True):
     w_scan = cfg.weights["scanner"] / wt
 
     halted = False
+
+    def tag(bar):
+        """Anota la barra en la ultima operacion registrada."""
+        if broker.trades:
+            broker.trades[-1].setdefault("bar", bar - warmup)
+
     for k in range(warmup, n):
         window = {s: c[len(c) - n:][: k + 1] for s, c in series.items()}
         prices = {s: w[-1]["c"] for s, w in window.items()}
@@ -75,9 +81,9 @@ def run(cfg=CONFIG, warmup=100, verbose=True):
             pos = broker.positions[sym]
             bar = window[sym][-1]
             if bar["l"] <= pos.stop:
-                broker.sell(sym, pos.stop, "stop-loss")
+                broker.sell(sym, pos.stop, "stop-loss"); tag(k)
             elif bar["h"] >= pos.target:
-                broker.sell(sym, pos.target, "take-profit")
+                broker.sell(sym, pos.target, "take-profit"); tag(k)
             else:
                 r = pos.entry - pos.stop
                 if r > 0 and bar["c"] >= pos.entry + r and pos.stop < pos.entry:
@@ -87,7 +93,7 @@ def run(cfg=CONFIG, warmup=100, verbose=True):
         if not halted and broker.drawdown(prices) <= -cfg.max_drawdown_stop:
             halted = True
             for sym in list(broker.positions):
-                broker.sell(sym, prices[sym], "kill switch")
+                broker.sell(sym, prices[sym], "kill switch"); tag(k)
         if halted:
             continue
 
@@ -96,7 +102,7 @@ def run(cfg=CONFIG, warmup=100, verbose=True):
 
         for sym, sc in scores.items():
             if sym in broker.positions and sc <= cfg.exit_threshold:
-                broker.sell(sym, prices[sym], f"senal debil ({sc:+.2f})")
+                broker.sell(sym, prices[sym], f"senal debil ({sc:+.2f})"); tag(k)
 
         for sym, sc in sorted(scores.items(), key=lambda x: -x[1]):
             if sc < cfg.buy_threshold or sym in broker.positions:
@@ -116,6 +122,7 @@ def run(cfg=CONFIG, warmup=100, verbose=True):
                 continue
             broker.buy(sym, qty, price, price - stop_dist,
                        price + stop_dist * cfg.take_profit_r, f"score {sc:+.2f}")
+            tag(k)
 
     final_prices = {s: c[-1]["c"] for s, c in series.items()}
     for sym in list(broker.positions):
