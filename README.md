@@ -15,7 +15,9 @@ Sin dependencias. Solo Python 3.10+.
 python3 run.py                  # $100 simulados, dashboard en http://127.0.0.1:8787
 python3 run.py --cash 250       # otro capital
 python3 run.py --port 9000      # otro puerto
-python3 -m bot.backtest         # backtest sobre histórico real
+python3 -m bot.backtest         # backtest: 2 años de velas diarias reales
+python3 -m bot.backtest --compare    # antes vs ahora
+python3 -m bot.backtest --ablation   # qué aporta cada mejora por separado
 ```
 
 ## Los cinco agentes
@@ -26,7 +28,7 @@ Cada uno corre en su propio hilo, con su propia cadencia.
 |---|---|---|
 | **`news`** | Lee titulares reales (Cointelegraph, WSJ Markets, Google News) y puntúa el sentimiento con un léxico financiero, por instrumento. | 180 s |
 | **`scanner`** | Recorre el universo y lo rankea por fuerza relativa: momentum a 6h/24h/72h normalizado por volatilidad, más volumen anormal (z-score). | 60 s |
-| **`technical`** | RSI(14), cruce EMA 12/26, histograma MACD, posición en las bandas de Bollinger y ATR(14) para calcular el stop. | 30 s |
+| **`technical`** | RSI(14), cruce EMA 12/26, histograma MACD, bandas de Bollinger, ATR(14) para el stop y **ADX(14)** para medir si hay tendencia o es lateral. | 30 s |
 | **`risk`** | **Poder de veto.** Dimensiona cada posición, coloca el stop y vigila la cuenta. Puede apagar el sistema entero. | 15 s |
 | **`execution`** | Manda las órdenes al bróker y vigila las abiertas: stop-loss, take-profit y subida del stop a break-even en +1R. | 10 s |
 
@@ -43,10 +45,41 @@ tech ──┘
 ## Reglas de riesgo (las importantes)
 
 - **2%** del equity arriesgado por operación — el tamaño sale de la distancia al stop, no al revés.
-- **Stop** a 2×ATR de la entrada. **Objetivo** a 2R. En +1R el stop sube a break-even.
+- **Stop** a 2×ATR de la entrada. **Objetivo** a 2R.
+- **Trailing stop**: pasado +2×ATR de beneficio, el stop persigue al precio a 1,5×ATR y nunca baja.
 - Máximo **3 posiciones** simultáneas, **35%** del equity en un solo activo, **2** por clase de activo.
+- **Protecciones de cartera** (portadas de freqtrade, ver `NOTICE.md`):
+  enfriamiento de 3 h tras operar un activo, parada global tras 3 stops en 24 h,
+  bloqueo de un activo que acumula pérdidas, y bloqueo global por drawdown de la ventana.
 - **Kill switch**: si el drawdown desde el pico llega a **-25%**, cierra todo y deja de abrir.
 - Comisión 0,10% por lado y slippage 0,05% aplicados en cada ejecución.
+
+## Qué mejora cada cosa (medido, no supuesto)
+
+`python3 -m bot.backtest --ablation` mide cada añadido por separado sobre 402 velas
+diarias reales (~1,1 años, 5 activos):
+
+| Variante | Retorno | Máx. drawdown | Ops. | Acierto | Profit factor |
+|---|---|---|---|---|---|
+| nada | +3,35 % | −11,59 % | 34 | 35 % | 1,16 |
+| solo ADX | +7,55 % | −12,45 % | 35 | 34 % | 1,32 |
+| solo protecciones | +1,01 % | −10,67 % | 30 | 30 % | 1,08 |
+| solo trailing | +1,78 % | −10,43 % | 36 | 50 % | 1,11 |
+| solo escalera ROI | +1,42 % | −12,54 % | 40 | 48 % | 1,09 |
+| solo filtro de régimen | +3,35 % | −11,59 % | 34 | 35 % | 1,16 |
+| **`adx` + `prot` + `trail`** | **+6,93 %** | **−10,89 %** | 36 | 56 % | **1,36** |
+
+Dos cosas se quedaron **fuera** tras medirlas:
+
+- La **escalera ROI** de freqtrade cerraba a los ganadores demasiado pronto: subía el
+  acierto al 48 % pero hundía el profit factor. Está implementada y se puede activar
+  (`features`), pero por defecto no.
+- El **filtro de régimen** (no comprar bajo la EMA50) no cambió ni una sola operación:
+  para llegar al umbral de compra ya hace falta un momentum que implica estar por encima.
+
+Advertencia honesta: elegir la mejor combinación sobre la misma muestra con la que se
+mide es, en parte, sobreajustar a esa muestra. 36 operaciones en un año no demuestran
+que esto funcione.
 
 ## Universo
 
@@ -78,11 +111,13 @@ no tiene ninguna ventaja estructural frente al mercado. Lo que sí hace bien es
 
 Si algún día alguien conecta esto a dinero real, es su decisión y su riesgo.
 
-## Referencias
+## Referencias y licencia
 
-Arquitectura inspirada en [TauricResearch/TradingAgents](https://github.com/TauricResearch/TradingAgents)
-(framework multi-agente LLM para trading) y en la gestión de riesgo de
-[freqtrade](https://github.com/freqtrade/freqtrade).
+Este repositorio es **GPL-3.0**. Las protecciones de cartera y las reglas de salida
+están portadas de [freqtrade](https://github.com/freqtrade/freqtrade) (GPL-3.0,
+54.202 ★, el bot de trading más estrellado de GitHub); la arquitectura multi-agente
+está inspirada en [TauricResearch/TradingAgents](https://github.com/TauricResearch/TradingAgents).
+El detalle de qué viene de dónde está en **[`NOTICE.md`](NOTICE.md)**.
 
 ## Demos estáticas
 

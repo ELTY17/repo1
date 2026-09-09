@@ -19,6 +19,7 @@ from .config import CONFIG, UNIVERSE
 class Orchestrator:
     def __init__(self, cfg=CONFIG):
         self.cfg = cfg
+        self.bar_seconds = 3600          # el sistema en vivo trabaja en velas de 1 h
         self.broker = PaperBroker(cfg.starting_cash, cfg.fee_rate, cfg.slippage_rate)
         self.started_at = time.time()
         self.cycles = 0
@@ -42,6 +43,14 @@ class Orchestrator:
 
     def debug(self, msg):
         self.debug_log.appendleft(msg)
+
+    def note_close(self, trade):
+        """Avisa a las protecciones de que se ha cerrado una operacion."""
+        if not trade or trade.get("side") != "SELL":
+            return
+        self.risk.protections.register_close(
+            trade["symbol"], trade["pnl"], trade.get("pnl_pct", 0.0),
+            trade["reason"], trade["t"], self.broker.equity(self.prices()))
 
     def prices(self) -> dict[str, float]:
         return {i.symbol: feeds.last_price(i) for i in UNIVERSE}

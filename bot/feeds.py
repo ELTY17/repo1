@@ -47,9 +47,9 @@ def _kraken_ohlc(code: str, interval: int = 60) -> list[dict]:
     ]
 
 
-def _yahoo_ohlc(code: str) -> list[dict]:
+def _yahoo_ohlc(code: str, rng: str = "60d", interval: str = "1h") -> list[dict]:
     url = (f"https://query2.finance.yahoo.com/v8/finance/chart/{code}"
-           f"?range=60d&interval=1h&includePrePost=false")
+           f"?range={rng}&interval={interval}&includePrePost=false")
     data = _get_json(url)
     res = data["chart"]["result"][0]
     ts = res["timestamp"]
@@ -86,26 +86,36 @@ def _synthetic(symbol: str, n: int = 400) -> list[dict]:
 
 
 # --- API publica -------------------------------------------------------------
-def get_candles(inst, ttl: int = 55) -> list[dict]:
-    """Velas horarias del instrumento, cacheadas `ttl` segundos."""
+# temporalidades disponibles: (kraken_interval, yahoo_range, yahoo_interval)
+TIMEFRAMES = {"1h": (60, "60d", "1h"), "1d": (1440, "2y", "1d")}
+
+
+def get_candles(inst, ttl: int = 55, timeframe: str = "1h") -> list[dict]:
+    """Velas del instrumento en la temporalidad pedida, cacheadas `ttl` segundos.
+
+    "1h" es la que usa el sistema en vivo; "1d" da dos años de historia y es la
+    que usa el backtest para tener una muestra que signifique algo.
+    """
+    kr_int, y_rng, y_int = TIMEFRAMES[timeframe]
+    key = f"{inst.symbol}@{timeframe}"
     with _lock:
-        hit = _cache.get(inst.symbol)
+        hit = _cache.get(key)
         if hit and time.time() - hit[0] < ttl:
             return hit[1]
     try:
         if inst.venue == "kraken":
-            candles = _kraken_ohlc(inst.code)
+            candles = _kraken_ohlc(inst.code, kr_int)
         else:
-            candles = _yahoo_ohlc(inst.code)
+            candles = _yahoo_ohlc(inst.code, y_rng, y_int)
         if len(candles) < 60:
             raise RuntimeError("pocas velas")
         health[inst.symbol] = "live"
     except Exception as e:                      # noqa: BLE001
         health[inst.symbol] = f"degradado: {type(e).__name__}"
-        prev = _cache.get(inst.symbol)
+        prev = _cache.get(key)
         candles = prev[1] if prev else _synthetic(inst.symbol)
     with _lock:
-        _cache[inst.symbol] = (time.time(), candles)
+        _cache[key] = (time.time(), candles)
     return candles
 
 

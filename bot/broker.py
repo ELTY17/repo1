@@ -11,13 +11,27 @@ import uuid
 
 
 class Position:
-    def __init__(self, symbol, qty, entry, stop, target, opened_at):
+    def __init__(self, symbol, qty, entry, stop, target, opened_at, atr=None):
         self.symbol = symbol
         self.qty = qty
         self.entry = entry
         self.stop = stop
         self.target = target
         self.opened_at = opened_at
+        self.high_water = entry          # maximo visto, para el trailing stop
+        self.atr = atr                   # ATR al abrir: fija objetivo y trailing
+
+    @property
+    def atr_pct(self):
+        return (self.atr / self.entry) if (self.atr and self.entry) else None
+
+    def bars_open(self, now, bar_seconds):
+        return max(0.0, (now - self.opened_at) / bar_seconds)
+
+    def profit_ratio(self, price):
+        return (price / self.entry - 1) if self.entry else 0.0
+
+
 
     def market_value(self, price):
         return self.qty * price
@@ -38,6 +52,7 @@ class Position:
             "pnl": self.unrealized(price),
             "pnl_pct": (self.unrealized(price) / cost) if cost else 0.0,
             "opened_at": self.opened_at,
+            "high_water": self.high_water,
         }
 
 
@@ -78,7 +93,7 @@ class PaperBroker:
         return (eq / self.peak_equity) - 1.0
 
     # --- ordenes ---
-    def buy(self, symbol, qty, price, stop, target, reason=""):
+    def buy(self, symbol, qty, price, stop, target, reason="", ts=None, atr=None):
         with self.lock:
             fill = price * (1 + self.slippage_rate)
             cost = fill * qty
@@ -87,14 +102,15 @@ class PaperBroker:
                 return None
             self.cash -= cost + fee
             self.fees_paid += fee
-            self.positions[symbol] = Position(symbol, qty, fill, stop, target, int(time.time()))
-            t = {"id": uuid.uuid4().hex[:8], "t": int(time.time()), "side": "BUY",
+            self.positions[symbol] = Position(symbol, qty, fill, stop, target,
+                                             int(ts if ts else time.time()), atr)
+            t = {"id": uuid.uuid4().hex[:8], "t": int(ts or time.time()), "side": "BUY",
                  "symbol": symbol, "qty": qty, "price": fill, "fee": fee,
                  "pnl": None, "reason": reason}
             self.trades.append(t)
             return t
 
-    def sell(self, symbol, price, reason=""):
+    def sell(self, symbol, price, reason="", ts=None):
         with self.lock:
             pos = self.positions.pop(symbol, None)
             if not pos:
@@ -105,9 +121,10 @@ class PaperBroker:
             self.cash += proceeds - fee
             self.fees_paid += fee
             pnl = (fill - pos.entry) * pos.qty - fee
-            t = {"id": uuid.uuid4().hex[:8], "t": int(time.time()), "side": "SELL",
+            t = {"id": uuid.uuid4().hex[:8], "t": int(ts or time.time()), "side": "SELL",
                  "symbol": symbol, "qty": pos.qty, "price": fill, "fee": fee,
-                 "pnl": pnl, "reason": reason}
+                 "pnl": pnl, "pnl_pct": (pnl / (pos.entry * pos.qty)) if pos.entry else 0.0,
+                 "reason": reason}
             self.trades.append(t)
             return t
 

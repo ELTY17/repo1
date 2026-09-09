@@ -6,8 +6,11 @@ tope de concentracion por clase de activo y kill switch por drawdown.
 """
 from __future__ import annotations
 
+import time
+
 from .. import feeds
 from ..config import UNIVERSE
+from ..protections import ProtectionManager
 from .base import Agent
 
 _INST = {i.symbol: i for i in UNIVERSE}
@@ -23,6 +26,7 @@ class RiskAgent(Agent):
         self.interval = 15
         self.halted = False
         self.halt_reason = ""
+        self.protections = ProtectionManager()
 
     # --- evaluacion periodica del estado de la cuenta ---
     def step(self):
@@ -44,6 +48,7 @@ class RiskAgent(Agent):
                        for s, p in b.positions.items())
         self.output = {
             "halted": self.halted,
+            "locks": self.protections.active(time.time()),
             "halt_reason": self.halt_reason,
             "equity": eq,
             "drawdown": dd,
@@ -76,6 +81,12 @@ class RiskAgent(Agent):
         if price <= 0:
             return {"ok": False, "reason": "precio invalido"}
 
+        # protecciones de cartera (cooldown, guardia de stops, drawdown, activo en perdidas)
+        if "prot" in self.ctx.cfg.features:
+            ok, why = self.protections.check(symbol, time.time())
+            if not ok:
+                return {"ok": False, "reason": why}
+
         # Stop por ATR; si no hay ATR, 3% por defecto
         stop_dist = (atr_value * cfg.stop_atr_mult) if atr_value else price * 0.03
         stop_dist = max(stop_dist, price * 0.005)          # nunca un stop absurdo
@@ -104,4 +115,4 @@ class RiskAgent(Agent):
 
         return {"ok": True, "qty": qty, "stop": stop, "target": target,
                 "risk_usd": risk_usd, "notional": notional,
-                "stop_pct": stop_dist / price}
+                "stop_pct": stop_dist / price, "atr": atr_value}

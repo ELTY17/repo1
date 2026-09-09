@@ -94,3 +94,46 @@ def zscore(value, sample):
 
 def clamp(x, lo=-1.0, hi=1.0):
     return max(lo, min(hi, x))
+
+
+def adx(candles, n=14):
+    """ADX de Wilder. Devuelve (adx, +DI, -DI) o (None, None, None).
+
+    Mide la FUERZA de la tendencia, no su direccion: por debajo de ~20 el
+    mercado esta lateral y las senales de tendencia valen poco.
+    """
+    if len(candles) < 2 * n + 1:
+        return None, None, None
+    pdm, ndm, trs = [], [], []
+    for i in range(1, len(candles)):
+        up = candles[i]["h"] - candles[i - 1]["h"]
+        dn = candles[i - 1]["l"] - candles[i]["l"]
+        pdm.append(up if (up > dn and up > 0) else 0.0)
+        ndm.append(dn if (dn > up and dn > 0) else 0.0)
+        h, l, pc = candles[i]["h"], candles[i]["l"], candles[i - 1]["c"]
+        trs.append(max(h - l, abs(h - pc), abs(l - pc)))
+
+    def wilder(vals):
+        s = sum(vals[:n])
+        out = [s]
+        for v in vals[n:]:
+            s = s - s / n + v
+            out.append(s)
+        return out
+
+    tr_s, pdm_s, ndm_s = wilder(trs), wilder(pdm), wilder(ndm)
+    dxs = []
+    for i in range(len(tr_s)):
+        if tr_s[i] == 0:
+            continue
+        pdi = 100 * pdm_s[i] / tr_s[i]
+        ndi = 100 * ndm_s[i] / tr_s[i]
+        if pdi + ndi == 0:
+            continue
+        dxs.append((100 * abs(pdi - ndi) / (pdi + ndi), pdi, ndi))
+    if len(dxs) < n:
+        return None, None, None
+    a = sum(d[0] for d in dxs[:n]) / n
+    for d in dxs[n:]:
+        a = (a * (n - 1) + d[0]) / n
+    return a, dxs[-1][1], dxs[-1][2]

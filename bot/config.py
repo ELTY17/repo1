@@ -55,6 +55,13 @@ class Config:
     scanner_seconds: int = 60
     technical_seconds: int = 30
 
+    # --- Mejoras activas ---
+    # Elegidas midiendo cada una por separado sobre 402 barras diarias
+    # (ver `python3 -m bot.backtest --ablation`). "roi" y "regime" quedan fuera:
+    # la escalera ROI cortaba a los ganadores y el filtro de regimen no cambio
+    # ni una sola operacion.
+    features: tuple = ("adx", "prot", "trail")
+
     # --- Servidor ---
     host: str = "127.0.0.1"
     port: int = 8787
