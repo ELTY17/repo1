@@ -151,6 +151,10 @@ Ambas se abren con doble clic, sin servidor:
   decorativa: dos tercios de las neuronas de un pulpo están en los brazos, que perciben
   y actúan por su cuenta y solo mandan un resumen al cerebro. Es literalmente esta
   arquitectura — cinco hilos independientes y un orquestador que solo recibe votos.
+- **`demo/cuadrilla.html`** — **LA CUADRILLA**, la misma sesión con los seis agentes
+  como personajes trabajando codo con codo en una sola consola, en paleta roja. Cada uno
+  con su cacharro delante y su piloto en el frontal; los votos viajan por la barra de luz
+  hasta el Director. Mismos paneles de datos que el puesto de mando.
 - **`demo/mesa.html`** — el mismo backtest en formato panel de instrumentos.
 
 El dashboard con datos en vivo es el de `python3 run.py`.
