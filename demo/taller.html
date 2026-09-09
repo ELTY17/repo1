@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="es"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Taller de Seis Agentes</title>
+<title>Pulpo de Ocho Brazos</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Archivo:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
@@ -17,6 +17,8 @@
   --c-news:#C0812F; --c-scan:#3F8574; --c-tech:#7A5F9E;
   --c-dir:#A9701A;  --c-risk:#A8503E; --c-exec:#3F6E9B;
   --skin:#D8C4A8; --desk:#B79B72; --desk2:#9A7F58;
+  --oct:#C4714A; --oct-dark:#8E4B31; --oct-lite:#E8A882; --oct-glow:#E9C7A6;
+  --oct-happy:#3E9A76; --oct-sad:#A93B36;
   --disp:"Bricolage Grotesque",Georgia,serif;
   --ui:"Archivo",system-ui,-apple-system,sans-serif;
   --num:"IBM Plex Mono",ui-monospace,Menlo,monospace;
@@ -32,6 +34,8 @@
   --c-news:#E0A44C; --c-scan:#5FB49E; --c-tech:#A489C9;
   --c-dir:#D69D45;  --c-risk:#D97A63; --c-exec:#6699C9;
   --skin:#C4A987; --desk:#7A6244; --desk2:#5E4B33;
+  --oct:#C9704A; --oct-dark:#7E3E26; --oct-lite:#EDA97F; --oct-glow:#4A2A1E;
+  --oct-happy:#37A57C; --oct-sad:#C2453C;
 }}
 :root[data-theme="dark"]{
   --ground:#0A1513; --surface:#11201D; --panel:#162924; --sunk:#0D1A18;
@@ -44,6 +48,8 @@
   --c-news:#E0A44C; --c-scan:#5FB49E; --c-tech:#A489C9;
   --c-dir:#D69D45;  --c-risk:#D97A63; --c-exec:#6699C9;
   --skin:#C4A987; --desk:#7A6244; --desk2:#5E4B33;
+  --oct:#C9704A; --oct-dark:#7E3E26; --oct-lite:#EDA97F; --oct-glow:#4A2A1E;
+  --oct-happy:#37A57C; --oct-sad:#C2453C;
 }
 *{box-sizing:border-box}
 body{margin:0;background:var(--ground);color:var(--ink);font-family:var(--ui);
@@ -72,7 +78,7 @@ button:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
 
 /* escenario */
 .stage{position:relative;margin-top:18px;background:var(--surface);
-  border:1px solid var(--line);aspect-ratio:1000/560;overflow:hidden}
+  border:1px solid var(--line);aspect-ratio:1000/620;overflow:hidden}
 .stage svg{position:absolute;inset:0;width:100%;height:100%}
 .floor{position:absolute;inset:auto 0 0 0;height:20%;
   background:linear-gradient(to bottom,transparent,var(--sunk))}
@@ -151,52 +157,39 @@ td.why{font-family:var(--ui);color:var(--dim);font-size:11.5px}
 .truth strong{color:var(--ink)}
 footer{margin-top:22px;font-size:11.5px;color:var(--faint);line-height:1.65}
 
-/* --- animaciones de los muñecos --- */
-@keyframes breathe{0%,100%{transform:translateY(0)}50%{transform:translateY(-1.6px)}}
-@keyframes blinkeye{0%,92%,100%{transform:scaleY(1)}96%{transform:scaleY(.12)}}
-@keyframes typeA{0%,100%{transform:rotate(0deg)}50%{transform:rotate(-15deg)}}
-@keyframes typeB{0%,100%{transform:rotate(-13deg)}50%{transform:rotate(2deg)}}
-@keyframes spin{to{transform:rotate(360deg)}}
-@keyframes ping{0%{r:6;opacity:.85}100%{r:30;opacity:0}}
-@keyframes sweepbar{0%,100%{transform:translateX(-11px)}50%{transform:translateX(11px)}}
-@keyframes tapeout{from{transform:scaleY(.15)}to{transform:scaleY(1)}}
-@keyframes lampglow{0%,100%{opacity:1}50%{opacity:.55}}
-@keyframes shake{0%,100%{transform:translate(0,0)}25%{transform:translate(-1.6px,1px)}
-  75%{transform:translate(1.6px,-1px)}}
-
-.mn{transform-box:fill-box;transform-origin:center}
-.body{transform-box:fill-box;transform-origin:bottom center;animation:breathe 3.4s ease-in-out infinite}
-.busy .body{animation-duration:1.5s}
-.eyes{transform-box:fill-box;transform-origin:center;animation:blinkeye 5.5s ease-in-out infinite}
-.arm{transform-box:fill-box;transform-origin:top left;transition:transform .3s}
-.busy .arm-a{animation:typeA .34s ease-in-out infinite}
-.busy .arm-b{animation:typeB .34s ease-in-out infinite .17s}
-.mouth{transition:d .2s}
-.dish{transform-box:fill-box;transform-origin:center;animation:spin 8s linear infinite}
-.busy .dish{animation-duration:1.4s}
-.ping{opacity:0}
-.busy .ping{animation:ping 1.5s ease-out infinite}
-.busy .ping.b{animation-delay:.55s}
-.pupil{transform-box:fill-box;transform-origin:center}
-.busy .pupil{animation:sweepbar 1.2s ease-in-out infinite}
-.tape{transform-box:fill-box;transform-origin:top;transform:scaleY(.15);transition:transform .5s}
-.busy .tape{animation:tapeout .55s ease-out forwards}
+/* --- el pulpo --- */
+@keyframes glowpulse{0%,100%{opacity:.5}50%{opacity:.95}}
+@keyframes lampglow{0%,100%{opacity:1}50%{opacity:.5}}
+@keyframes lidblink{0%,93%,100%{transform:scaleY(0)}96%{transform:scaleY(1)}}
+@keyframes shake{0%,100%{transform:translate(0,0)}25%{transform:translate(-2px,1px)}
+  75%{transform:translate(2px,-1px)}}
+@keyframes sweepbeam{0%,100%{transform:rotate(-38deg)}50%{transform:rotate(38deg)}}
+@keyframes tapeout{from{transform:scaleY(.12)}to{transform:scaleY(1)}}
+.mantle{transition:fill 1.2s ease}
+.halo{animation:glowpulse 3.6s ease-in-out infinite}
+.lid{transform-box:fill-box;transform-origin:top;transform:scaleY(0);
+  animation:lidblink 6.5s ease-in-out infinite}
 .lamp{transition:fill .3s}
 .lamp.lit{animation:lampglow 1.5s ease-in-out infinite}
+.beam{transform-box:fill-box;transform-origin:center;
+  transition:transform .8s cubic-bezier(.4,1.5,.5,1)}
+.sweep{transform-box:fill-box;transform-origin:center;opacity:.35}
+.busy .sweep{opacity:1;animation:sweepbeam 1.5s ease-in-out infinite}
+.tape{transform-box:fill-box;transform-origin:top;transform:scaleY(.12);transition:transform .5s}
+.busy .tape{animation:tapeout .55s ease-out forwards}
 .valve{transform-box:fill-box;transform-origin:center;transition:transform .7s ease-out}
-.wheel.turn{transform:rotate(160deg)}
-.arm.slam{animation:none!important;transform:rotate(26deg) translateY(7px);
-  transition:transform .11s cubic-bezier(.3,1.7,.5,1)}
-.beam{transform-box:fill-box;transform-origin:center;transition:transform .8s cubic-bezier(.4,1.5,.5,1)}
-.mn.alarm{animation:shake .18s linear 4}
+.wheel.turn{transform:rotate(24deg)}
 .ticket{opacity:0;transition:opacity .3s,transform .5s}
-.ticket.out{opacity:1;transform:translate(0,30px)}
+.ticket.out{opacity:1;transform:translate(0,26px)}
 .stamp{opacity:0;transform-box:fill-box;transform-origin:center;
-  transform:scale(2.4) rotate(-13deg);transition:opacity .18s,transform .18s}
-.stamp.hit{opacity:1;transform:scale(1) rotate(-13deg)}
+  transform:scale(2.6) rotate(-12deg);transition:opacity .18s,transform .18s}
+.stamp.hit{opacity:1;transform:scale(1) rotate(-12deg)}
+.tool{transition:transform .35s cubic-bezier(.3,1.5,.5,1)}
+.tool.press{transform:translateY(9px)}
+.alarm{animation:shake .18s linear 4}
+.pulse{transition:opacity .12s}
 @media (prefers-reduced-motion:reduce){
-  .body,.eyes,.busy .arm-a,.busy .arm-b,.dish,.busy .ping,.busy .pupil,
-  .busy .tape,.lamp.lit,.mn.alarm{animation:none}
+  .halo,.lid,.lamp.lit,.busy .sweep,.busy .tape,.alarm{animation:none}
 }
 </style>
 
@@ -204,10 +197,11 @@ footer{margin-top:22px;font-size:11.5px;color:var(--faint);line-height:1.65}
 <div class="page">
   <header class="top">
     <div>
-      <h1>Taller de Seis Agentes</h1>
-      <p>Tres analistas mandan su voto por tubo neumático al Director. El Director
-         decide. Riesgo puede vetarlo. Ejecución aprieta el botón. Todo lo que dicen
-         son cifras medidas sobre 402 días de mercado real.</p>
+      <h1>Pulpo de Ocho Brazos</h1>
+      <p>Un pulpo con ocho brazos. Cinco llevan una herramienta y trabajan por su
+         cuenta; el impulso sube por el brazo hasta el cerebro, que es quien decide
+         comprar o esperar. Todas las cifras están medidas sobre 402 días de
+         mercado real.</p>
     </div>
     <div class="ctrls">
       <button id="play" aria-pressed="true">⏸ Pausa</button>
@@ -219,23 +213,23 @@ footer{margin-top:22px;font-size:11.5px;color:var(--faint);line-height:1.65}
   </header>
 
   <div class="stage" id="stage">
-    <div class="floor"></div>
-    <svg viewBox="0 0 1000 560" id="scene"
-         aria-label="Seis agentes sentados en sus mesas, conectados por tubos neumáticos"></svg>
+    <svg viewBox="0 0 1000 620" id="scene"
+         aria-label="Un pulpo con ocho brazos: cinco manejan una herramienta cada uno y el cerebro decide"></svg>
 
-    <div class="ov" style="left:17%;top:31%"><div class="nm">Noticias</div><div class="jb">titulares</div></div>
-    <div class="ov" style="left:17%;top:63%"><div class="nm">Escáner</div><div class="jb">fuerza relativa</div></div>
-    <div class="ov" style="left:17%;top:95%"><div class="nm">Técnico</div><div class="jb">indicadores</div></div>
-    <div class="ov" style="left:52%;top:82%"><div class="nm" style="color:var(--brass)">Director</div><div class="jb">decide</div></div>
-    <div class="ov" style="left:70%;top:79%"><div class="nm">Riesgo</div><div class="jb">veta</div></div>
-    <div class="ov" style="left:88%;top:79%"><div class="nm">Ejecución</div><div class="jb">aprieta</div></div>
+    <div class="ov" style="left:18.5%;top:30%"><div class="nm">Noticias</div><div class="jb">titulares</div></div>
+    <div class="ov" style="left:16.8%;top:57%"><div class="nm">Escáner</div><div class="jb">fuerza relativa</div></div>
+    <div class="ov" style="left:19%;top:85%"><div class="nm">Técnico</div><div class="jb">indicadores</div></div>
+    <div class="ov" style="left:50%;top:1.5%"><div class="nm" style="color:var(--brass)">Cerebro · Director</div><div class="jb">decide</div></div>
+    <div class="ov" style="left:82%;top:57%"><div class="nm">Riesgo</div><div class="jb">veta</div></div>
+    <div class="ov" style="left:81%;top:86%"><div class="nm">Ejecución</div><div class="jb">aprieta</div></div>
 
-    <div class="bub" id="b-news" style="left:31%;top:9%"></div>
-    <div class="bub" id="b-scan" style="left:31%;top:41%"></div>
-    <div class="bub" id="b-tech" style="left:31%;top:73%"></div>
-    <div class="bub" id="b-dir"  style="left:52%;top:53%"></div>
-    <div class="bub" id="b-risk" style="left:70%;top:50%"></div>
-    <div class="bub" id="b-exec" style="left:88%;top:50%"></div>
+    <div class="bub" id="b-news" style="left:31%;top:23%"></div>
+    <div class="bub" id="b-scan" style="left:31%;top:50%"></div>
+    <div class="bub" id="b-tech" style="left:32%;top:78%"></div>
+    <div class="bub" id="b-dir"  style="left:70%;top:16%"></div>
+    <div class="bub" id="b-risk" style="left:70%;top:43%"></div>
+    <div class="bub" id="b-exec" style="left:70%;top:72%"></div>
+  </div>
   </div>
 
   <section class="verdict">
@@ -292,8 +286,13 @@ footer{margin-top:22px;font-size:11.5px;color:var(--faint);line-height:1.65}
   </div>
 
   <section class="truth">
-    <h3>Los muñecos son dibujos; las cifras no</h3>
-    <p>Cada voto que sale de un tubo es el valor real que ese agente calculó en esa barra
+    <h3>Por qué un pulpo (y no es solo por hacerlo bonito)</h3>
+    <p>Dos tercios de las neuronas de un pulpo no están en su cerebro: están repartidas
+      por los brazos, que perciben y actúan por su cuenta y le mandan al cerebro un
+      resumen de lo que encuentran. Eso es exactamente esta arquitectura: cinco agentes
+      son hilos independientes con su propia cadencia, y el orquestador —el cerebro—
+      solo recibe sus votos y decide.</p>
+    <p>Cada impulso que sube por un brazo es el valor real que ese agente calculó en esa barra
       del <strong>backtest</strong>: 402 velas diarias auténticas de Kraken y Yahoo Finance,
       solo con datos disponibles hasta esa barra, con comisión del 0,10&nbsp;% y
       deslizamiento del 0,05&nbsp;%. El agente de <strong>Noticias no vota en el histórico</strong>
@@ -308,9 +307,9 @@ footer{margin-top:22px;font-size:11.5px;color:var(--faint);line-height:1.65}
   </section>
 
   <footer>
-    Los seis agentes existen en el repositorio: Noticias, Escáner, Técnico, Riesgo y
-    Ejecución son hilos independientes; el Director es el orquestador que combina los
-    votos (técnico 0,45 · escáner 0,30 · noticias 0,25) y consulta a Riesgo antes de
+    Los cinco brazos con herramienta existen en el repositorio como hilos
+    independientes —Noticias, Escáner, Técnico, Riesgo y Ejecución—; el cerebro es el
+    orquestador que combina los votos (técnico 0,45 · escáner 0,30 · noticias 0,25) y consulta a Riesgo antes de
     cada orden. El rendimiento pasado no predice el futuro. Esto no es asesoramiento financiero.
   </footer>
 </div>
@@ -324,7 +323,7 @@ const sgn = v => (v>=0?"+":"−") + Math.abs(v).toFixed(2);
 const cl = v => v>0?"pos":(v<0?"neg":"dim");
 
 const R = D.rounds, CURVE = D.curve, NB = CURVE.length, BASE = 100;
-const TUBES = {news:"t-news", scan:"t-scan", tech:"t-tech", risk:"t-risk", exec:"t-exec"};
+const TUBES = {news:"news", scan:"scan", tech:"tech", risk:"risk", exec:"exec"};
 
 /* umbral en el medidor */
 $("mthr").style.left = ((0.35+1)/2*100) + "%";
@@ -332,234 +331,224 @@ $("mthr").style.left = ((0.35+1)/2*100) + "%";
 
 
 
-/* ================= construcción de la escena ================= */
-const SCENE = [
-  {k:"news", x:168, y:166, c:"--c-news"},
-  {k:"scan", x:168, y:344, c:"--c-scan"},
-  {k:"tech", x:168, y:522, c:"--c-tech"},
-  {k:"dir",  x:520, y:452, c:"--c-dir", front:true, s:1.12},
-  {k:"risk", x:700, y:404, c:"--c-risk"},
-  {k:"exec", x:878, y:404, c:"--c-exec"},
+/* ================= el pulpo ================= */
+/* Ocho brazos. Cinco llevan herramienta; los otros tres solo se mueven, como
+   los de un pulpo de verdad. El centro de cada brazo es una curva de Bézier
+   cuyos puntos de control ondulan; el contorno se recalcula en cada fotograma. */
+
+const HEAD = {x:500, y:186};
+
+const ARMS = [
+  {k:"news", base:[452,262], c1:[352,214], c2:[258,150], tip:[190,132], w:17, tool:[190,132]},
+  {k:"scan", base:[436,278], c1:[330,306], c2:[240,302], tip:[176,300], w:17, tool:[176,300]},
+  {k:"tech", base:[452,292], c1:[356,420], c2:[258,472], tip:[198,476], w:17, tool:[198,476]},
+  {k:"risk", base:[548,262], c1:[664,254], c2:[754,292], tip:[812,300], w:17, tool:[812,300]},
+  {k:"exec", base:[548,292], c1:[656,404], c2:[746,468], tip:[806,478], w:17, tool:[806,478]},
+  {k:"idle1", base:[478,300], c1:[432,420], c2:[372,532], tip:[332,572], w:14},
+  {k:"idle2", base:[500,304], c1:[522,432], c2:[498,542], tip:[486,592], w:15},
+  {k:"idle3", base:[522,300], c1:[600,424], c2:[652,524], tip:[680,570], w:14},
 ];
 
-const MOUTH = {
-  neutral: (x,y)=>`M${x-7} ${y} h14`,
-  happy:   (x,y)=>`M${x-8} ${y-2} q8 8 16 0`,
-  sad:     (x,y)=>`M${x-8} ${y+3} q8 -8 16 0`,
-  think:   (x,y)=>`M${x-5} ${y} h9`,
-  wow:     (x,y)=>`M${x-5} ${y-3} q5 9 10 0 q-5 5 -10 0`,
-};
-
-function facePart(k, ox, oy){
-  return `<g class="face">
-    <g class="eyes">
-      <circle cx="${ox-8}" cy="${oy}" r="5.2" fill="#fff" stroke="var(--ink)" stroke-width="1.4"/>
-      <circle cx="${ox+8}" cy="${oy}" r="5.2" fill="#fff" stroke="var(--ink)" stroke-width="1.4"/>
-      <circle id="pl-${k}" cx="${ox-7}" cy="${oy}" r="2.3" fill="var(--ink)"/>
-      <circle id="pr-${k}" cx="${ox+9}" cy="${oy}" r="2.3" fill="var(--ink)"/>
-    </g>
-    <path class="mouth" id="mouth-${k}" d="${MOUTH.neutral(ox,oy+13)}"
-          fill="none" stroke="var(--ink)" stroke-width="2.2" stroke-linecap="round"/>
-  </g>`;
+const NSAMP = 26;
+function cubic(p0,c1,c2,p3,t){
+  const u=1-t, a=u*u*u, b=3*u*u*t, c=3*u*t*t, d=t*t*t;
+  return [a*p0[0]+b*c1[0]+c*c2[0]+d*p3[0], a*p0[1]+b*c1[1]+c*c2[1]+d*p3[1]];
+}
+/* contorno con grosor que se afila hacia la punta */
+function outline(pts, w0, w1){
+  const L=[], R=[];
+  for(let i=0;i<pts.length;i++){
+    const p=pts[i], q=pts[Math.min(i+1,pts.length-1)], o=pts[Math.max(i-1,0)];
+    let dx=q[0]-o[0], dy=q[1]-o[1];
+    const m=Math.hypot(dx,dy)||1; dx/=m; dy/=m;
+    const t=i/(pts.length-1), w=w0+(w1-w0)*Math.pow(t,.75);
+    L.push([p[0]-dy*w, p[1]+dx*w]);
+    R.push([p[0]+dy*w, p[1]-dx*w]);
+  }
+  return "M"+L.map(p=>`${p[0].toFixed(1)},${p[1].toFixed(1)}`).join("L")
+       + "L"+R.reverse().map(p=>`${p[0].toFixed(1)},${p[1].toFixed(1)}`).join("L")+"Z";
 }
 
-/* cabezas: cada oficio lleva la suya */
-function headGear(k, ox, oy){
-  const P = 'fill="var(--panel)" stroke="var(--ink)" stroke-width="2.4"';
-  if(k==="news") return `<line x1="${ox}" y1="${oy-24}" x2="${ox+2}" y2="${oy-42}"
-      stroke="var(--brass)" stroke-width="3"/>
-    <g class="dish"><path d="M${ox+2} ${oy-42} l13 -11 -13 19 -13 -19 z" fill="var(--brass)"/></g>`;
-  if(k==="scan") return `<path d="M${ox-24} ${oy-14} q24 -22 48 0" ${P}/>
-    <circle class="ping" cx="${ox}" cy="${oy-20}" r="6" fill="none" stroke="var(--brass)" stroke-width="2.4"/>
-    <circle class="ping b" cx="${ox}" cy="${oy-20}" r="6" fill="none" stroke="var(--brass)" stroke-width="2.4"/>`;
-  if(k==="tech") return `<rect x="${ox-25}" y="${oy-13}" width="50" height="8" rx="3" ${P}/>
-    <rect x="${ox-9}" y="${oy-21}" width="18" height="9" rx="2" ${P}/>`;
-  if(k==="dir")  return `<path d="M${ox-27} ${oy-13} h54 l-7 -13 h-40 z" fill="var(--brass)"
-      stroke="var(--ink)" stroke-width="2.4"/>
-    <circle cx="${ox}" cy="${oy-31}" r="5" fill="var(--brass)" stroke="var(--ink)" stroke-width="2"/>`;
-  if(k==="risk") return `<path d="M${ox-26} ${oy-12} q26 -20 52 0 z" fill="var(--c-risk)"
-      stroke="var(--ink)" stroke-width="2.4"/>
-    <rect x="${ox-30}" y="${oy-13}" width="60" height="5" rx="2.5" fill="var(--ink)"/>`;
-  return `<rect x="${ox-24}" y="${oy-20}" width="48" height="12" rx="6" fill="var(--c-exec)"
-      stroke="var(--ink)" stroke-width="2.4"/>
-    <circle cx="${ox-24}" cy="${oy-4}" r="6" ${P}/>
-    <circle cx="${ox+24}" cy="${oy-4}" r="6" ${P}/>`;
-}
-
-/* lo que cada uno tiene encima de la mesa */
-function deskProp(k, dx, dy){
-  const P = 'fill="var(--sunk)" stroke="var(--ink)" stroke-width="2.2"';
-  if(k==="news") return `<rect x="${dx}" y="${dy-30}" width="42" height="30" rx="3" ${P}/>
-    <g class="tape"><rect x="${dx+10}" y="${dy}" width="22" height="34" fill="var(--surface)"
-      stroke="var(--ink)" stroke-width="1.8"/>
-      <line x1="${dx+15}" y1="${dy+9}" x2="${dx+27}" y2="${dy+9}" stroke="var(--dim)" stroke-width="1.8"/>
-      <line x1="${dx+15}" y1="${dy+17}" x2="${dx+27}" y2="${dy+17}" stroke="var(--dim)" stroke-width="1.8"/>
-      <line x1="${dx+15}" y1="${dy+25}" x2="${dx+23}" y2="${dy+25}" stroke="var(--dim)" stroke-width="1.8"/></g>`;
-  if(k==="scan") return `<rect x="${dx}" y="${dy-34}" width="46" height="34" rx="3" ${P}/>
-    <rect class="pupil" x="${dx+21}" y="${dy-30}" width="4" height="26" fill="var(--brass)"/>
-    <circle cx="${dx+23}" cy="${dy-17}" r="11" fill="none" stroke="var(--dim)" stroke-width="1.4"/>`;
-  if(k==="tech") return `<rect x="${dx}" y="${dy-34}" width="48" height="34" rx="3" ${P}/>
-    <clipPath id="scope"><rect x="${dx+3}" y="${dy-31}" width="42" height="28"/></clipPath>
+/* ---- herramientas al final de cada brazo ---- */
+function tool(k,x,y){
+  const P='stroke="var(--ink)" stroke-width="2.4" stroke-linejoin="round"';
+  if(k==="news") return `<g class="tool" id="tool-${k}">
+    <rect x="${x-34}" y="${y-26}" width="68" height="46" rx="3" fill="var(--panel)" ${P}/>
+    <rect x="${x-26}" y="${y-19}" width="52" height="8" rx="2" fill="var(--brass)"/>
+    <line x1="${x-26}" y1="${y-4}" x2="${x+26}" y2="${y-4}" stroke="var(--dim)" stroke-width="2.2"/>
+    <line x1="${x-26}" y1="${y+4}" x2="${x+26}" y2="${y+4}" stroke="var(--dim)" stroke-width="2.2"/>
+    <line x1="${x-26}" y1="${y+12}" x2="${x+8}" y2="${y+12}" stroke="var(--dim)" stroke-width="2.2"/>
+    <g class="tape"><rect x="${x-16}" y="${y+20}" width="32" height="34" fill="var(--surface)" ${P}/>
+      <line x1="${x-9}" y1="${y+30}" x2="${x+9}" y2="${y+30}" stroke="var(--dim)" stroke-width="2"/>
+      <line x1="${x-9}" y1="${y+40}" x2="${x+3}" y2="${y+40}" stroke="var(--dim)" stroke-width="2"/></g></g>`;
+  if(k==="scan") return `<g class="tool" id="tool-${k}">
+    <circle cx="${x}" cy="${y}" r="30" fill="var(--sunk)" ${P}/>
+    <circle cx="${x}" cy="${y}" r="19" fill="none" stroke="var(--dim)" stroke-width="1.6"/>
+    <circle cx="${x}" cy="${y}" r="9" fill="none" stroke="var(--dim)" stroke-width="1.6"/>
+    <g class="sweep"><path d="M${x} ${y} L${x-4} ${y-29} A29 29 0 0 1 ${x+4} ${y-29} Z"
+      fill="var(--brass)"/></g>
+    <circle cx="${x}" cy="${y}" r="3.4" fill="var(--brass)"/>
+    <circle cx="${x+38}" cy="${y}" r="7" fill="var(--panel)" ${P}/></g>`;
+  if(k==="tech") return `<g class="tool" id="tool-${k}">
+    <rect x="${x-36}" y="${y-27}" width="72" height="54" rx="4" fill="var(--sunk)" ${P}/>
+    <clipPath id="scope"><rect x="${x-31}" y="${y-22}" width="62" height="44"/></clipPath>
     <g clip-path="url(#scope)"><polyline id="wave" points="" fill="none"
-      stroke="var(--brass)" stroke-width="2"/></g>`;
-  if(k==="risk") return `<rect x="${dx}" y="${dy-30}" width="44" height="30" rx="3" ${P}/>
-    <text id="riskface" x="${dx+22}" y="${dy-11}" text-anchor="middle"
-      font-family="IBM Plex Mono,monospace" font-size="13" font-weight="600"
+      stroke="var(--brass)" stroke-width="2.4"/></g>
+    <line x1="${x-31}" y1="${y+16}" x2="${x+31}" y2="${y+16}" stroke="var(--dim)"
+      stroke-width="1.2" stroke-dasharray="3 4"/></g>`;
+  if(k==="risk") return `<g class="tool" id="tool-${k}">
+    <line x1="${x}" y1="${y-34}" x2="${x}" y2="${y+6}" stroke="var(--brass)" stroke-width="4"/>
+    <g class="valve wheel" id="wheel">
+      <line x1="${x-30}" y1="${y-34}" x2="${x+30}" y2="${y-34}" stroke="var(--brass)"
+        stroke-width="5" stroke-linecap="round"/>
+      <path d="M${x-30} ${y-34} l-9 15 h18 z" fill="var(--neg)" ${P}/>
+      <path d="M${x+30} ${y-34} l-9 15 h18 z" fill="var(--pos)" ${P}/></g>
+    <rect x="${x-30}" y="${y+6}" width="60" height="30" rx="4" fill="var(--sunk)" ${P}/>
+    <text id="riskface" x="${x}" y="${y+27}" text-anchor="middle"
+      font-family="IBM Plex Mono,monospace" font-size="15" font-weight="600"
       fill="var(--dim)">2%</text>
-    <g transform="translate(${dx+22},${dy-44})">
-      <g class="valve wheel" id="wheel"><circle r="11" fill="none" stroke="var(--brass)" stroke-width="3.4"/>
-      <line x1="-11" y1="0" x2="11" y2="0" stroke="var(--brass)" stroke-width="3"/>
-      <line x1="0" y1="-11" x2="0" y2="11" stroke="var(--brass)" stroke-width="3"/></g></g>
-    <g transform="translate(${dx+22},${dy-16})"><g class="stamp" id="veto">
-      <rect x="-33" y="-12" width="66" height="24" rx="2" fill="none" stroke="var(--neg)" stroke-width="3.2"/>
-      <text x="0" y="7" text-anchor="middle" font-family="Bricolage Grotesque,serif"
-        font-size="17" font-weight="800" fill="var(--neg)">VETO</text></g></g>`;
-  if(k==="exec") return `<rect x="${dx}" y="${dy-26}" width="46" height="26" rx="3" ${P}/>
-    <circle cx="${dx+23}" cy="${dy-13}" r="9" fill="var(--neg)" stroke="var(--ink)" stroke-width="2.4"/>
-    <g class="ticket" id="ticket"><rect x="${dx+4}" y="${dy+2}" width="38" height="22"
-      fill="var(--surface)" stroke="var(--ink)" stroke-width="1.8"/>
-      <line x1="${dx+10}" y1="${dy+10}" x2="${dx+36}" y2="${dy+10}" stroke="var(--dim)" stroke-width="1.8"/>
-      <line x1="${dx+10}" y1="${dy+17}" x2="${dx+28}" y2="${dy+17}" stroke="var(--dim)" stroke-width="1.8"/></g>`;
+    <g class="stamp" id="veto" transform="translate(${x},${y+21})">
+      <rect x="-40" y="-15" width="80" height="30" rx="3" fill="none" stroke="var(--neg)" stroke-width="4"/>
+      <text x="0" y="9" text-anchor="middle" font-family="Bricolage Grotesque,serif"
+        font-size="21" font-weight="800" fill="var(--neg)">VETO</text></g></g>`;
+  if(k==="exec") return `<g id="tool-${k}">
+    <path d="M${x-34} ${y+34} l8 -26 h52 l8 26 z" fill="var(--panel)" ${P}/>
+    <rect x="${x-30}" y="${y-4}" width="60" height="14" rx="4" fill="var(--sunk)" ${P}/>
+    <g class="tool" id="btn-exec">
+      <circle cx="${x}" cy="${y-13}" r="17" fill="var(--neg)" ${P}/>
+      <circle cx="${x}" cy="${y-17}" r="11" fill="none" stroke="#fff" stroke-opacity=".35" stroke-width="3"/></g>
+    <g class="ticket" id="ticket">
+      <rect x="${x-22}" y="${y+18}" width="44" height="26" fill="var(--surface)" ${P}/>
+      <line x1="${x-14}" y1="${y+27}" x2="${x+14}" y2="${y+27}" stroke="var(--dim)" stroke-width="2"/>
+      <line x1="${x-14}" y1="${y+35}" x2="${x+6}" y2="${y+35}" stroke="var(--dim)" stroke-width="2"/></g></g>`;
   return "";
 }
 
-/* mesa del Director: monitor con el veredicto, tres pilotos y la balanza */
-function dirDesk(){
-  return `<rect x="-52" y="-48" width="104" height="40" rx="4" fill="var(--sunk)"
-      stroke="var(--ink)" stroke-width="2.6"/>
-    <text id="chest" x="0" y="-28" text-anchor="middle" font-family="IBM Plex Mono,monospace"
-      font-size="19" font-weight="600" fill="var(--dim)">· · ·</text>
-    <rect x="-44" y="-20" width="88" height="6" rx="3" fill="var(--brass-soft)"
-      stroke="var(--ink)" stroke-width="1.4"/>
-    <rect id="chestbar" x="-44" y="-20" width="0" height="6" rx="3" fill="var(--brass)"/>
-    <circle class="lamp" id="lamp-news" cx="-26" cy="-58" r="6.2" fill="var(--sunk)"
-      stroke="var(--ink)" stroke-width="2"/>
-    <circle class="lamp" id="lamp-scan" cx="0" cy="-58" r="6.2" fill="var(--sunk)"
-      stroke="var(--ink)" stroke-width="2"/>
-    <circle class="lamp" id="lamp-tech" cx="26" cy="-58" r="6.2" fill="var(--sunk)"
-      stroke="var(--ink)" stroke-width="2"/>
-    <g transform="translate(74,-8)">
-      <line x1="0" y1="0" x2="0" y2="-20" stroke="var(--brass)" stroke-width="3.2"/>
-      <g class="beam" id="beam">
-        <line x1="-18" y1="-20" x2="18" y2="-20" stroke="var(--brass)" stroke-width="4.2"
-          stroke-linecap="round"/>
-        <circle cx="-18" cy="-20" r="4.4" fill="var(--neg)"/>
-        <circle cx="18" cy="-20" r="4.4" fill="var(--pos)"/>
-      </g></g>
-`;
+/* ---- cabeza: manto, ojos y la mancha bioluminiscente del veredicto ---- */
+function head(){
+  const P='stroke="var(--ink)" stroke-width="3" stroke-linejoin="round"';
+  const eye = (cx)=>`<g>
+    <ellipse cx="${cx}" cy="172" rx="31" ry="27" fill="#F6F1E6" ${P}/>
+    <rect class="pup" x="${cx-22}" y="166" width="44" height="12" rx="6" fill="#241F1A"/>
+    <circle cx="${cx-9}" cy="164" r="4.6" fill="#fff" opacity=".95"/>
+    <ellipse class="lid" cx="${cx}" cy="172" rx="31.5" ry="27.5" fill="var(--oct)"
+      stroke="var(--ink)" stroke-width="2"/></g>`;
+  return `<g id="octo-head">
+    <ellipse class="halo" cx="500" cy="182" rx="114" ry="130" fill="var(--oct-glow)" opacity=".5"/>
+    <ellipse class="mantle" id="mantle" cx="500" cy="182" rx="97" ry="116"
+      fill="var(--oct)" ${P}/>
+    <ellipse cx="464" cy="106" rx="25" ry="30" fill="#fff" opacity=".11"/>
+    <circle class="lamp" id="lamp-news" cx="464" cy="98" r="8" fill="var(--sunk)"
+      stroke="var(--ink)" stroke-width="2.4"/>
+    <circle class="lamp" id="lamp-scan" cx="500" cy="92" r="8" fill="var(--sunk)"
+      stroke="var(--ink)" stroke-width="2.4"/>
+    <circle class="lamp" id="lamp-tech" cx="536" cy="98" r="8" fill="var(--sunk)"
+      stroke="var(--ink)" stroke-width="2.4"/>
+    ${eye(458)} ${eye(542)}
+    <rect x="434" y="212" width="132" height="46" rx="20" fill="var(--oct-dark)"
+      stroke="var(--ink)" stroke-width="2.4"/>
+    <text id="chest" x="500" y="243" text-anchor="middle" font-family="IBM Plex Mono,monospace"
+      font-size="21" font-weight="600" fill="var(--oct-lite)">· · ·</text>
+    <rect x="442" y="264" width="116" height="8" rx="4" fill="var(--oct-dark)"/>
+    <rect id="chestbar" x="442" y="264" width="0" height="8" rx="4" fill="var(--brass-2)"/>
+    <path id="beak" d="M488 286 q12 12 24 0" fill="none" stroke="var(--ink)"
+      stroke-width="3" stroke-linecap="round"/>
+    <g transform="translate(500,54)"><g class="beam" id="beam">
+      <line x1="-26" y1="0" x2="26" y2="0" stroke="var(--brass)" stroke-width="4.4"
+        stroke-linecap="round"/>
+      <circle cx="-26" cy="0" r="5" fill="var(--neg)"/>
+      <circle cx="26" cy="0" r="5" fill="var(--pos)"/></g></g>
+  </g>`;
 }
 
-function person(o){
-  const k = o.k, C = `var(${o.c})`, sc = o.s || 1;
-  const P = 'stroke="var(--ink)" stroke-width="2.4" stroke-linejoin="round"';
-  const chairColor = "var(--desk2)";
-
-  if(o.front){
-    // Director: de frente, mesa grande delante
-    return `<g transform="translate(${o.x},${o.y}) scale(${sc})">
-      <ellipse cx="0" cy="4" rx="96" ry="10" fill="var(--sunk)"/>
-      <g class="mn" id="mn-${k}">
-        <g class="body">
-          <rect x="-30" y="-118" width="14" height="46" rx="7" fill="${chairColor}" ${P}/>
-          <rect x="16" y="-118" width="14" height="46" rx="7" fill="${chairColor}" ${P}/>
-          <path d="M-27 -72 q27 -14 54 0 l5 46 h-64 z" fill="${C}" ${P}/>
-          <circle cx="0" cy="-96" r="23" fill="var(--skin)" ${P}/>
-          ${headGear(k,0,-96)}
-          ${facePart(k,0,-98)}
-          <g class="arm arm-a" id="armA-${k}" style="transform-origin:-26px -66px">
-            <path d="M-26 -66 q-32 10 -36 26" fill="none" stroke="var(--ink)"
-              stroke-width="7.5" stroke-linecap="round"/>
-            <path d="M-26 -66 q-32 10 -36 26" fill="none" stroke="${C}"
-              stroke-width="4.5" stroke-linecap="round"/>
-            <circle cx="-62" cy="-40" r="5.6" fill="var(--skin)" ${P}/></g>
-          <g class="arm arm-b" id="armB-${k}" style="transform-origin:26px -66px">
-            <path d="M26 -66 q32 10 36 26" fill="none" stroke="var(--ink)"
-              stroke-width="7.5" stroke-linecap="round"/>
-            <path d="M26 -66 q32 10 36 26" fill="none" stroke="${C}"
-              stroke-width="4.5" stroke-linecap="round"/>
-            <circle cx="62" cy="-40" r="5.6" fill="var(--skin)" ${P}/></g>
-        </g>
-        <g transform="translate(0,-24)">
-          <rect x="-92" y="-8" width="184" height="12" rx="3" fill="var(--desk)" ${P}/>
-          <rect x="-84" y="4" width="9" height="24" fill="var(--desk2)"/>
-          <rect x="75" y="4" width="9" height="24" fill="var(--desk2)"/>
-          ${dirDesk()}
-          <rect x="-46" y="-2" width="92" height="5" rx="2.5" fill="var(--sunk)"
-            stroke="var(--ink)" stroke-width="1.6"/>
-        </g>
-      </g></g>`;
-  }
-
-  // analistas y operarios: de perfil, mirando a la derecha
-  return `<g transform="translate(${o.x},${o.y}) scale(${sc})">
-    <ellipse cx="14" cy="3" rx="62" ry="8" fill="var(--sunk)"/>
-    <g class="mn" id="mn-${k}">
-      <rect x="-40" y="-74" width="12" height="60" rx="6" fill="${chairColor}" ${P}/>
-      <rect x="-40" y="-30" width="46" height="10" rx="4" fill="${chairColor}" ${P}/>
-      <rect x="-34" y="-20" width="7" height="20" fill="var(--desk2)"/>
-      <g class="body">
-        <path d="M-24 -30 h34 l4 -34 q-19 -13 -38 0 z" fill="${C}" ${P}/>
-        <path d="M8 -30 h22 l2 12 h-24 z" fill="${C}" ${P}/>
-        <rect x="28" y="-20" width="11" height="20" rx="4" fill="var(--ink)"/>
-        <circle cx="-4" cy="-84" r="21" fill="var(--skin)" ${P}/>
-        ${headGear(k,-4,-84)}
-        ${facePart(k,2,-86)}
-        <g class="arm arm-a" id="armA-${k}" style="transform-origin:10px -58px">
-          <path d="M10 -58 q22 6 30 20" fill="none" stroke="var(--ink)"
-            stroke-width="7.5" stroke-linecap="round"/>
-          <path d="M10 -58 q22 6 30 20" fill="none" stroke="${C}"
-            stroke-width="4.5" stroke-linecap="round"/>
-          <circle cx="40" cy="-38" r="5.2" fill="var(--skin)" ${P}/></g>
-        <g class="arm arm-b" id="armB-${k}" style="transform-origin:6px -54px">
-          <path d="M6 -54 q24 4 32 16" fill="none" stroke="var(--ink)"
-            stroke-width="7" stroke-linecap="round"/>
-          <path d="M6 -54 q24 4 32 16" fill="none" stroke="${C}" stroke-width="4"
-            stroke-linecap="round"/>
-          <circle cx="38" cy="-38" r="5" fill="var(--skin)" ${P}/></g>
-      </g>
-      <rect x="26" y="-34" width="92" height="10" rx="3" fill="var(--desk)" ${P}/>
-      <rect x="32" y="-24" width="8" height="24" fill="var(--desk2)"/>
-      <rect x="104" y="-24" width="8" height="24" fill="var(--desk2)"/>
-      ${deskProp(k, 52, -34)}
-    </g></g>`;
-}
-
-/* tubos: de cada mesa a la del Director, y de ahí a Riesgo y Ejecución */
-const TUBEPATH = {
-  "t-news": "M288 132 C 372 132, 396 356, 426 414",
-  "t-scan": "M288 310 C 372 310, 396 392, 426 420",
-  "t-tech": "M288 488 C 372 488, 396 448, 426 426",
-  "t-risk": "M614 420 C 656 420, 686 372, 726 370",
-  "t-exec": "M792 370 C 828 370, 864 370, 904 370",
-};
-
-(function buildScene(){
-  const tubes = Object.entries(TUBEPATH)
-    .map(([id,d])=>`<path id="${id}" d="${d}"/>`).join("");
-  $("scene").innerHTML = `
-    <g fill="none" stroke="var(--tube)" stroke-width="7" stroke-linecap="round" opacity=".45">
-      ${tubes}
-    </g>
-    <g fill="none" stroke="var(--surface)" stroke-width="2.5" stroke-dasharray="7 9" opacity=".85">
-      ${Object.keys(TUBEPATH).map(id=>`<use href="#${id}"/>`).join("")}
-    </g>
-    ${SCENE.map(person).join("")}
-    <g id="caps"></g>`;
-  // onda del osciloscopio del Técnico
-  const pts=[]; for(let i=0;i<=21;i++){
-    pts.push(`${55+i*2},${-51+Math.sin(i/1.6)*7+Math.sin(i/0.6)*2.5}`);}
-  $("wave").setAttribute("points", pts.join(" "));
+(function build(){
+  const armsSvg = ARMS.map(a=>{
+    const suckers = Array.from({length:9},(_,i)=>
+      `<circle id="sk-${a.k}-${i}" r="3" fill="var(--oct-lite)" opacity=".85"/>`).join("");
+    const pulses = Array.from({length:NSAMP},(_,i)=>
+      `<circle class="pulse" id="pz-${a.k}-${i}" r="5" fill="var(--pos)" opacity="0"/>`).join("");
+    return `<g id="mn-${a.k}">
+      <path id="arm-${a.k}" fill="var(--oct)" stroke="var(--ink)" stroke-width="2.6"
+        stroke-linejoin="round"/>${suckers}${pulses}</g>`;
+  }).join("");
+  const tools = ARMS.filter(a=>a.tool).map(a=>tool(a.k,a.tool[0],a.tool[1])).join("");
+  $("scene").innerHTML = `<g id="arms">${armsSvg}</g>${head()}${tools}`;
+  const wp=[]; for(let i=0;i<=20;i++){
+    wp.push(`${167+i*3.2},${(476+Math.sin(i/1.5)*11+Math.sin(i/0.55)*4).toFixed(1)}`);}
+  $("wave").setAttribute("points", wp.join(" "));
 })();
 
-/* expresiones */
-const FACE_POS = {news:[2,-86], scan:[2,-86], tech:[2,-86],
-                  dir:[0,-98], risk:[2,-86], exec:[2,-86]};
-function setFace(k, mood){
-  const m = $("mouth-"+k), p = FACE_POS[k];
-  if(!m || !p) return;
-  m.setAttribute("d", (MOUTH[mood]||MOUTH.neutral)(p[0], p[1]+13));
+/* ---- animación: los brazos ondulan; al trabajar, más ---- */
+const REDUCED = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+const armState = {};
+ARMS.forEach((a,i)=>armState[a.k]={phase:i*1.9, amp:1, pulse:-1});
+
+function drawArms(t){
+  ARMS.forEach(a=>{
+    const st = armState[a.k];
+    const on = $("mn-"+a.k).classList.contains("busy");
+    st.amp += ((on?3.1:1) - st.amp) * 0.06;
+    const w = REDUCED ? 0 : st.amp;
+    const s1 = Math.sin(t*0.0011 + st.phase), s2 = Math.sin(t*0.0016 + st.phase*1.4);
+    const c1 = [a.c1[0] + s1*9*w,  a.c1[1] + s2*11*w];
+    const c2 = [a.c2[0] + s2*12*w, a.c2[1] + s1*13*w];
+    const tip= [a.tip[0]+ s1*4*w,  a.tip[1] + s2*5*w];
+    const pts = Array.from({length:NSAMP},(_,i)=>cubic(a.base,c1,c2,tip,i/(NSAMP-1)));
+    $("arm-"+a.k).setAttribute("d", outline(pts, a.w, 3.2));
+    for(let i=0;i<9;i++){
+      const p = pts[3+Math.round(i*2.4)];
+      const e = $(`sk-${a.k}-${i}`);
+      e.setAttribute("cx",p[0].toFixed(1)); e.setAttribute("cy",p[1].toFixed(1));
+      e.setAttribute("r", (4.6 - i*0.34).toFixed(1));
+    }
+    // impulso nervioso viajando de la punta al cerebro
+    for(let i=0;i<NSAMP;i++){
+      const e = $(`pz-${a.k}-${i}`);
+      if(st.pulse < 0){ if(e.getAttribute("opacity")!=="0") e.setAttribute("opacity","0"); continue; }
+      const d = Math.abs(i - st.pulse);
+      e.setAttribute("cx",pts[i][0].toFixed(1)); e.setAttribute("cy",pts[i][1].toFixed(1));
+      e.setAttribute("opacity", d<2.6 ? (1-d/2.6).toFixed(2) : "0");
+    }
+    if(st.pulse >= 0){
+      st.pulse += 0.42 * (st.pulseDir || -1);
+      if(st.pulse < -1 || st.pulse > NSAMP + 1) st.pulse = -1;
+    }
+  });
 }
-function allFaces(mood){ Object.keys(FACE_POS).forEach(k=>setFace(k,mood)); }
+(function loop(t){ drawArms(t||0); requestAnimationFrame(loop); })();
+
+function sendPulse(k, outward){
+  const st = armState[k]; if(!st) return;
+  st.pulse = outward ? 0 : NSAMP-1;
+  st.pulseDir = outward ? 1 : -1;
+}
+function busy(k, on){ const e=$("mn-"+k); if(e) e.classList.toggle("busy", on); }
+function calm(){ ARMS.forEach(a=>busy(a.k,false)); }
+function bub(id, html){ const e=$("b-"+id); if(e){e.innerHTML=html; e.classList.add("show");} }
+function unbub(){ ["news","scan","tech","dir","risk","exec"].forEach(k=>{
+  const e=$("b-"+k); if(e) e.classList.remove("show"); }); }
+function lamp(id, on){ const e=$(id); if(!e) return;
+  e.classList.toggle("lit", on);
+  e.setAttribute("fill", on ? "var(--brass-2)" : "var(--sunk)"); }
+function pressButton(){ const b=$("btn-exec"); if(!b) return;
+  b.classList.add("press"); setTimeout(()=>b.classList.remove("press"), 190); }
+
+/* el manto cambia de color, como un pulpo de verdad */
+const MOODS = {
+  neutral:["var(--oct)","M488 286 q12 12 24 0"],
+  happy:  ["var(--oct-happy)","M486 282 q14 17 28 0"],
+  sad:    ["var(--oct-sad)","M486 292 q14 -15 28 0"],
+  think:  ["var(--oct)","M494 286 q6 7 12 0"],
+  wow:    ["var(--oct-happy)","M491 280 q9 17 18 0 q-9 8 -18 0"],
+};
+function setFace(k, mood){
+  if(k && k!=="dir" && k!=="all") return;         // los brazos no tienen cara
+  const m = MOODS[mood] || MOODS.neutral;
+  const mt = $("mantle"), bk = $("beak");
+  if(mt) mt.setAttribute("fill", m[0]);
+  if(bk) bk.setAttribute("d", m[1]);
+}
+function allFaces(mood){ setFace("dir", mood); }
 
 /* ---------- de dónde sale cada mejora ---------- */
 $("abl").innerHTML = `<thead><tr><th>Variante</th><th>Retorno</th><th>Máx. drawdown</th>
@@ -580,42 +569,16 @@ let rows = [], wire = [];
 function at(ms, fn){ timers.push(setTimeout(fn, ms/speed)); }
 function clearAll(){ timers.forEach(clearTimeout); timers = []; }
 
-function bub(id, html){ const e=$("b-"+id); e.innerHTML=html; e.classList.add("show"); }
-function unbub(){ ["news","scan","tech","dir","risk","exec"].forEach(k=>
-  $("b-"+k).classList.remove("show")); }
-function busy(id, on){ $("mn-"+id).classList.toggle("busy", on); }
-function calm(){ ["news","scan","tech","dir","risk","exec"].forEach(k=>busy(k,false)); }
-function lamp(id, on){ const e=$(id); e.classList.toggle("lit", on);
-  e.setAttribute("fill", on ? "var(--brass)" : "var(--sunk)"); }
-
 function log(who, msg){
   wire.push(`<p><span class="who">${who}</span><span>${esc(msg)}</span></p>`);
   if(wire.length>50) wire.shift();
   $("wire").innerHTML = [...wire].reverse().join("");
 }
 
-/* ---------- cápsulas por el tubo ---------- */
-function capsule(tubeId, reverse, color, ms, done){
-  const path = $(tubeId), L = path.getTotalLength();
-  const ns = "http://www.w3.org/2000/svg";
-  const g = document.createElementNS(ns,"g");
-  const c = document.createElementNS(ns,"rect");
-  c.setAttribute("x",-9); c.setAttribute("y",-6); c.setAttribute("width",18);
-  c.setAttribute("height",12); c.setAttribute("rx",6);
-  c.setAttribute("fill",color); c.setAttribute("stroke","var(--ink)");
-  c.setAttribute("stroke-width","2");
-  g.appendChild(c); $("caps").appendChild(g);
-  const t0 = performance.now(), dur = ms/speed;
-  function frame(now){
-    const k = Math.min((now-t0)/dur, 1);
-    const e = k<.5 ? 2*k*k : 1-Math.pow(-2*k+2,2)/2;
-    const p = path.getPointAtLength((reverse ? 1-e : e) * L);
-    g.setAttribute("transform", `translate(${p.x},${p.y})`);
-    if(k<1){ requestAnimationFrame(frame); }
-    else { g.remove(); done && done(); }
-  }
-  requestAnimationFrame(frame);
-  caps.push(g);
+/* ---------- el impulso que sube (o baja) por el brazo ---------- */
+function capsule(armKey, outward, color, ms, done){
+  sendPulse(armKey, outward);
+  timers.push(setTimeout(()=>done && done(), ms/speed));
 }
 
 /* ---------- paneles ---------- */
@@ -689,11 +652,9 @@ function round(){
     ["news","scan","tech"].forEach(k=>{$("v-"+k).textContent="—";$("v-"+k).className="dim";});
     meter(0);
     log("Ejecución", `${r.symbol} toca el ${r.reason} · disparo automático`);
-    at(200, ()=>{ busy("exec",true); setFace("exec","wow"); bub("exec",
+    at(200, ()=>{ busy("exec",true); setFace("dir","wow"); bub("exec",
       `<b>${r.reason === "stop-loss" ? "STOP" : "OBJETIVO"}</b><br>${esc(r.symbol)} @ ${r.price}`); });
-    at(900, ()=>{ $("armA-exec").classList.add("slam"); $("armB-exec").classList.add("slam");
-      at(190, ()=>{$("armA-exec").classList.remove("slam");
-                   $("armB-exec").classList.remove("slam");}); });
+    at(900, ()=>{ pressButton(); });
     at(1150, ()=>{
       $("ticket").classList.add("out");
       V.closed++; V.realized += r.pnl; r.pnl>0 ? V.wins++ : V.losses++;
@@ -728,7 +689,6 @@ function round(){
   votes.forEach(([k,label,txt,val],i)=>{
     at(250 + i*480, ()=>{
       busy(k,true); bub(k, bubTxt[k]);
-      setFace(k, k==="news" ? "think" : (val>0.1 ? "happy" : (val<-0.1 ? "sad" : "neutral")));
       $("v-"+k).textContent = txt;
       $("v-"+k).className = k==="news" ? "dim num" : (cl(val)+" num");
       log(label, k==="news" ? "no puedo votar el pasado · voto 0,00"
@@ -774,24 +734,22 @@ function round(){
   if(!buy){ at(5200, round); return; }
 
   at(3900, ()=>{ busy("dir",false);
-    capsule(TUBES.risk, false, "var(--brass)", 800, ()=>busy("risk",true)); });
+    capsule(TUBES.risk, true, "var(--brass)", 800, ()=>busy("risk",true)); });
   at(4800, ()=>{
     $("wheel").classList.add("turn");
     $("riskface").textContent = "OK";
     $("riskface").setAttribute("fill","var(--pos)");
     bub("risk", `2 % de riesgo<br>stop 2×ATR<br><b class="pos">aprobado</b>`);
-    setFace("risk","happy");
+    setFace("dir","happy");
     log("Riesgo", `${r.symbol} aprobado · tamaño por 2 % de riesgo, stop a 2×ATR`);
   });
   at(5600, ()=>{ busy("risk",false);
-    capsule(TUBES.exec, false, "var(--pos)", 700, ()=>busy("exec",true)); });
-  at(6400, ()=>{ $("armA-exec").classList.add("slam"); $("armB-exec").classList.add("slam");
-    at(190, ()=>{$("armA-exec").classList.remove("slam");
-                 $("armB-exec").classList.remove("slam");}); });
+    capsule(TUBES.exec, true, "var(--pos)", 700, ()=>busy("exec",true)); });
+  at(6400, ()=>pressButton());
   at(6650, ()=>{
     $("ticket").classList.add("out");
     bub("exec", `<b>COMPRADO</b><br>${esc(r.symbol)} @ ${r.price}`);
-    setFace("exec","happy");
+    setFace("dir","happy");
     V.equity = r.equity;
     rows.push({bar:r.bar, side:"BUY", symbol:r.symbol, price:r.price, pnl:null,
                by:`Director · compuesto ${sgn(r.comp)}`});

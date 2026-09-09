@@ -123,15 +123,18 @@ El detalle de qué viene de dónde está en **[`NOTICE.md`](NOTICE.md)**.
 
 Ambas se abren con doble clic, sin servidor:
 
-- **`demo/taller.html`** — los seis agentes dibujados como personajes sentados a sus
-  mesas, cada uno con su cara, sus brazos y sus trastos: la antena y el teletipo de
-  Noticias, el radar del Escáner, el osciloscopio del Técnico, el monitor de veredicto
-  y la balanza del Director, el sello y la válvula de Riesgo, y el botón rojo de
-  Ejecución. Los tres analistas mandan su voto por tubo neumático al **Director**, que
-  decide comprar o esperar; Riesgo dimensiona o veta, y Ejecución aprieta el botón.
-  Las caras cambian de expresión según cómo vaya la operación. Cada voto es el valor real calculado por
-  ese agente en esa barra del backtest (Noticias no vota en histórico: los titulares
-  antiguos no son recuperables, así que su voto cuenta como cero).
+- **`demo/taller.html`** — el sistema dibujado como **un pulpo de ocho brazos**. Cinco
+  brazos llevan herramienta (el periódico de Noticias, el radar del Escáner, la tableta
+  del Técnico, la balanza y el sello de Riesgo, el botón rojo de Ejecución) y los otros
+  tres solo se mueven. Cuando un agente termina su cálculo, un impulso sube por su brazo
+  hasta el cerebro; el cerebro suma los votos, decide, y manda la orden de vuelta por el
+  brazo de Riesgo y el de Ejecución. El manto cambia de color según cómo acabe la
+  operación, como hace un pulpo de verdad.
+
+  La metáfora no es decorativa: dos tercios de las neuronas de un pulpo están en los
+  brazos, que perciben y actúan por su cuenta y solo mandan un resumen al cerebro. Es
+  literalmente esta arquitectura — cinco hilos independientes con su propia cadencia y
+  un orquestador que solo recibe votos y decide.
 - **`demo/mesa.html`** — el mismo backtest en formato panel de instrumentos.
 
 El dashboard con datos en vivo es el de `python3 run.py`.
