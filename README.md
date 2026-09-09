@@ -18,6 +18,7 @@ python3 run.py --port 9000      # otro puerto
 python3 -m bot.backtest         # backtest: 2 años de velas diarias reales
 python3 -m bot.backtest --compare    # antes vs ahora
 python3 -m bot.backtest --ablation   # qué aporta cada mejora por separado
+python3 -m bot.montecarlo            # cono de ruina: 10.000 futuros posibles
 ```
 
 ## Los cinco agentes
@@ -83,7 +84,24 @@ que esto funcione.
 
 ## Universo
 
-`BTC-USD`, `ETH-USD`, `SOL-USD` (Kraken) · `SPY` = S&P 500, `QQQ` = Nasdaq 100 (Yahoo Finance).
+Se **opera** en cinco: `BTC-USD`, `ETH-USD`, `SOL-USD` (Kraken) · `SPY` = S&P 500,
+`QQQ` = Nasdaq 100 (Yahoo Finance).
+
+Se **vigilan** 22: `feeds.wide_universe()` trae en una sola llamada 18 pares de Kraken
+más SPY, QQQ, DIA e IWM. Mirar más mercado del que se opera sale casi gratis y dice en
+qué estado está el conjunto.
+
+## Cono de ruina
+
+`python3 -m bot.montecarlo` coge las operaciones cerradas del backtest, las remuestrea
+con reemplazo 10.000 veces y simula futuros de 100 operaciones aplicando el mismo
+kill switch. Con la distribución medida: mediana **+22,9 %**, acaba en verde el
+**88 %** de las veces, el freno salta en el **1,8 %** y la cuenta **nunca** pierde la
+mitad.
+
+Dicho lo cual, hay un sesgo que conviene tener presente: esas operaciones salen de un
+solo tramo de mercado que resultó favorable. Un bootstrap solo puede repartir lo que ya
+ocurrió — no sabe inventar el crash que no estaba en la muestra.
 
 Si una fuente falla, el sistema mantiene la última vela buena y marca el instrumento
 como *degradado* en el dashboard, en vez de operar a ciegas.
@@ -123,18 +141,16 @@ El detalle de qué viene de dónde está en **[`NOTICE.md`](NOTICE.md)**.
 
 Ambas se abren con doble clic, sin servidor:
 
-- **`demo/taller.html`** — el sistema dibujado como **un pulpo de ocho brazos**. Cinco
-  brazos llevan herramienta (el periódico de Noticias, el radar del Escáner, la tableta
-  del Técnico, la balanza y el sello de Riesgo, el botón rojo de Ejecución) y los otros
-  tres solo se mueven. Cuando un agente termina su cálculo, un impulso sube por su brazo
-  hasta el cerebro; el cerebro suma los votos, decide, y manda la orden de vuelta por el
-  brazo de Riesgo y el de Ejecución. El manto cambia de color según cómo acabe la
-  operación, como hace un pulpo de verdad.
+- **`demo/taller.html`** — **PULPO DESK**, el puesto de mando. Velas diarias reales del
+  activo en juego, el anillo con los cinco agentes y el cerebro, el horno con el resultado
+  de cada operación cerrada, el cono de ruina, un cartograma de 22 instrumentos vigilados,
+  el registro de órdenes y la cinta de lo que se dicen entre ellos. Todo reproduce la
+  sesión medida de 402 barras.
 
-  La metáfora no es decorativa: dos tercios de las neuronas de un pulpo están en los
-  brazos, que perciben y actúan por su cuenta y solo mandan un resumen al cerebro. Es
-  literalmente esta arquitectura — cinco hilos independientes con su propia cadencia y
-  un orquestador que solo recibe votos y decide.
+  Los cinco agentes son bichos con ojos y el cerebro es el pulpo. La metáfora no es
+  decorativa: dos tercios de las neuronas de un pulpo están en los brazos, que perciben
+  y actúan por su cuenta y solo mandan un resumen al cerebro. Es literalmente esta
+  arquitectura — cinco hilos independientes y un orquestador que solo recibe votos.
 - **`demo/mesa.html`** — el mismo backtest en formato panel de instrumentos.
 
 El dashboard con datos en vivo es el de `python3 run.py`.

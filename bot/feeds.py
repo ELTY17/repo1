@@ -124,6 +124,45 @@ def last_price(inst) -> float:
     return c[-1]["c"] if c else 0.0
 
 
+WIDE_CRYPTO = ["XBTUSD", "ETHUSD", "SOLUSD", "XRPUSD", "ADAUSD", "DOTUSD",
+               "LINKUSD", "AVAXUSD", "LTCUSD", "ATOMUSD", "UNIUSD", "AAVEUSD",
+               "ALGOUSD", "FILUSD", "NEARUSD", "INJUSD", "TIAUSD", "SUIUSD"]
+WIDE_EQUITY = [("SPY", "S&P 500"), ("QQQ", "Nasdaq 100"),
+               ("DIA", "Dow Jones"), ("IWM", "Russell 2000")]
+
+
+def wide_universe() -> list[dict]:
+    """Foto rapida de un universo mas ancho del que se opera.
+
+    El sistema solo tiene posiciones en cinco instrumentos, pero mirar mas
+    mercado sale casi gratis y dice en que estado esta el conjunto.
+    """
+    out = []
+    try:
+        d = _get_json("https://api.kraken.com/0/public/Ticker?pair="
+                      + ",".join(WIDE_CRYPTO))
+        for code, v in d.get("result", {}).items():
+            o, c = float(v["o"]), float(v["c"][0])
+            out.append({"symbol": code.replace("ZUSD", "").replace("USD", "")
+                                      .replace("XXBT", "BTC").replace("XETH", "ETH")
+                                      .replace("X", "", 1) if code.startswith("X")
+                                 else code.replace("USD", ""),
+                        "price": c, "chg": (c / o - 1) if o else 0.0,
+                        "kind": "crypto"})
+    except Exception:                                    # noqa: BLE001,S110
+        pass
+    for code, label in WIDE_EQUITY:
+        try:
+            c = _yahoo_ohlc(code, "5d", "1d")
+            if len(c) >= 2:
+                out.append({"symbol": code, "label": label, "price": c[-1]["c"],
+                            "chg": c[-1]["c"] / c[-2]["c"] - 1, "kind": "equity"})
+        except Exception:                                # noqa: BLE001,S110
+            continue
+    out.sort(key=lambda r: -abs(r["chg"]))
+    return out
+
+
 def snapshot() -> dict[str, dict]:
     """Precio y variacion reciente de todo el universo."""
     out = {}
