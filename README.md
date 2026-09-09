@@ -123,9 +123,13 @@ El detalle de qué viene de dónde está en **[`NOTICE.md`](NOTICE.md)**.
 
 Ambas se abren con doble clic, sin servidor:
 
-- **`demo/taller.html`** — los seis agentes dibujados. Los tres analistas mandan su
-  voto por tubo neumático al **Director**, que decide comprar o esperar; Riesgo
-  dimensiona o veta, y Ejecución dispara. Cada voto es el valor real calculado por
+- **`demo/taller.html`** — los seis agentes dibujados como personajes sentados a sus
+  mesas, cada uno con su cara, sus brazos y sus trastos: la antena y el teletipo de
+  Noticias, el radar del Escáner, el osciloscopio del Técnico, el monitor de veredicto
+  y la balanza del Director, el sello y la válvula de Riesgo, y el botón rojo de
+  Ejecución. Los tres analistas mandan su voto por tubo neumático al **Director**, que
+  decide comprar o esperar; Riesgo dimensiona o veta, y Ejecución aprieta el botón.
+  Las caras cambian de expresión según cómo vaya la operación. Cada voto es el valor real calculado por
   ese agente en esa barra del backtest (Noticias no vota en histórico: los titulares
   antiguos no son recuperables, así que su voto cuenta como cero).
 - **`demo/mesa.html`** — el mismo backtest en formato panel de instrumentos.
