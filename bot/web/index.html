@@ -1,0 +1,341 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Sala de Agentes · Trading</title>
+<style>
+  :root{
+    --bg:#0b0e14; --panel:#131822; --panel2:#182030; --line:#242e42;
+    --txt:#e6edf7; --dim:#8b98ad; --dim2:#5d6b82;
+    --up:#2ee6a8; --down:#ff5c72; --accent:#6ea8ff; --warn:#ffb454;
+    --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--txt);
+    font:14px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Inter,system-ui,sans-serif;}
+  a{color:var(--accent)}
+  .wrap{max-width:1500px;margin:0 auto;padding:18px}
+
+  header{display:flex;flex-wrap:wrap;gap:14px;align-items:center;
+    justify-content:space-between;margin-bottom:18px}
+  .brand{display:flex;align-items:center;gap:12px}
+  .dot{width:10px;height:10px;border-radius:50%;background:var(--up);
+    box-shadow:0 0 0 0 rgba(46,230,168,.6);animation:pulse 2s infinite}
+  @keyframes pulse{70%{box-shadow:0 0 0 10px rgba(46,230,168,0)}
+                   100%{box-shadow:0 0 0 0 rgba(46,230,168,0)}}
+  h1{font-size:17px;margin:0;letter-spacing:.2px}
+  .sub{color:var(--dim);font-size:12px}
+  .badge{font-size:11px;letter-spacing:.6px;text-transform:uppercase;
+    border:1px solid var(--line);border-radius:999px;padding:4px 10px;color:var(--dim)}
+  .badge.paper{border-color:#3a5bd9;color:#9db7ff;background:#141d3a}
+  .badge.halt{border-color:var(--down);color:var(--down);background:#2a1119}
+
+  .grid{display:grid;gap:14px}
+  .kpis{grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px}
+  .k-label{font-size:11px;text-transform:uppercase;letter-spacing:.7px;color:var(--dim2)}
+  .k-val{font:600 24px/1.2 var(--mono);margin-top:6px}
+  .k-sub{font-size:12px;color:var(--dim);margin-top:4px;font-family:var(--mono)}
+  .up{color:var(--up)} .down{color:var(--down)} .warn{color:var(--warn)}
+
+  .cols{display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1fr);gap:14px;margin-top:14px}
+  @media(max-width:1050px){.cols{grid-template-columns:1fr}}
+
+  h2{font-size:12px;text-transform:uppercase;letter-spacing:.9px;color:var(--dim2);
+     margin:0 0 10px;font-weight:600}
+
+  /* agentes */
+  .agents{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
+  .agent{background:var(--panel);border:1px solid var(--line);border-radius:12px;
+    padding:12px;position:relative;overflow:hidden;transition:border-color .3s}
+  .agent.working{border-color:var(--accent)}
+  .agent::after{content:"";position:absolute;left:0;top:0;height:2px;width:0;
+    background:var(--accent);transition:width .4s}
+  .agent.working::after{width:100%}
+  .a-head{display:flex;align-items:center;gap:9px;margin-bottom:8px}
+  .a-ico{width:26px;height:26px;border-radius:7px;display:grid;place-items:center;
+    font:700 12px var(--mono);background:var(--panel2);border:1px solid var(--line)}
+  .a-name{font-weight:600;font-size:13px;text-transform:capitalize}
+  .a-role{font-size:11px;color:var(--dim2);line-height:1.35;min-height:30px}
+  .a-stat{display:flex;gap:6px;align-items:center;margin-left:auto;font-size:10px;
+    color:var(--dim);font-family:var(--mono)}
+  .led{width:7px;height:7px;border-radius:50%;background:var(--dim2)}
+  .led.working{background:var(--accent);animation:pulse2 1s infinite}
+  .led.idle{background:var(--up);opacity:.55}
+  .led.error{background:var(--down)}
+  @keyframes pulse2{50%{opacity:.25}}
+  .a-log{font:11px/1.5 var(--mono);color:var(--dim);border-top:1px solid var(--line);
+    padding-top:8px;margin-top:8px;max-height:74px;overflow:hidden}
+
+  table{width:100%;border-collapse:collapse;font-size:12.5px}
+  th{text-align:left;font-size:10px;letter-spacing:.7px;text-transform:uppercase;
+     color:var(--dim2);font-weight:600;padding:6px 8px;border-bottom:1px solid var(--line)}
+  td{padding:7px 8px;border-bottom:1px solid #1b2331;font-family:var(--mono)}
+  tr:last-child td{border-bottom:none}
+  .sym{font-weight:600;font-family:inherit}
+  .muted{color:var(--dim2)}
+  .empty{color:var(--dim2);font-size:12.5px;padding:14px 8px;text-align:center}
+
+  .bar{height:6px;background:var(--panel2);border-radius:3px;overflow:hidden;min-width:60px}
+  .bar>i{display:block;height:100%;border-radius:3px}
+  .pill{display:inline-block;padding:2px 7px;border-radius:5px;font:600 10px var(--mono);
+    letter-spacing:.4px}
+  .pill.BUY{background:#0f3a2c;color:var(--up)}
+  .pill.SELL{background:#3a1520;color:var(--down)}
+  .pill.HOLD{background:#1e2634;color:var(--dim)}
+  .pill.VETO{background:#3a2a10;color:var(--warn)}
+
+  .stream{font:11.5px/1.65 var(--mono);max-height:330px;overflow-y:auto}
+  .stream div{padding:3px 0;border-bottom:1px solid #171e2b;display:flex;gap:8px}
+  .stream .who{color:var(--accent);min-width:70px}
+  .stream .tm{color:var(--dim2);min-width:52px}
+  .news li{font-size:12px;margin-bottom:7px;list-style:none;display:flex;gap:8px}
+  .news ul{padding:0;margin:0}
+  footer{color:var(--dim2);font-size:11.5px;margin-top:20px;line-height:1.7;
+    border-top:1px solid var(--line);padding-top:14px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="brand">
+      <span class="dot" id="livedot"></span>
+      <div>
+        <h1>Sala de Agentes · Trading multi-agente</h1>
+        <div class="sub" id="subtitle">conectando…</div>
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;align-items:center">
+      <span class="badge paper" id="modebadge">PAPER · dinero simulado</span>
+      <span class="badge" id="uptime">—</span>
+    </div>
+  </header>
+
+  <div class="grid kpis" id="kpis"></div>
+
+  <div style="margin-top:14px">
+    <h2>Los 5 agentes</h2>
+    <div class="agents" id="agents"></div>
+  </div>
+
+  <div class="cols">
+    <div>
+      <div class="card">
+        <h2>Curva de capital</h2>
+        <svg id="equity" viewBox="0 0 800 200" preserveAspectRatio="none"
+             style="width:100%;height:200px"></svg>
+      </div>
+
+      <div class="card" style="margin-top:14px">
+        <h2>Consenso de agentes por activo</h2>
+        <div style="overflow-x:auto"><table id="consensus"></table></div>
+      </div>
+
+      <div class="card" style="margin-top:14px">
+        <h2>Posiciones abiertas</h2>
+        <div style="overflow-x:auto"><table id="positions"></table></div>
+      </div>
+
+      <div class="card" style="margin-top:14px">
+        <h2>Operaciones</h2>
+        <div style="overflow-x:auto"><table id="trades"></table></div>
+      </div>
+    </div>
+
+    <div>
+      <div class="card">
+        <h2>Mercado</h2>
+        <div style="overflow-x:auto"><table id="market"></table></div>
+      </div>
+      <div class="card" style="margin-top:14px">
+        <h2>Actividad en vivo</h2>
+        <div class="stream" id="stream"></div>
+      </div>
+      <div class="card news" style="margin-top:14px">
+        <h2>Titulares que están leyendo</h2>
+        <ul id="news"></ul>
+      </div>
+    </div>
+  </div>
+
+  <footer id="footer"></footer>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+const money = v => (v<0?"-":"")+"$"+Math.abs(v).toFixed(2);
+const pct = v => (v>=0?"+":"")+(v*100).toFixed(2)+"%";
+const cls = v => v>0?"up":(v<0?"down":"muted");
+const hhmm = t => new Date(t*1000).toLocaleTimeString([], {hour:"2-digit",minute:"2-digit",second:"2-digit"});
+const esc = s => String(s).replace(/[&<>]/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
+
+function kpis(s){
+  const p = s.portfolio, r = p.total_return;
+  const dd = p.drawdown;
+  const items = [
+    ["Equity", money(p.equity), `inicial ${money(p.starting_cash)}`, cls(r)],
+    ["Resultado total", pct(r), `${money(p.equity-p.starting_cash)} netos`, cls(r)],
+    ["PnL realizado", money(p.realized_pnl), `no realizado ${money(p.unrealized_pnl)}`, cls(p.realized_pnl)],
+    ["Drawdown", pct(dd), `límite ${(-s.config.max_drawdown_stop*100).toFixed(0)}%`, dd<-0.1?"down":"muted"],
+    ["Operaciones", `${p.trades_closed}`, `${p.wins}G / ${p.losses}P · acierto ${(p.win_rate*100).toFixed(0)}%`, "muted"],
+    ["Efectivo libre", money(p.cash), `comisiones ${money(p.fees_paid)}`, "muted"],
+  ];
+  $("kpis").innerHTML = items.map(([l,v,sb,c])=>
+    `<div class="card"><div class="k-label">${l}</div>
+     <div class="k-val ${c}">${v}</div><div class="k-sub">${sb}</div></div>`).join("");
+}
+
+function agents(s){
+  $("agents").innerHTML = s.agents.map(a=>{
+    const last = a.log[0] ? esc(a.log[0].msg) : "esperando primer ciclo…";
+    const prev = a.log[1] ? `<div class="muted">${esc(a.log[1].msg)}</div>` : "";
+    return `<div class="agent ${a.status}">
+      <div class="a-head">
+        <div class="a-ico">${a.emoji}</div>
+        <div><div class="a-name">${a.name}</div></div>
+        <div class="a-stat"><span class="led ${a.status}"></span>${a.status}
+          · ${a.runs} ciclos${a.errors?` · <span class="down">${a.errors} err</span>`:""}</div>
+      </div>
+      <div class="a-role">${esc(a.role)}</div>
+      <div class="a-log"><div>${last}</div>${prev}</div>
+    </div>`;
+  }).join("");
+}
+
+function equity(s){
+  const c = s.equity_curve||[];
+  const svg = $("equity");
+  if(c.length < 2){ svg.innerHTML = `<text x="400" y="100" fill="#5d6b82" font-size="13"
+      text-anchor="middle">recogiendo datos…</text>`; return; }
+  const vals = c.map(p=>p.equity);
+  const base = s.portfolio.starting_cash;
+  const lo = Math.min(...vals, base), hi = Math.max(...vals, base);
+  const pad = (hi-lo)*0.15 || 1, y0 = lo-pad, y1 = hi+pad;
+  const X = i => (i/(c.length-1))*800;
+  const Y = v => 200 - ((v-y0)/(y1-y0))*200;
+  const pts = vals.map((v,i)=>`${X(i).toFixed(1)},${Y(v).toFixed(1)}`).join(" ");
+  const last = vals[vals.length-1];
+  const col = last>=base ? "#2ee6a8" : "#ff5c72";
+  svg.innerHTML = `
+    <defs><linearGradient id="g" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="${col}" stop-opacity=".28"/>
+      <stop offset="100%" stop-color="${col}" stop-opacity="0"/></linearGradient></defs>
+    <line x1="0" y1="${Y(base)}" x2="800" y2="${Y(base)}"
+      stroke="#39445c" stroke-dasharray="4 4" stroke-width="1"/>
+    <polygon points="0,200 ${pts} 800,200" fill="url(#g)"/>
+    <polyline points="${pts}" fill="none" stroke="${col}" stroke-width="2"
+      stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
+    <circle cx="800" cy="${Y(last)}" r="3.5" fill="${col}"/>`;
+}
+
+function consensus(s){
+  const rows = (s.composite||[]).sort((a,b)=>b.score-a.score);
+  const dec = {}; (s.decisions||[]).forEach(d=>dec[d.symbol]=d);
+  $("consensus").innerHTML = `<thead><tr><th>Activo</th><th>Noticias</th>
+    <th>Escáner</th><th>Técnico</th><th>Score</th><th>Consenso</th><th>Decisión</th></tr></thead>
+    <tbody>${rows.map(r=>{
+      const d = dec[r.symbol];
+      const w = Math.abs(r.score)*100;
+      return `<tr>
+        <td class="sym">${r.symbol}</td>
+        <td class="${cls(r.votes.news)}">${r.votes.news.toFixed(2)}</td>
+        <td class="${cls(r.votes.scanner)}">${r.votes.scanner.toFixed(2)}</td>
+        <td class="${cls(r.votes.technical)}">${r.votes.technical.toFixed(2)}</td>
+        <td class="${cls(r.score)}"><b>${r.score>=0?"+":""}${r.score.toFixed(2)}</b></td>
+        <td><div class="bar"><i style="width:${(r.consensus*100).toFixed(0)}%;
+          background:${r.score>=0?"#2ee6a8":"#ff5c72"}"></i></div></td>
+        <td>${d?`<span class="pill ${d.action}">${d.action}</span>`:'<span class="muted">—</span>'}
+          <div class="muted" style="font-size:10px">${d?esc(d.note).slice(0,52):""}</div></td>
+      </tr>`;}).join("")}</tbody>`;
+}
+
+function positions(s){
+  const p = s.positions||[];
+  if(!p.length){ $("positions").innerHTML =
+    `<tr><td class="empty">Sin posiciones abiertas — los agentes están esperando una señal con consenso.</td></tr>`; return; }
+  $("positions").innerHTML = `<thead><tr><th>Activo</th><th>Cantidad</th><th>Entrada</th>
+    <th>Actual</th><th>Stop</th><th>Objetivo</th><th>Valor</th><th>PnL</th></tr></thead>
+    <tbody>${p.map(x=>`<tr>
+      <td class="sym">${x.symbol}</td><td>${x.qty.toFixed(6)}</td>
+      <td>${x.entry.toFixed(2)}</td><td>${x.price.toFixed(2)}</td>
+      <td class="down">${x.stop.toFixed(2)}</td><td class="up">${x.target.toFixed(2)}</td>
+      <td>${money(x.value)}</td>
+      <td class="${cls(x.pnl)}">${money(x.pnl)} (${pct(x.pnl_pct)})</td></tr>`).join("")}</tbody>`;
+}
+
+function trades(s){
+  const t = s.trades||[];
+  if(!t.length){ $("trades").innerHTML =
+    `<tr><td class="empty">Todavía no se ha ejecutado ninguna operación.</td></tr>`; return; }
+  $("trades").innerHTML = `<thead><tr><th>Hora</th><th>Lado</th><th>Activo</th><th>Cantidad</th>
+    <th>Precio</th><th>PnL</th><th>Motivo</th></tr></thead>
+    <tbody>${t.map(x=>`<tr>
+      <td class="muted">${hhmm(x.t)}</td>
+      <td><span class="pill ${x.side}">${x.side}</span></td>
+      <td class="sym">${x.symbol}</td><td>${x.qty.toFixed(6)}</td>
+      <td>${x.price.toFixed(2)}</td>
+      <td class="${x.pnl==null?'muted':cls(x.pnl)}">${x.pnl==null?"—":money(x.pnl)}</td>
+      <td class="muted" style="font-family:inherit">${esc(x.reason||"")}</td></tr>`).join("")}</tbody>`;
+}
+
+function market(s){
+  const m = Object.values(s.market||{});
+  $("market").innerHTML = `<thead><tr><th>Activo</th><th>Precio</th><th>24h</th><th>Fuente</th></tr></thead>
+    <tbody>${m.map(x=>`<tr>
+      <td class="sym">${x.symbol}<div class="muted" style="font-size:10px;font-family:inherit">${esc(x.label)}</div></td>
+      <td>${x.price>=1000?x.price.toFixed(0):x.price.toFixed(2)}</td>
+      <td class="${cls(x.chg_24h)}">${pct(x.chg_24h)}</td>
+      <td class="${x.source==='live'?'up':'warn'}" style="font-size:10px">${esc(x.source)}</td>
+    </tr>`).join("")}</tbody>`;
+}
+
+function stream(s){
+  $("stream").innerHTML = (s.events||[]).map(e=>
+    `<div><span class="tm">${hhmm(e.t)}</span><span class="who">${esc(e.agent)}</span>
+     <span>${esc(e.msg)}</span></div>`).join("") || `<div class="empty">…</div>`;
+}
+
+function news(s){
+  const h = s.headlines||[];
+  $("news").innerHTML = h.length ? h.map(x=>
+    `<li><span class="${x.score>0?'up':'down'}" style="font-family:var(--mono);min-width:26px">
+      ${x.score>0?"+":""}${x.score}</span><span>${esc(x.title)}</span></li>`).join("")
+    : `<div class="empty">sin titulares todavía</div>`;
+}
+
+function render(s){
+  $("subtitle").textContent =
+    `${s.agents.length} agentes · ciclo ${s.cycles} · ${Object.keys(s.market).length} instrumentos (cripto + S&P 500 + Nasdaq)`;
+  const h = Math.floor(s.uptime/3600), m = Math.floor(s.uptime%3600/60);
+  $("uptime").textContent = `activo ${h}h ${m}m`;
+  const mb = $("modebadge");
+  if(s.halted){ mb.className="badge halt"; mb.textContent="DETENIDO · "+s.halt_reason; }
+  else { mb.className="badge paper"; mb.textContent="PAPER · dinero simulado"; }
+  kpis(s); agents(s); equity(s); consensus(s); positions(s); trades(s);
+  market(s); stream(s); news(s);
+  $("footer").innerHTML =
+    `Riesgo por operación ${(s.config.risk_per_trade*100).toFixed(0)}% del equity ·
+     máximo ${s.config.max_positions} posiciones · kill switch a
+     ${(-s.config.max_drawdown_stop*100).toFixed(0)}% de drawdown ·
+     pesos de voto: técnico ${s.config.weights.technical}, escáner ${s.config.weights.scanner},
+     noticias ${s.config.weights.news}.<br>
+     <b>Esto es simulación.</b> Precios reales, dinero ficticio. Ningún resultado aquí predice
+     lo que pasaría con dinero real: no incluye impacto de mercado ni fallos de bróker,
+     y el rendimiento pasado no garantiza nada.`;
+}
+
+let fails = 0;
+async function tick(){
+  try{
+    const r = await fetch("/api/state", {cache:"no-store"});
+    render(await r.json());
+    fails = 0; $("livedot").style.background = "#2ee6a8";
+  }catch(e){
+    fails++; if(fails>2) $("livedot").style.background = "#ff5c72";
+  }
+}
+tick(); setInterval(tick, 2000);
+</script>
+</body>
+</html>
