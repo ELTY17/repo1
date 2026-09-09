@@ -92,6 +92,42 @@ Se **vigilan** 22: `feeds.wide_universe()` trae en una sola llamada 18 pares de 
 más SPY, QQQ, DIA e IWM. Mirar más mercado del que se opera sale casi gratis y dice en
 qué estado está el conjunto.
 
+## El mínimo del exchange decide todavía más
+
+Kraken rechaza cualquier orden por debajo de su mínimo, y una acción de SPY cuesta
+más que toda la cuenta. `bot/limits.py` consulta esos mínimos y el agente de riesgo
+ya los comprueba antes de mandar nada. Con ellos activados el resultado cambia por
+completo:
+
+| Capital | Comisión | ¿Mínimos? | Retorno | Final | Ops. | Órdenes rechazadas |
+|---|---|---|---|---|---|---|
+| $100 | 0,10 % | no | +6,84 % | $106,84 | 36 | 0 |
+| $100 | 0,10 % | **sí** | **−2,85 %** | $97,15 | 22 | 107 |
+| $100 | 0,26 % | **sí** | **−4,11 %** | $95,89 | 22 | 107 |
+| $19 | 0,26 % | **sí** | **−1,18 %** | $18,78 | 15 | 154 |
+
+**Con dinero real y capital pequeño, esta estrategia pierde.** Todos los resultados
+positivos de este repositorio asumían órdenes que un exchange habría rechazado.
+
+Dos causas concretas:
+
+- **SPY y QQQ son inoperables** por debajo de ~$2.200 de capital: el tamaño máximo
+  por posición es el 35 % de la cuenta y una sola acción cuesta $762 / $716. Dos de
+  los cinco instrumentos del universo están muertos, y con ellos la mitad no-cripto
+  de la diversificación.
+- El tamaño que dicta la regla del 2 % de riesgo **cae por debajo del mínimo de
+  Kraken** en los activos más volátiles. Para colocar la orden habría que subir el
+  tamaño, es decir, romper la propia regla de riesgo.
+
+Comprobar esto es lo primero que hay que hacer antes de conectar nada:
+
+```bash
+python3 -m bot.backtest --fees        # sensibilidad a la comisión
+python3 -c "from bot import limits, feeds; from bot.config import UNIVERSE; \
+  [print(i.symbol, limits.min_notional(i, feeds.get_candles(i,timeframe='1d')[-1]['c'])) \
+   for i in UNIVERSE]"
+```
+
 ## La comisión decide
 
 Todo lo anterior usa 0,10 % por lado, que es la tarifa de una cuenta con mucho

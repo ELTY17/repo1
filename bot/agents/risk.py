@@ -10,6 +10,7 @@ import time
 
 from .. import feeds
 from ..config import UNIVERSE
+from ..limits import check as check_min
 from ..protections import ProtectionManager
 from .base import Agent
 
@@ -104,6 +105,11 @@ class RiskAgent(Agent):
         notional = qty * price
         if notional < 1.0:
             return {"ok": False, "reason": f"tamano demasiado pequeno (${notional:.2f})"}
+
+        # el exchange rechaza las ordenes por debajo de su minimo
+        ok, why = check_min(_INST[symbol], price, notional)
+        if not ok:
+            return {"ok": False, "reason": why}
         if notional + notional * cfg.fee_rate > b.cash:
             return {"ok": False, "reason": "efectivo insuficiente"}
 

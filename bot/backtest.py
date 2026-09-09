@@ -15,8 +15,11 @@ import argparse
 from . import feeds, signals
 from .broker import PaperBroker
 from .config import CONFIG, UNIVERSE, Config
+
+_BY_SYMBOL = {i.symbol: i for i in UNIVERSE}
 from .exits import roi_reached, roi_target, trailing_stop
 from .indicators import atr
+from .limits import min_notional
 from .protections import ProtectionManager
 
 
@@ -46,7 +49,7 @@ BAR_SECONDS = {"1h": 3600, "1d": 86400}
 
 
 def run(cfg: Config = CONFIG, warmup: int = 100, features=None,
-        verbose: bool = True, timeframe: str = "1d"):
+        verbose: bool = True, timeframe: str = "1d", enforce_minimums: bool = False):
     feats = signals._feat(features)
     smart = bool(feats)
     series = _series(warmup, timeframe)
@@ -61,6 +64,7 @@ def run(cfg: Config = CONFIG, warmup: int = 100, features=None,
 
     halted = False
     blocked_entries = 0
+    rejected = 0
 
     def tag(bar):
         if broker.trades:
@@ -143,6 +147,11 @@ def run(cfg: Config = CONFIG, warmup: int = 100, features=None,
                 qty = max_notional / price
             if qty * price < 1.0:
                 continue
+            if enforce_minimums:
+                need = min_notional(_BY_SYMBOL[sym], price)
+                if qty * price < need:
+                    rejected += 1
+                    continue
             broker.buy(sym, qty, price, price - stop_dist,
                        price + stop_dist * cfg.take_profit_r, f"score {sc:+.2f}",
                        ts=now, atr=a)
@@ -155,6 +164,7 @@ def run(cfg: Config = CONFIG, warmup: int = 100, features=None,
     stats = broker.stats(final)
     stats["max_drawdown"] = max_dd(broker)
     stats["blocked_entries"] = blocked_entries
+    stats["rejected_min"] = rejected
     stats["bars"] = n - warmup
     stats["timeframe"] = timeframe
     stats["halted"] = halted
