@@ -19,6 +19,7 @@ python3 -m bot.backtest         # backtest: 2 años de velas diarias reales
 python3 -m bot.backtest --compare    # antes vs ahora
 python3 -m bot.backtest --ablation   # qué aporta cada mejora por separado
 python3 -m bot.montecarlo            # cono de ruina: 10.000 futuros posibles
+python3 -m bot.backtest --fees       # cuánto aguanta según lo que cobre el exchange
 ```
 
 ## Los cinco agentes
@@ -90,6 +91,25 @@ Se **opera** en cinco: `BTC-USD`, `ETH-USD`, `SOL-USD` (Kraken) · `SPY` = S&P 5
 Se **vigilan** 22: `feeds.wide_universe()` trae en una sola llamada 18 pares de Kraken
 más SPY, QQQ, DIA e IWM. Mirar más mercado del que se opera sale casi gratis y dice en
 qué estado está el conjunto.
+
+## La comisión decide
+
+Todo lo anterior usa 0,10 % por lado, que es la tarifa de una cuenta con mucho
+volumen. Una cuenta nueva paga bastante más, y eso cambia el resultado por completo:
+
+| Comisión por lado | Retorno | Comisiones pagadas | Profit factor |
+|---|---|---|---|
+| 0,10 % — el que usábamos | +6,84 % | $2,14 | 1,35 |
+| 0,16 % — Kraken Pro, volumen alto | +6,18 % | $3,39 | 1,35 |
+| **0,26 % — Kraken taker, cuenta nueva** | **+3,27 %** | **$5,43** | 1,26 |
+| 0,40 % — Kraken Instant Buy | −0,84 % | $8,20 | 1,14 |
+| 0,60 % — Coinbase Advanced | −6,02 % | $12,00 | 1,00 |
+| 1,49 % — Coinbase básico | −23,78 % | $17,60 | 0,39 |
+
+**El punto en el que esto deja de compensar está entre 0,26 % y 0,40 % por lado.**
+Ese margen es todo lo que separa una estrategia rentable de una que regala dinero al
+exchange. Comprueba la tarifa que te aplican a ti antes de dar por bueno cualquier
+número de este repositorio.
 
 ## Cono de ruina
 

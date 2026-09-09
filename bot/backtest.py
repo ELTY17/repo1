@@ -21,9 +21,20 @@ from .protections import ProtectionManager
 
 
 def _series(warmup, timeframe="1d"):
+    """Velas cerradas de cada instrumento.
+
+    La ultima vela que devuelve el exchange es la del periodo en curso y todavia
+    se esta moviendo: incluirla hace que el mismo backtest de un numero distinto
+    cada vez que se ejecuta. Se descarta.
+    """
+    import time as _t
+    period = {"1h": 3600, "1d": 86400}[timeframe]
+    now = _t.time()
     out = {}
     for inst in UNIVERSE:
         c = feeds.get_candles(inst, timeframe=timeframe)
+        if c and now - c[-1]["t"] < period:
+            c = c[:-1]                      # fuera la vela sin cerrar
         if len(c) > warmup + 20:
             out[inst.symbol] = c
     if not out:
@@ -208,6 +219,37 @@ def compare(cfg, timeframe="1d"):
     return old, new
 
 
+FEE_TIERS = [
+    ("0,10 % — el que usábamos", 0.0010, 0.0005),
+    ("0,16 % — Kraken Pro, volumen alto", 0.0016, 0.0007),
+    ("0,26 % — Kraken taker, cuenta nueva", 0.0026, 0.0010),
+    ("0,40 % — Kraken Instant Buy", 0.0040, 0.0015),
+    ("0,60 % — Coinbase Advanced", 0.0060, 0.0020),
+    ("1,49 % — Coinbase básico", 0.0149, 0.0025),
+]
+
+
+def fees(cfg, timeframe="1d"):
+    """Cuanto aguanta la estrategia segun lo que cobre el exchange.
+
+    Es la medida que decide si esto tiene sentido con dinero real: el backtest
+    por defecto usa 0,10 % por lado, que es la tarifa de una cuenta con mucho
+    volumen. Una cuenta nueva paga bastante mas.
+    """
+    print(f"{'comisión por lado':>36}{'retorno':>10}{'ops':>5}{'comisiones':>12}{'PF':>7}")
+    print("-" * 70)
+    for name, fee, slip in FEE_TIERS:
+        c = Config(**{**cfg.to_dict(), "fee_rate": fee, "slippage_rate": slip})
+        st, _ = run(c, verbose=False, timeframe=timeframe)
+        pf = f"{st['profit_factor']:.2f}" if st["profit_factor"] else "n/a"
+        print(f"{name:>36}{st['total_return']*100:>9.2f}%{st['trades_closed']:>5}"
+              f"{'$'+format(st['fees_paid'],'.2f'):>12}{pf:>7}")
+    print("-" * 70)
+    print("  El punto en el que deja de compensar está entre 0,26 % y 0,40 %.")
+    print("  Una cuenta nueva de Kraken paga 0,26 % de taker; Instant Buy, más.")
+    print("  Comprueba la tarifa que te aplican a ti antes de dar por bueno nada.")
+
+
 def ablation(cfg, timeframe="1d"):
     """Mide cada mejora aislada. Sin esto es imposible saber cual aporta."""
     tests = [("BASE (nada)", set())]
@@ -234,9 +276,13 @@ if __name__ == "__main__":
     ap.add_argument("--tf", default="1d", choices=["1h", "1d"], help="temporalidad")
     ap.add_argument("--ablation", action="store_true",
                     help="mide cada mejora por separado")
+    ap.add_argument("--fees", action="store_true",
+                    help="sensibilidad a la comisión del exchange")
     a = ap.parse_args()
     CONFIG.starting_cash = a.cash
-    if a.ablation:
+    if a.fees:
+        fees(CONFIG, a.tf)
+    elif a.ablation:
         ablation(CONFIG, a.tf)
     elif a.compare:
         compare(CONFIG, a.tf)
