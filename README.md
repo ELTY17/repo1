@@ -84,8 +84,21 @@ Arquitectura inspirada en [TauricResearch/TradingAgents](https://github.com/Taur
 (framework multi-agente LLM para trading) y en la gestión de riesgo de
 [freqtrade](https://github.com/freqtrade/freqtrade).
 
-## Demo estática
+## Demos estáticas
 
-`demo/mesa.html` reproduce visualmente la sesión de backtest (las 14 órdenes
-reales, la curva de capital real) sin necesidad de servidor: se abre con doble clic.
-El dashboard en vivo con datos actualizados es el de `python3 run.py`.
+Ambas se abren con doble clic, sin servidor:
+
+- **`demo/taller.html`** — los seis agentes dibujados. Los tres analistas mandan su
+  voto por tubo neumático al **Director**, que decide comprar o esperar; Riesgo
+  dimensiona o veta, y Ejecución dispara. Cada voto es el valor real calculado por
+  ese agente en esa barra del backtest (Noticias no vota en histórico: los titulares
+  antiguos no son recuperables, así que su voto cuenta como cero).
+- **`demo/mesa.html`** — el mismo backtest en formato panel de instrumentos.
+
+El dashboard con datos en vivo es el de `python3 run.py`.
+
+### El Director
+
+En el código, el Director es el **orquestador** (`bot/orchestrator.py`): combina los
+tres votos direccionales con sus pesos, y solo abre posición si el agente de riesgo
+lo aprueba. Los otros cinco agentes son hilos independientes con su propia cadencia.

@@ -1,0 +1,684 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Taller de Seis Agentes</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Archivo:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+:root{
+  --ground:#E3E9E5; --surface:#F5F8F6; --panel:#FFFFFF; --sunk:#D5DEDA;
+  --line:#B8C6C0; --hair:#D2DCD7;
+  --ink:#14231E; --dim:#51655D; --faint:#7E938B;
+  --brass:#9C6A14; --brass-2:#C99236; --brass-soft:#F0E4CB;
+  --pos:#0F7A57; --pos-soft:#D3EAE0;
+  --neg:#AB3B27; --neg-soft:#F6DED8;
+  --tube:#A98B5B;
+  --disp:"Bricolage Grotesque",Georgia,serif;
+  --ui:"Archivo",system-ui,-apple-system,sans-serif;
+  --num:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --ground:#0A1513; --surface:#11201D; --panel:#162924; --sunk:#0D1A18;
+  --line:#264039; --hair:#1D332E;
+  --ink:#DBE9E3; --dim:#87A199; --faint:#5F7A73;
+  --brass:#D69D45; --brass-2:#EBB963; --brass-soft:#33280E;
+  --pos:#45C89B; --pos-soft:#0F2C23;
+  --neg:#E58068; --neg-soft:#2E1512;
+  --tube:#7A6238;
+}}
+:root[data-theme="dark"]{
+  --ground:#0A1513; --surface:#11201D; --panel:#162924; --sunk:#0D1A18;
+  --line:#264039; --hair:#1D332E;
+  --ink:#DBE9E3; --dim:#87A199; --faint:#5F7A73;
+  --brass:#D69D45; --brass-2:#EBB963; --brass-soft:#33280E;
+  --pos:#45C89B; --pos-soft:#0F2C23;
+  --neg:#E58068; --neg-soft:#2E1512;
+  --tube:#7A6238;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--ground);color:var(--ink);font-family:var(--ui);
+  font-size:15px;line-height:1.55;-webkit-font-smoothing:antialiased}
+h1,h2,h3{margin:0;text-wrap:balance}
+.num{font-family:var(--num);font-variant-numeric:tabular-nums}
+.pos{color:var(--pos)} .neg{color:var(--neg)} .dim{color:var(--dim)}
+.page{max-width:1240px;margin:0 auto;padding:22px 20px 56px}
+
+/* cabecera */
+header.top{display:flex;flex-wrap:wrap;gap:16px;align-items:flex-end;
+  justify-content:space-between;border-bottom:2px solid var(--ink);padding-bottom:14px}
+header.top h1{font-family:var(--disp);font-size:clamp(28px,5vw,44px);font-weight:800;
+  letter-spacing:-.03em;line-height:.95}
+header.top p{margin:7px 0 0;color:var(--dim);font-size:13.5px;max-width:56ch}
+.ctrls{display:flex;gap:7px;align-items:center;flex-wrap:wrap}
+button{font-family:var(--ui);font-size:12px;font-weight:600;letter-spacing:.02em;
+  padding:7px 13px;border:1px solid var(--line);background:var(--surface);color:var(--ink);
+  border-radius:2px;cursor:pointer;transition:background .15s,border-color .15s}
+button:hover{border-color:var(--brass);background:var(--brass-soft)}
+button[aria-pressed="true"]{background:var(--brass);border-color:var(--brass);color:#fff}
+:root[data-theme="dark"] button[aria-pressed="true"],
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) button[aria-pressed="true"]{color:#16110A}}
+button:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
+
+/* escenario */
+.stage{position:relative;margin-top:18px;background:var(--surface);
+  border:1px solid var(--line);aspect-ratio:1000/540;overflow:hidden}
+.stage svg{position:absolute;inset:0;width:100%;height:100%}
+.floor{position:absolute;inset:auto 0 0 0;height:20%;
+  background:linear-gradient(to bottom,transparent,var(--sunk))}
+.ov{position:absolute;transform:translate(-50%,0);text-align:center;pointer-events:none}
+.nm{font-family:var(--disp);font-weight:700;font-size:clamp(9px,1.15vw,14px);
+  letter-spacing:-.01em;line-height:1.1}
+.jb{font-size:clamp(7px,.82vw,10px);color:var(--faint);letter-spacing:.05em;
+  text-transform:uppercase;font-weight:600}
+.bub{position:absolute;transform:translate(-50%,-100%);max-width:23%;
+  background:var(--panel);border:1.5px solid var(--ink);border-radius:9px 9px 9px 2px;
+  padding:5px 8px;font-family:var(--num);font-size:clamp(7px,.86vw,11px);line-height:1.35;
+  opacity:0;transition:opacity .25s,transform .25s;pointer-events:none;
+  box-shadow:3px 3px 0 var(--sunk)}
+.bub.show{opacity:1;transform:translate(-50%,-108%)}
+.bub b{font-weight:600}
+@media(max-width:620px){.bub{display:none}}
+
+/* pieza del director */
+.verdict{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:0;
+  margin-top:16px;border:1px solid var(--line);background:var(--panel)}
+@media(max-width:800px){.verdict{grid-template-columns:1fr}}
+.vleft{padding:16px 18px;border-right:1px solid var(--hair)}
+@media(max-width:800px){.vleft{border-right:none;border-bottom:1px solid var(--hair)}}
+.eyebrow{font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--faint)}
+.call{font-family:var(--disp);font-size:clamp(26px,4.4vw,40px);font-weight:800;
+  letter-spacing:-.03em;line-height:1;margin-top:6px}
+.callwhy{font-size:13px;color:var(--dim);margin-top:6px;min-height:38px}
+.votes{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--hair);
+  border:1px solid var(--hair);margin-top:14px}
+.votes div{background:var(--panel);padding:8px 10px}
+.votes dt{font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--faint);
+  font-weight:700}
+.votes dd{margin:2px 0 0;font-family:var(--num);font-size:15px;font-weight:500}
+.meter{margin-top:14px}
+.mtrack{height:9px;background:var(--sunk);position:relative;border:1px solid var(--hair)}
+.mtrack i{position:absolute;top:0;bottom:0;left:50%;background:var(--brass);transition:width .5s,transform .5s}
+.mthr{position:absolute;top:-3px;bottom:-3px;width:2px;background:var(--ink)}
+.mlabels{display:flex;justify-content:space-between;font-family:var(--num);font-size:9.5px;
+  color:var(--faint);margin-top:3px}
+.vright{padding:16px 18px}
+.money{font-family:var(--num);font-size:32px;font-weight:600;letter-spacing:-.02em;margin-top:5px}
+.mini{width:100%;height:74px;display:block;margin-top:10px}
+.mstat{display:flex;flex-wrap:wrap;gap:14px;margin-top:10px;font-family:var(--num);
+  font-size:11.5px;color:var(--dim)}
+
+/* tablas */
+h2.sec{font-family:var(--disp);font-size:13px;font-weight:700;letter-spacing:.02em;
+  color:var(--dim);margin:26px 0 10px;display:flex;align-items:center;gap:12px}
+h2.sec::after{content:"";flex:1;height:1px;background:var(--hair)}
+.cols{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:24px;align-items:start}
+@media(max-width:900px){.cols{grid-template-columns:1fr}}
+.box{background:var(--panel);border:1px solid var(--line);padding:12px}
+table{width:100%;border-collapse:collapse;font-size:12.5px}
+th{text-align:left;font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--faint);font-weight:700;padding:0 7px 6px;border-bottom:1px solid var(--line)}
+td{padding:6px 7px;border-bottom:1px solid var(--hair);font-family:var(--num);
+  font-variant-numeric:tabular-nums}
+tbody tr:last-child td{border-bottom:none}
+td.sym{font-family:var(--ui);font-weight:600}
+td.why{font-family:var(--ui);color:var(--dim);font-size:11.5px}
+.tag{display:inline-block;padding:1px 6px;border-radius:2px;font-family:var(--num);
+  font-size:10px;font-weight:600}
+.tag.BUY{background:var(--pos-soft);color:var(--pos)}
+.tag.SELL{background:var(--neg-soft);color:var(--neg)}
+.wire{font-family:var(--num);font-size:11.5px;line-height:1.65;height:250px;overflow:hidden;
+  display:flex;flex-direction:column-reverse}
+.wire p{margin:0;padding:2px 0;border-bottom:1px solid var(--hair);display:flex;gap:8px}
+.wire p:first-child{border-bottom:none}
+.wire .who{color:var(--brass);min-width:62px;font-weight:500}
+
+.truth{margin-top:30px;background:var(--panel);border:1px solid var(--line);
+  border-top:3px solid var(--brass);padding:18px 20px}
+.truth h3{font-family:var(--disp);font-size:17px;font-weight:700;margin-bottom:7px}
+.truth p{margin:0 0 9px;font-size:13.5px;color:var(--dim);max-width:70ch}
+.truth strong{color:var(--ink)}
+footer{margin-top:22px;font-size:11.5px;color:var(--faint);line-height:1.65}
+
+/* --- animaciones de los muñecos --- */
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes sweep{0%,100%{transform:translateX(-9px)}50%{transform:translateX(9px)}}
+@keyframes ping{0%{r:14;opacity:.75}100%{r:46;opacity:0}}
+@keyframes blink{0%,45%,100%{opacity:1}50%,95%{opacity:.62}}
+@keyframes tapeout{0%{transform:scaleY(.2)}100%{transform:scaleY(1)}}
+@keyframes shake{0%,100%{transform:translate(0,0)}25%{transform:translate(-1.5px,1px)}
+  75%{transform:translate(1.5px,-1px)}}
+
+.mn.busy{animation:bob 1.05s ease-in-out infinite}
+.dish{transform-box:fill-box;transform-origin:center;animation:spin 9s linear infinite}
+.busy .dish{animation-duration:1.5s}
+.pupil{transform-box:fill-box;transform-origin:center}
+.busy .pupil{animation:sweep 1.15s ease-in-out infinite}
+.ping{opacity:0}
+.busy .ping{animation:ping 1.5s ease-out infinite}
+.busy .ping.b{animation-delay:.5s}
+.lamp{transition:fill .3s,opacity .3s}
+.lamp.lit{animation:blink 1.6s ease-in-out infinite}
+.tape{transform-box:fill-box;transform-origin:top;transform:scaleY(.2);transition:transform .5s}
+.busy .tape{animation:tapeout .6s ease-out forwards}
+.valve{transform-box:fill-box;transform-origin:center;transition:transform .7s ease-out}
+.wheel.turn{transform:rotate(150deg)}
+.hammer{transition:transform .12s cubic-bezier(.3,1.6,.5,1)}
+.hammer.slam{transform:translateY(26px)}
+.beam{transform-box:fill-box;transform-origin:center;transition:transform .8s cubic-bezier(.4,1.5,.5,1)}
+.mn.alarm{animation:shake .18s linear 4}
+.ticket{opacity:0;transition:opacity .3s,transform .5s}
+.ticket.out{opacity:1;transform:translate(0,34px)}
+.stamp{opacity:0;transform-box:fill-box;transform-origin:center;transform:scale(2.4) rotate(-14deg);
+  transition:opacity .18s,transform .18s}
+.stamp.hit{opacity:1;transform:scale(1) rotate(-14deg)}
+.cap{opacity:0}
+@media (prefers-reduced-motion:reduce){
+  .mn.busy,.dish,.busy .pupil,.busy .ping,.lamp.lit,.busy .tape,.mn.alarm{animation:none}
+}
+</style>
+
+</head><body>
+<div class="page">
+  <header class="top">
+    <div>
+      <h1>Taller de Seis Agentes</h1>
+      <p>Tres analistas mandan su voto por tubo neumático al Director. El Director
+         decide. Riesgo puede vetarlo. Ejecución aprieta el botón. Todo lo que dicen
+         son cifras medidas de una sesión real.</p>
+    </div>
+    <div class="ctrls">
+      <button id="play" aria-pressed="true">⏸ Pausa</button>
+      <button id="sp1" aria-pressed="true">×1</button>
+      <button id="sp2" aria-pressed="false">×2</button>
+      <button id="rst">↺ Reiniciar</button>
+    </div>
+  </header>
+
+  <div class="stage" id="stage">
+    <div class="floor"></div>
+    <svg viewBox="0 0 1000 540" id="scene" aria-label="Seis agentes conectados por tubos neumáticos">
+      <defs>
+        <linearGradient id="brassG" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="var(--brass-2)"/><stop offset="100%" stop-color="var(--brass)"/>
+        </linearGradient>
+      </defs>
+
+      <!-- tubos -->
+      <g fill="none" stroke="var(--tube)" stroke-width="7" stroke-linecap="round" opacity=".5">
+        <path id="t-news"   d="M150 116 C 290 116, 330 214, 392 236"/>
+        <path id="t-scan"   d="M160 272 C 280 272, 320 268, 392 268"/>
+        <path id="t-tech"   d="M154 424 C 290 424, 330 326, 392 300"/>
+        <path id="t-risk"   d="M540 268 C 600 268, 620 268, 664 268"/>
+        <path id="t-exec"   d="M772 268 C 820 268, 830 268, 862 268"/>
+      </g>
+      <g fill="none" stroke="var(--surface)" stroke-width="2.5" stroke-dasharray="7 9" opacity=".8">
+        <use href="#t-news"/><use href="#t-scan"/><use href="#t-tech"/>
+        <use href="#t-risk"/><use href="#t-exec"/>
+      </g>
+
+      <!-- ============ NOTICIAS ============ -->
+      <g transform="translate(110,116)"><g class="mn" id="mn-news">
+        <ellipse cx="0" cy="76" rx="52" ry="8" fill="var(--sunk)"/>
+        <g class="dish"><path d="M0 -78 l26 -20 -26 34 -26 -34 z" fill="url(#brassG)"/></g>
+        <line x1="0" y1="-46" x2="0" y2="-72" stroke="var(--brass)" stroke-width="4"/>
+        <path d="M-38 68 L-27 -46 L27 -46 L38 68 Z" fill="var(--panel)" stroke="var(--ink)" stroke-width="3"/>
+        <rect x="-24" y="-32" width="48" height="20" rx="3" fill="var(--sunk)" stroke="var(--ink)" stroke-width="2.5"/>
+        <rect class="lamp" id="eye-news" x="-17" y="-27" width="34" height="10" rx="2" fill="var(--brass)"/>
+        <rect x="-20" y="6" width="40" height="5" rx="2" fill="var(--ink)"/>
+        <g class="tape"><rect x="-13" y="11" width="26" height="46" fill="var(--surface)" stroke="var(--ink)" stroke-width="2"/>
+          <line x1="-7" y1="21" x2="7" y2="21" stroke="var(--dim)" stroke-width="2"/>
+          <line x1="-7" y1="30" x2="7" y2="30" stroke="var(--dim)" stroke-width="2"/>
+          <line x1="-7" y1="39" x2="3" y2="39" stroke="var(--dim)" stroke-width="2"/></g>
+        <rect x="-30" y="68" width="16" height="9" fill="var(--ink)"/>
+        <rect x="14" y="68" width="16" height="9" fill="var(--ink)"/>
+      </g></g>
+
+      <!-- ============ ESCANER ============ -->
+      <g transform="translate(110,272)"><g class="mn" id="mn-scan">
+        <ellipse cx="0" cy="62" rx="56" ry="8" fill="var(--sunk)"/>
+        <circle class="ping" cx="0" cy="0" r="14" fill="none" stroke="var(--brass)" stroke-width="3"/>
+        <circle class="ping b" cx="0" cy="0" r="14" fill="none" stroke="var(--brass)" stroke-width="3"/>
+        <path d="M-46 -10 L-28 -44 L28 -44 L46 -10 L28 30 L-28 30 Z" fill="var(--panel)"
+              stroke="var(--ink)" stroke-width="3"/>
+        <rect x="-32" y="-20" width="64" height="17" rx="8" fill="var(--sunk)" stroke="var(--ink)" stroke-width="2.5"/>
+        <rect class="pupil lamp" id="eye-scan" x="-6" y="-17" width="12" height="11" rx="2" fill="var(--brass)"/>
+        <path d="M-20 30 l-6 26" stroke="var(--ink)" stroke-width="4" stroke-linecap="round"/>
+        <path d="M-6 30 l-2 26" stroke="var(--ink)" stroke-width="4" stroke-linecap="round"/>
+        <path d="M8 30 l2 26" stroke="var(--ink)" stroke-width="4" stroke-linecap="round"/>
+        <path d="M22 30 l6 26" stroke="var(--ink)" stroke-width="4" stroke-linecap="round"/>
+      </g></g>
+
+      <!-- ============ TECNICO ============ -->
+      <g transform="translate(110,424)"><g class="mn" id="mn-tech">
+        <ellipse cx="0" cy="66" rx="50" ry="8" fill="var(--sunk)"/>
+        <path d="M0 -56 L48 4 L0 64 L-48 4 Z" fill="var(--panel)" stroke="var(--ink)" stroke-width="3"/>
+        <circle cx="0" cy="2" r="27" fill="var(--sunk)" stroke="var(--ink)" stroke-width="2.5"/>
+        <clipPath id="scope"><circle cx="0" cy="2" r="24"/></clipPath>
+        <g clip-path="url(#scope)">
+          <polyline id="wave" points="" fill="none" stroke="var(--brass)" stroke-width="2.5"/>
+        </g>
+        <circle class="lamp" id="eye-tech" cx="0" cy="-34" r="6" fill="var(--brass)"/>
+        <circle cx="-44" cy="18" r="9" fill="var(--panel)" stroke="var(--ink)" stroke-width="2.5"/>
+        <circle cx="44" cy="18" r="9" fill="var(--panel)" stroke="var(--ink)" stroke-width="2.5"/>
+        <line id="ndl-l" x1="-44" y1="18" x2="-49" y2="12" stroke="var(--neg)" stroke-width="2.5"/>
+        <line id="ndl-r" x1="44" y1="18" x2="49" y2="12" stroke="var(--pos)" stroke-width="2.5"/>
+      </g></g>
+
+      <!-- ============ DIRECTOR ============ -->
+      <g transform="translate(466,268)"><g class="mn" id="mn-dir">
+        <ellipse cx="0" cy="122" rx="86" ry="11" fill="var(--sunk)"/>
+        <!-- balanza -->
+        <line x1="0" y1="-104" x2="0" y2="-84" stroke="var(--brass)" stroke-width="5"/>
+        <g class="beam" id="beam">
+          <line x1="-52" y1="-104" x2="52" y2="-104" stroke="var(--brass)" stroke-width="7" stroke-linecap="round"/>
+          <circle cx="-52" cy="-104" r="8" fill="var(--neg)"/>
+          <circle cx="52" cy="-104" r="8" fill="var(--pos)"/>
+        </g>
+        <!-- cuerpo: domo pentagonal -->
+        <path d="M-74 118 L-74 -30 L0 -84 L74 -30 L74 118 Z" fill="var(--panel)"
+              stroke="var(--ink)" stroke-width="3.5"/>
+        <!-- tres lamparas -->
+        <circle class="lamp" id="lamp-news" cx="-34" cy="-16" r="11" fill="var(--sunk)"
+                stroke="var(--ink)" stroke-width="2.5"/>
+        <circle class="lamp" id="lamp-scan" cx="0" cy="-16" r="11" fill="var(--sunk)"
+                stroke="var(--ink)" stroke-width="2.5"/>
+        <circle class="lamp" id="lamp-tech" cx="34" cy="-16" r="11" fill="var(--sunk)"
+                stroke="var(--ink)" stroke-width="2.5"/>
+        <!-- placa del pecho -->
+        <rect x="-58" y="10" width="116" height="52" rx="4" fill="var(--sunk)"
+              stroke="var(--ink)" stroke-width="2.5"/>
+        <text id="chest" x="0" y="43" text-anchor="middle" font-family="IBM Plex Mono,monospace"
+              font-size="24" font-weight="600" fill="var(--dim)">· · ·</text>
+        <rect x="-58" y="74" width="116" height="10" rx="3" fill="var(--brass-soft)" stroke="var(--ink)" stroke-width="2"/>
+        <rect id="chestbar" x="-58" y="74" width="0" height="10" rx="3" fill="var(--brass)"/>
+        <rect x="-52" y="118" width="26" height="12" fill="var(--ink)"/>
+        <rect x="26" y="118" width="26" height="12" fill="var(--ink)"/>
+      </g></g>
+
+      <!-- ============ RIESGO ============ -->
+      <g transform="translate(718,268)"><g class="mn" id="mn-risk">
+        <ellipse cx="0" cy="80" rx="54" ry="8" fill="var(--sunk)"/>
+        <rect x="-48" y="-24" width="96" height="102" rx="5" fill="var(--panel)"
+              stroke="var(--ink)" stroke-width="3.5"/>
+        <g transform="translate(0,-46)"><g class="valve wheel" id="wheel">
+          <circle r="22" fill="none" stroke="var(--brass)" stroke-width="6"/>
+          <line x1="-22" y1="0" x2="22" y2="0" stroke="var(--brass)" stroke-width="5"/>
+          <line x1="0" y1="-22" x2="0" y2="22" stroke="var(--brass)" stroke-width="5"/>
+        </g></g>
+        <line x1="0" y1="-24" x2="0" y2="-34" stroke="var(--ink)" stroke-width="4"/>
+        <rect x="-32" y="-8" width="64" height="30" rx="3" fill="var(--sunk)"
+              stroke="var(--ink)" stroke-width="2.5"/>
+        <text id="riskface" x="0" y="14" text-anchor="middle" font-family="IBM Plex Mono,monospace"
+              font-size="16" font-weight="600" fill="var(--dim)">2%</text>
+        <rect x="-34" y="34" width="68" height="8" rx="3" fill="var(--hair)"/>
+        <rect x="-34" y="50" width="68" height="8" rx="3" fill="var(--hair)"/>
+        <g transform="translate(0,20)"><g class="stamp" id="veto">
+          <rect x="-46" y="-17" width="92" height="34" rx="3" fill="none" stroke="var(--neg)" stroke-width="4"/>
+          <text x="0" y="8" text-anchor="middle" font-family="Bricolage Grotesque,serif"
+                font-size="24" font-weight="800" fill="var(--neg)">VETO</text>
+        </g></g>
+      </g></g>
+
+      <!-- ============ EJECUCION ============ -->
+      <g transform="translate(902,268)"><g class="mn" id="mn-exec">
+        <ellipse cx="0" cy="82" rx="48" ry="8" fill="var(--sunk)"/>
+        <rect x="-40" y="-62" width="10" height="140" fill="var(--ink)"/>
+        <rect x="30" y="-62" width="10" height="140" fill="var(--ink)"/>
+        <rect x="-44" y="-70" width="88" height="12" rx="3" fill="url(#brassG)" stroke="var(--ink)" stroke-width="2.5"/>
+        <g class="hammer" id="hammer">
+          <rect x="-26" y="-52" width="52" height="34" rx="3" fill="var(--panel)"
+                stroke="var(--ink)" stroke-width="3"/>
+          <circle class="lamp" id="eye-exec" cx="0" cy="-35" r="6" fill="var(--brass)"/>
+        </g>
+        <rect x="-38" y="46" width="76" height="32" rx="3" fill="var(--sunk)"
+              stroke="var(--ink)" stroke-width="2.5"/>
+        <rect x="-30" y="20" width="60" height="20" rx="2" fill="var(--panel)" stroke="var(--ink)" stroke-width="2.5"/>
+        <g class="ticket" id="ticket">
+          <rect x="-24" y="46" width="48" height="26" fill="var(--surface)" stroke="var(--ink)" stroke-width="2"/>
+          <line x1="-16" y1="55" x2="16" y2="55" stroke="var(--dim)" stroke-width="2"/>
+          <line x1="-16" y1="63" x2="8" y2="63" stroke="var(--dim)" stroke-width="2"/>
+        </g>
+      </g></g>
+
+      <!-- capsulas -->
+      <g id="caps"></g>
+    </svg>
+
+    <div class="ov" style="left:11%;top:37%"><div class="nm">Noticias</div><div class="jb">titulares</div></div>
+    <div class="ov" style="left:11%;top:62%"><div class="nm">Escáner</div><div class="jb">fuerza relativa</div></div>
+    <div class="ov" style="left:11%;top:92%"><div class="nm">Técnico</div><div class="jb">indicadores</div></div>
+    <div class="ov" style="left:46.6%;top:75.5%"><div class="nm" style="color:var(--brass)">Director</div><div class="jb">decide</div></div>
+    <div class="ov" style="left:71.8%;top:65.5%"><div class="nm">Riesgo</div><div class="jb">veta</div></div>
+    <div class="ov" style="left:90.2%;top:71.5%"><div class="nm">Ejecución</div><div class="jb">aprieta</div></div>
+
+    <div class="bub" id="b-news" style="left:26%;top:17%"></div>
+    <div class="bub" id="b-scan" style="left:26%;top:45%"></div>
+    <div class="bub" id="b-tech" style="left:26%;top:73%"></div>
+    <div class="bub" id="b-dir"  style="left:46.6%;top:24%"></div>
+    <div class="bub" id="b-risk" style="left:71.8%;top:30%"></div>
+    <div class="bub" id="b-exec" style="left:87%;top:30%"></div>
+  </div>
+
+  <section class="verdict">
+    <div class="vleft">
+      <div class="eyebrow">El Director dice</div>
+      <div class="call" id="call">Esperando</div>
+      <div class="callwhy" id="callwhy">Los analistas todavía no han mandado su cápsula.</div>
+      <dl class="votes">
+        <div><dt>Noticias</dt><dd id="v-news" class="dim">—</dd></div>
+        <div><dt>Escáner</dt><dd id="v-scan" class="dim">—</dd></div>
+        <div><dt>Técnico</dt><dd id="v-tech" class="dim">—</dd></div>
+      </dl>
+      <div class="meter">
+        <div class="mtrack"><i id="mfill" style="width:0"></i><span class="mthr" id="mthr"></span></div>
+        <div class="mlabels"><span>−1,00</span><span>umbral de compra +0,35</span><span>+1,00</span></div>
+      </div>
+    </div>
+    <div class="vright">
+      <div class="eyebrow">Capital de la mesa</div>
+      <div class="money" id="eq">$100.00</div>
+      <svg class="mini" id="mini" viewBox="0 0 460 74" aria-label="Curva de capital"></svg>
+      <div class="mstat" id="mstat"></div>
+    </div>
+  </section>
+
+  <div class="cols">
+    <div>
+      <h2 class="sec">Órdenes que ha firmado el Director</h2>
+      <div class="box" style="overflow-x:auto"><table id="blot"></table></div>
+    </div>
+    <div>
+      <h2 class="sec">Lo que se dicen entre ellos</h2>
+      <div class="box wire" id="wire"></div>
+    </div>
+  </div>
+
+  <section class="truth">
+    <h3>Los muñecos son dibujos; las cifras no</h3>
+    <p>Cada voto que sale de un tubo es el valor real que ese agente calculó en esa barra
+      del <strong>backtest</strong>: velas horarias auténticas de Kraken y Yahoo Finance,
+      solo con datos disponibles hasta esa barra, con comisión del 0,10&nbsp;% y
+      deslizamiento del 0,05&nbsp;%. El agente de <strong>Noticias no vota en el histórico</strong>
+      —los titulares antiguos no son recuperables—, y por eso dice «sin histórico» y su
+      voto cuenta como cero.</p>
+    <p>La sesión completa terminó en <strong>−1,16&nbsp;%</strong>: siete operaciones,
+      dos ganadoras y cinco perdedoras. Siete operaciones no demuestran nada.
+      <strong>Ninguna ruta de este código puede mover dinero real.</strong></p>
+  </section>
+
+  <footer>
+    Los seis agentes existen en el repositorio: Noticias, Escáner, Técnico, Riesgo y
+    Ejecución son hilos independientes; el Director es el orquestador que combina los
+    votos (técnico 0,45 · escáner 0,30 · noticias 0,25) y consulta a Riesgo antes de
+    cada orden. El rendimiento pasado no predice el futuro. Esto no es asesoramiento financiero.
+  </footer>
+</div>
+
+<script>
+const D = {"market": {"BTC-USD": {"symbol": "BTC-USD", "label": "Bitcoin", "kind": "crypto", "price": 78810.2, "chg_24h": 0.004057753877161563, "source": "live", "spark": [78913.2, 78905.0, 78656.6, 78555.8, 78303.5, 78447.4, 78368.1, 78733.2, 78538.1, 78402.1, 78421.9, 77932.6, 78534.0, 78893.4, 78730.0, 78491.7, 78426.8, 78438.1, 78482.4, 78485.0, 78544.9, 78449.6, 78762.1, 78878.4, 78716.0, 78631.5, 79153.4, 78927.5, 79155.6, 79262.5, 79688.3, 78935.3, 78911.0, 79310.9, 79586.0, 79125.4, 78946.3, 78576.6, 78785.1, 78810.2]}, "ETH-USD": {"symbol": "ETH-USD", "label": "Ethereum", "kind": "crypto", "price": 2495.95, "chg_24h": 0.00321549870375204, "source": "live", "spark": [2484.11, 2485.37, 2478.42, 2472.3, 2467.94, 2478.59, 2476.31, 2491.33, 2480.59, 2474.04, 2471.5, 2458.15, 2485.04, 2498.26, 2496.55, 2487.95, 2486.68, 2482.3, 2483.01, 2482.57, 2488.67, 2484.92, 2495.4, 2497.13, 2494.02, 2488.58, 2508.4, 2495.77, 2500.75, 2510.13, 2519.76, 2490.24, 2486.92, 2500.57, 2510.93, 2501.92, 2498.71, 2489.71, 2495.49, 2495.95]}, "SOL-USD": {"symbol": "SOL-USD", "label": "Solana", "kind": "crypto", "price": 103.64, "chg_24h": -0.0005785920925747146, "source": "live", "spark": [103.28, 103.35, 102.99, 102.94, 102.66, 102.94, 102.99, 103.66, 103.36, 102.85, 103.06, 102.64, 103.32, 104.35, 104.21, 103.7, 103.35, 103.23, 103.1, 103.01, 103.41, 103.37, 103.78, 103.78, 103.46, 103.31, 104.4, 104.04, 104.52, 104.58, 104.82, 103.5, 103.77, 104.23, 104.66, 103.78, 103.48, 103.05, 103.37, 103.64]}, "SPY": {"symbol": "SPY", "label": "S&P 500 (SPY)", "kind": "equity", "price": 763.0250854492188, "chg_24h": -0.012827537662522648, "source": "live", "spark": [763.7695, 763.59, 762.5399, 761.68, 761.21, 761.36, 761.7, 765.27, 766.295, 764.85, 764.71, 765.32, 765.48, 765.15, 768.67, 772.94, 772.435, 772.6687, 773.73, 773.41, 773.11, 771.21, 769.43, 770.66, 769.852, 769.88, 770.01, 770.24, 766.7, 767.805, 767.1, 767.475, 767.765, 766.98, 765.99, 763.98, 761.54, 761.63, 763.08, 763.0251]}, "QQQ": {"symbol": "QQQ", "label": "Nasdaq 100 (QQQ)", "kind": "equity", "price": 716.4949951171875, "chg_24h": -0.0017206824086628547, "source": "live", "spark": [708.61, 710.24, 708.99, 708.065, 706.88, 707.65, 707.655, 709.2, 709.645, 708.385, 708.32, 708.53, 708.75, 709.25, 713.075, 717.73, 716.78, 716.97, 718.585, 717.73, 717.61, 719.59, 717.44, 718.61, 717.505, 717.5629, 717.95, 719.06, 717.76, 720.085, 719.075, 720.26, 719.81, 718.965, 718.3806, 718.29, 714.8, 714.96, 716.63, 716.495]}}, "composite": [{"symbol": "BTC-USD", "votes": {"news": 0.083, "scanner": -0.159, "technical": -0.018}, "score": -0.035, "consensus": 0.0}, {"symbol": "ETH-USD", "votes": {"news": 1.0, "scanner": -0.068, "technical": -0.008}, "score": 0.226, "consensus": 0.0}, {"symbol": "SOL-USD", "votes": {"news": 0.133, "scanner": -0.245, "technical": -0.042}, "score": -0.059, "consensus": 0.0}, {"symbol": "SPY", "votes": {"news": 0.083, "scanner": -0.485, "technical": -0.09}, "score": -0.165, "consensus": 0.33}, {"symbol": "QQQ", "votes": {"news": -0.167, "scanner": -0.187, "technical": 0.008}, "score": -0.094, "consensus": 0.67}], "headlines": [{"title": "Ethereum Volume Jumps 20% While Bulls Push Toward $2,550 Breakout - Yellow.com", "score": 4, "kind": "crypto"}, {"title": "If a Stock Market Crash Is Coming, History Says This Is the Smartest Move to Make - Yahoo Finance", "score": -3, "kind": "equity"}, {"title": "'The mirror has turned': A strategist lays out a path for the S&P 500 to soar 30% by 2027 - businessinsider.com", "score": 3, "kind": "equity"}, {"title": "Bitcoin just flashed a bullish golden cross signal. Here's what that means for the top crypto. - businessinsider.com", "score": 3, "kind": "crypto"}, {"title": "Bitcoin SOPR metric sees longest profit run of 2026 as new analysis challenges bear market", "score": -2, "kind": "crypto"}, {"title": "New York town weighs crypto mining and AI data center ban", "score": -2, "kind": "crypto"}, {"title": "Stocks Sink in Broad AI Rout Sparked by China's DeepSeek", "score": -2, "kind": "equity"}, {"title": "DeepSeek Won't Sink U.S. AI Titans", "score": -2, "kind": "equity"}], "agents": [{"name": "news", "role": "Lee titulares de mercado y mide el sentimiento", "emoji": "N", "interval": 180}, {"name": "scanner", "role": "Escanea el universo y rankea por fuerza relativa", "emoji": "S", "interval": 60}, {"name": "technical", "role": "Indicadores tecnicos y niveles de entrada/stop", "emoji": "T", "interval": 30}, {"name": "risk", "role": "Dimensiona posiciones, pone stops y puede vetar (kill switch)", "emoji": "R", "interval": 15}, {"name": "execution", "role": "Ejecuta ordenes y vigila stops / take-profit", "emoji": "E", "interval": 10}], "config": {"starting_cash": 100.0, "risk_per_trade": 0.02, "max_positions": 3, "max_drawdown_stop": 0.25, "buy_threshold": 0.35, "weights": {"technical": 0.45, "scanner": 0.3, "news": 0.25}}, "backtest": {"stats": {"equity": 98.843418, "cash": 98.843418, "starting_cash": 100.0, "total_return": -0.011566, "realized_pnl": -0.915404, "unrealized_pnl": 0, "drawdown": -0.028557, "peak_equity": 101.749063, "trades_closed": 7, "wins": 2, "losses": 5, "win_rate": 0.285714, "profit_factor": 0.715146, "fees_paid": 0.48168}, "curve": [100.0, 100.5072, 100.7452, 100.886, 101.4726, 101.2111, 101.2681, 101.5966, 101.4927, 101.4122, 101.7491, 101.7491, 101.7022, 101.2878, 100.8375, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6423, 100.6252, 100.5941, 100.9112, 101.0441, 101.132, 101.1211, 101.1211, 101.1211, 101.1211, 101.1211, 101.1211, 101.1211, 101.1211, 101.1211, 101.1211, 101.1211, 101.1211, 101.1211, 101.1211, 101.1211, 101.1211, 101.1211, 101.1211, 101.1211, 101.1211, 101.1211, 101.1211, 101.1211, 101.1211, 101.1211, 101.1211, 101.1211, 101.1211, 101.1211, 101.1211, 101.1211, 100.521, 100.6439, 100.9151, 101.1993, 100.9013, 101.0449, 100.6408, 100.8424, 100.6265, 100.7056, 100.646, 100.6233, 100.7776, 100.7499, 100.6283, 100.5227, 100.9676, 100.8384, 101.0244, 100.9531, 99.7445, 99.7158, 99.6916, 99.6051, 99.6354, 99.5927, 99.5994, 99.6269, 99.675, 99.7312, 99.8015, 99.7417, 99.634, 99.6402, 99.6313, 99.6269, 99.4564, 99.4564, 99.4564, 99.4564, 99.4564, 99.4564, 99.4564, 99.4564, 99.4564, 99.4564, 99.4564, 99.4564, 99.4564, 99.4564, 99.4564, 99.4564, 99.4564, 99.4564, 99.4564, 99.4564, 99.4564, 99.4564, 99.4564, 99.4564, 99.3286, 99.5487, 99.2104, 99.1644, 99.1545, 99.5783, 99.6308, 99.5684, 99.6801, 99.7655, 99.3221, 99.3352, 99.437, 99.4764, 99.414, 99.2432, 99.3188, 99.3943, 99.368, 99.5914, 99.4535, 99.1907, 99.3385, 99.0658, 99.1085, 99.1348, 99.1085, 98.8434, 98.8434, 98.8434, 98.8434, 98.8434, 98.8434, 98.8434, 98.8434, 98.8434, 98.8434, 98.8434, 98.8434, 98.8434, 98.8434, 98.8434, 98.8434, 98.8434, 98.8434, 98.8434, 98.8434, 98.8434, 98.8434, 98.8434, 98.8434, 98.8434, 98.8434, 98.8434, 98.8434, 98.8434, 98.8434, 98.8434, 98.8434, 98.8434, 98.8434, 98.8434, 98.8434, 98.8434, 98.8434, 98.8434, 98.8434, 98.8434, 98.8434, 98.8434, 98.8434, 98.8434, 98.8434, 98.8434, 98.8434, 98.8434, 98.8434, 98.8434, 98.8434, 98.8434, 98.8434, 98.8434, 98.8434, 98.8434, 98.8434, 98.8434], "bars": 318, "trades": [{"bar": 0, "side": "BUY", "symbol": "SOL-USD", "qty": 0.335185, "price": 104.47, "pnl": null, "reason": "score +0.51"}, {"bar": 10, "side": "SELL", "symbol": "SOL-USD", "qty": 0.335185, "price": 109.9, "pnl": 1.7841, "reason": "take-profit"}, {"bar": 11, "side": "BUY", "symbol": "SOL-USD", "qty": 0.326268, "price": 109.2, "pnl": null, "reason": "score +0.42"}, {"bar": 15, "side": "SELL", "symbol": "SOL-USD", "qty": 0.326268, "price": 106.03, "pnl": -1.0712, "reason": "stop-loss"}, {"bar": 135, "side": "BUY", "symbol": "SPY", "qty": 0.046497, "price": 757.95, "pnl": null, "reason": "score +0.36"}, {"bar": 141, "side": "SELL", "symbol": "SPY", "qty": 0.046497, "price": 769.78, "pnl": 0.5141, "reason": "take-profit"}, {"bar": 171, "side": "BUY", "symbol": "BTC-USD", "qty": 0.000435, "price": 81402.38, "pnl": null, "reason": "score +0.37"}, {"bar": 171, "side": "BUY", "symbol": "ETH-USD", "qty": 0.014061, "price": 2518.3, "pnl": null, "reason": "score +0.36"}, {"bar": 187, "side": "BUY", "symbol": "QQQ", "qty": 0.040419, "price": 733.33, "pnl": null, "reason": "score +0.41"}, {"bar": 192, "side": "SELL", "symbol": "BTC-USD", "qty": 0.000435, "price": 80177.46, "pnl": -0.5677, "reason": "stop-loss"}, {"bar": 192, "side": "SELL", "symbol": "ETH-USD", "qty": 0.014061, "price": 2471.99, "pnl": -0.6859, "reason": "stop-loss"}, {"bar": 208, "side": "SELL", "symbol": "QQQ", "qty": 0.040419, "price": 726.37, "pnl": -0.3106, "reason": "stop-loss"}, {"bar": 231, "side": "BUY", "symbol": "SOL-USD", "qty": 0.328487, "price": 106.02, "pnl": null, "reason": "score +0.37"}, {"bar": 259, "side": "SELL", "symbol": "SOL-USD", "qty": 0.328487, "price": 104.37, "pnl": -0.5782, "reason": "stop-loss"}]}, "rounds": [{"bar": 0, "symbol": "SOL-USD", "kind": "BUY", "tech": 0.456, "scan": 0.549, "comp": 0.493, "price": 103.99, "pnl": null, "reason": "score +0.49", "equity": 100.0}, {"bar": 8, "symbol": "SOL-USD", "kind": "MECH", "tech": 0.195, "scan": 0.82, "comp": 0.445, "price": 109.61, "pnl": 1.8532, "reason": "take-profit", "equity": 101.8182}, {"bar": 8, "symbol": "SOL-USD", "kind": "BUY", "tech": 0.195, "scan": 0.82, "comp": 0.445, "price": 109.39, "pnl": null, "reason": "score +0.45", "equity": 101.8182}, {"bar": 11, "symbol": "SOL-USD", "kind": "WAIT", "tech": 0.083, "scan": 0.609, "comp": 0.294, "price": 109.2, "pnl": null, "reason": "score +0.29 < umbral +0.35", "equity": 101.7191}, {"bar": 16, "symbol": "SOL-USD", "kind": "MECH", "tech": -0.036, "scan": 0.239, "comp": 0.074, "price": 106.05, "pnl": -1.1242, "reason": "stop-loss", "equity": 100.6583}, {"bar": 61, "symbol": "SOL-USD", "kind": "WAIT", "tech": 0.114, "scan": 0.181, "comp": 0.141, "price": 105.26, "pnl": null, "reason": "score +0.14 < umbral +0.35", "equity": 100.6583}, {"bar": 108, "symbol": "ETH-USD", "kind": "WAIT", "tech": 0.064, "scan": 0.132, "comp": 0.091, "price": 2467.12, "pnl": null, "reason": "score +0.09 < umbral +0.35", "equity": 100.6583}, {"bar": 135, "symbol": "SPY", "kind": "BUY", "tech": 0.273, "scan": 0.502, "comp": 0.365, "price": 757.95, "pnl": null, "reason": "score +0.36", "equity": 100.6583}, {"bar": 141, "symbol": "SPY", "kind": "MECH", "tech": -0.038, "scan": 0.714, "comp": 0.263, "price": 769.78, "pnl": 0.5142, "reason": "take-profit", "equity": 101.1373}, {"bar": 157, "symbol": "SPY", "kind": "WAIT", "tech": 0.021, "scan": 0.227, "comp": 0.103, "price": 768.66, "pnl": null, "reason": "score +0.10 < umbral +0.35", "equity": 101.1373}, {"bar": 172, "symbol": "BTC-USD", "kind": "BUY", "tech": -0.055, "scan": 1.0, "comp": 0.367, "price": 81402.38, "pnl": null, "reason": "score +0.37", "equity": 101.1373}, {"bar": 172, "symbol": "ETH-USD", "kind": "BUY", "tech": -0.074, "scan": 1.0, "comp": 0.355, "price": 2518.3, "pnl": null, "reason": "score +0.36", "equity": 101.1373}, {"bar": 187, "symbol": "QQQ", "kind": "BUY", "tech": 0.053, "scan": 0.957, "comp": 0.415, "price": 733.33, "pnl": null, "reason": "score +0.41", "equity": 100.6444}, {"bar": 193, "symbol": "BTC-USD", "kind": "MECH", "tech": -0.011, "scan": 0.227, "comp": 0.084, "price": 80177.46, "pnl": -0.5678, "reason": "stop-loss", "equity": 99.7317}, {"bar": 193, "symbol": "ETH-USD", "kind": "MECH", "tech": 0.017, "scan": 0.154, "comp": 0.072, "price": 2471.99, "pnl": -0.6861, "reason": "stop-loss", "equity": 99.7317}, {"bar": 208, "symbol": "QQQ", "kind": "MECH", "tech": 0.0, "scan": 0.079, "comp": 0.032, "price": 726.37, "pnl": -0.3106, "reason": "stop-loss", "equity": 99.4723}, {"bar": 219, "symbol": "SOL-USD", "kind": "WAIT", "tech": 0.044, "scan": 0.254, "comp": 0.128, "price": 102.87, "pnl": null, "reason": "score +0.13 < umbral +0.35", "equity": 99.4723}, {"bar": 232, "symbol": "SOL-USD", "kind": "BUY", "tech": 0.141, "scan": 0.709, "comp": 0.368, "price": 106.02, "pnl": null, "reason": "score +0.37", "equity": 99.4723}, {"bar": 260, "symbol": "SOL-USD", "kind": "MECH", "tech": -0.098, "scan": 0.164, "comp": 0.007, "price": 104.37, "pnl": -0.5783, "reason": "stop-loss", "equity": 98.8592}, {"bar": 272, "symbol": "ETH-USD", "kind": "WAIT", "tech": -0.015, "scan": 0.008, "comp": -0.006, "price": 2495.7, "pnl": null, "reason": "score -0.01 < umbral +0.35", "equity": 98.8592}], "curve": [100.0, 100.1091, 100.6715, 100.9105, 101.052, 101.6412, 101.3786, 101.4358, 101.8182, 101.6637, 101.5855, 101.7191, 101.7028, 101.7093, 101.2954, 100.8456, 100.6583, 100.6583, 100.6583, 100.6583, 100.6583, 100.6583, 100.6583, 100.6583, 100.6583, 100.6583, 100.6583, 100.6583, 100.6583, 100.6583, 100.6583, 100.6583, 100.6583, 100.6583, 100.6583, 100.6583, 100.6583, 100.6583, 100.6583, 100.6583, 100.6583, 100.6583, 100.6583, 100.6583, 100.6583, 100.6583, 100.6583, 100.6583, 100.6583, 100.6583, 100.6583, 100.6583, 100.6583, 100.6583, 100.6583, 100.6583, 100.6583, 100.6583, 100.6583, 100.6583, 100.6583, 100.6583, 100.6583, 100.6583, 100.6583, 100.6583, 100.6583, 100.6583, 100.6583, 100.6583, 100.6583, 100.6583, 100.6583, 100.6583, 100.6583, 100.6583, 100.6583, 100.6583, 100.6583, 100.6583, 100.6583, 100.6583, 100.6583, 100.6583, 100.6583, 100.6583, 100.6583, 100.6583, 100.6583, 100.6583, 100.6583, 100.6583, 100.6583, 100.6583, 100.6583, 100.6583, 100.6583, 100.6583, 100.6583, 100.6583, 100.6583, 100.6583, 100.6583, 100.6583, 100.6583, 100.6583, 100.6583, 100.6583, 100.6583, 100.6583, 100.6583, 100.6583, 100.6583, 100.6583, 100.6583, 100.6583, 100.6583, 100.6583, 100.6583, 100.6583, 100.6583, 100.6583, 100.6583, 100.6583, 100.6583, 100.6583, 100.6583, 100.6583, 100.6583, 100.6583, 100.6583, 100.6583, 100.6583, 100.6583, 100.6583, 100.6583, 100.6413, 100.6101, 100.9273, 101.0603, 101.1482, 101.1373, 101.1373, 101.1373, 101.1373, 101.1373, 101.1373, 101.1373, 101.1373, 101.1373, 101.1373, 101.1373, 101.1373, 101.1373, 101.1373, 101.1373, 101.1373, 101.1373, 101.1373, 101.1373, 101.1373, 101.1373, 101.1373, 101.1373, 101.1373, 101.1373, 101.1373, 101.1373, 101.1373, 101.1373, 101.1373, 101.1373, 101.1373, 100.5371, 100.66, 100.9312, 101.2155, 100.9174, 101.0611, 100.6569, 100.8585, 100.6426, 100.7217, 100.662, 100.6394, 100.7937, 100.766, 100.6444, 100.4519, 100.9805, 100.9038, 100.9982, 101.0004, 99.7317, 99.7075, 99.621, 99.6513, 99.6086, 99.6153, 99.6428, 99.6909, 99.7471, 99.8174, 99.7576, 99.6499, 99.6561, 99.6473, 99.6428, 99.4723, 99.4723, 99.4723, 99.4723, 99.4723, 99.4723, 99.4723, 99.4723, 99.4723, 99.4723, 99.4723, 99.4723, 99.4723, 99.4723, 99.4723, 99.4723, 99.4723, 99.4723, 99.4723, 99.4723, 99.4723, 99.4723, 99.4723, 99.4723, 99.4723, 99.3445, 99.5646, 99.2262, 99.1802, 99.1704, 99.5942, 99.6468, 99.5843, 99.696, 99.7815, 99.3379, 99.3511, 99.4529, 99.4923, 99.4299, 99.2591, 99.3346, 99.4102, 99.3839, 99.6073, 99.4693, 99.2065, 99.3544, 99.0817, 99.1244, 99.1507, 99.1244, 98.8592, 98.8592, 98.8592, 98.8592, 98.8592, 98.8592, 98.8592, 98.8592, 98.8592, 98.8592, 98.8592, 98.8592, 98.8592, 98.8592, 98.8592, 98.8592, 98.8592, 98.8592, 98.8592, 98.8592, 98.8592, 98.8592, 98.8592, 98.8592, 98.8592, 98.8592, 98.8592, 98.8592, 98.8592, 98.8592, 98.8592, 98.8592, 98.8592, 98.8592, 98.8592, 98.8592, 98.8592, 98.8592, 98.8592, 98.8592, 98.8592, 98.8592, 98.8592, 98.8592, 98.8592, 98.8592, 98.8592, 98.8592, 98.8592, 98.8592, 98.8592, 98.8592, 98.8592, 98.8592, 98.8592, 98.8592, 98.8592, 98.8592, 98.8592]};
+const $ = s => document.getElementById(s);
+const esc = s => String(s).replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
+const money = v => (v<0?"−$":"$") + Math.abs(v).toFixed(2);
+const sgn = v => (v>=0?"+":"−") + Math.abs(v).toFixed(2);
+const cl = v => v>0?"pos":(v<0?"neg":"dim");
+
+const R = D.rounds, CURVE = D.curve, NB = CURVE.length, BASE = 100;
+const TUBES = {news:"t-news", scan:"t-scan", tech:"t-tech", risk:"t-risk", exec:"t-exec"};
+
+/* umbral en el medidor */
+$("mthr").style.left = ((0.35+1)/2*100) + "%";
+
+/* onda del osciloscopio */
+(function(){ let p=[]; for(let i=0;i<=24;i++){ const x=-24+i*2;
+  p.push(`${x},${(2+Math.sin(i/1.7)*9+Math.sin(i/0.7)*3).toFixed(1)}`);} 
+  $("wave").setAttribute("points", p.join(" ")); })();
+
+/* ---------- estado ---------- */
+let ri = -1, playing = true, speed = 1, timers = [], caps = [];
+const V = {equity:BASE, closed:0, wins:0, losses:0, realized:0, bar:0};
+let rows = [], wire = [];
+
+function at(ms, fn){ timers.push(setTimeout(fn, ms/speed)); }
+function clearAll(){ timers.forEach(clearTimeout); timers = []; }
+
+function bub(id, html){ const e=$("b-"+id); e.innerHTML=html; e.classList.add("show"); }
+function unbub(){ ["news","scan","tech","dir","risk","exec"].forEach(k=>
+  $("b-"+k).classList.remove("show")); }
+function busy(id, on){ $("mn-"+id).classList.toggle("busy", on); }
+function calm(){ ["news","scan","tech","dir","risk","exec"].forEach(k=>busy(k,false)); }
+function lamp(id, on){ const e=$(id); e.classList.toggle("lit", on);
+  e.setAttribute("fill", on ? "var(--brass)" : "var(--sunk)"); }
+
+function log(who, msg){
+  wire.push(`<p><span class="who">${who}</span><span>${esc(msg)}</span></p>`);
+  if(wire.length>50) wire.shift();
+  $("wire").innerHTML = [...wire].reverse().join("");
+}
+
+/* ---------- cápsulas por el tubo ---------- */
+function capsule(tubeId, reverse, color, ms, done){
+  const path = $(tubeId), L = path.getTotalLength();
+  const ns = "http://www.w3.org/2000/svg";
+  const g = document.createElementNS(ns,"g");
+  const c = document.createElementNS(ns,"rect");
+  c.setAttribute("x",-9); c.setAttribute("y",-6); c.setAttribute("width",18);
+  c.setAttribute("height",12); c.setAttribute("rx",6);
+  c.setAttribute("fill",color); c.setAttribute("stroke","var(--ink)");
+  c.setAttribute("stroke-width","2");
+  g.appendChild(c); $("caps").appendChild(g);
+  const t0 = performance.now(), dur = ms/speed;
+  function frame(now){
+    const k = Math.min((now-t0)/dur, 1);
+    const e = k<.5 ? 2*k*k : 1-Math.pow(-2*k+2,2)/2;
+    const p = path.getPointAtLength((reverse ? 1-e : e) * L);
+    g.setAttribute("transform", `translate(${p.x},${p.y})`);
+    if(k<1){ requestAnimationFrame(frame); }
+    else { g.remove(); done && done(); }
+  }
+  requestAnimationFrame(frame);
+  caps.push(g);
+}
+
+/* ---------- paneles ---------- */
+function meter(score){
+  const f = $("mfill"), w = Math.min(Math.abs(score),1)*50;
+  f.style.width = w+"%";
+  f.style.transform = score<0 ? "translateX(-100%)" : "translateX(0)";
+  f.style.background = score>=0.35 ? "var(--pos)" : (score<0 ? "var(--neg)" : "var(--brass)");
+}
+function drawMini(upto){
+  const W=460,H=74,PL=2,PR=44,PT=8,PB=8;
+  const lo=Math.min(...CURVE,BASE), hi=Math.max(...CURVE,BASE);
+  const pad=(hi-lo)*.2||1, y0=lo-pad, y1=hi+pad;
+  const X=i=>PL+(i/(NB-1))*(W-PL-PR), Y=v=>PT+(1-(v-y0)/(y1-y0))*(H-PT-PB);
+  const pts=CURVE.slice(0,Math.max(upto+1,2)).map((v,i)=>`${X(i).toFixed(1)},${Y(v).toFixed(1)}`).join(" ");
+  const last=CURVE[Math.min(upto,NB-1)], col=last>=BASE?"var(--pos)":"var(--neg)";
+  $("mini").innerHTML=`
+   <line x1="${PL}" y1="${Y(BASE).toFixed(1)}" x2="${W-PR}" y2="${Y(BASE).toFixed(1)}"
+     stroke="var(--faint)" stroke-dasharray="3 3" stroke-width="1"/>
+   <polyline points="${pts}" fill="none" stroke="${col}" stroke-width="1.8" stroke-linejoin="round"/>
+   <circle cx="${X(Math.max(upto,1)).toFixed(1)}" cy="${Y(last).toFixed(1)}" r="3" fill="${col}"/>
+   <text x="${W-PR+6}" y="${Y(BASE)+3.5}" fill="var(--faint)" font-size="9"
+     font-family="IBM Plex Mono,monospace">$100</text>`;
+}
+function stats(){
+  const ret=V.equity/BASE-1;
+  $("eq").textContent = money(V.equity);
+  $("eq").className = "money num " + cl(ret);
+  $("mstat").innerHTML =
+    `<span class="${cl(ret)}">${ret>=0?"+":"−"}${Math.abs(ret*100).toFixed(2)} %</span>
+     <span>realizado <b class="${cl(V.realized)}">${money(V.realized)}</b></span>
+     <span>cerradas ${V.closed}</span>
+     <span>${V.closed?`${V.wins}G / ${V.losses}P`:"—"}</span>
+     <span class="dim">barra ${V.bar}/${NB-1}</span>`;
+}
+function blotter(){
+  if(!rows.length){ $("blot").innerHTML =
+    `<tbody><tr><td class="why" style="text-align:center;padding:16px">
+     Todavía no hay ninguna orden firmada.</td></tr></tbody>`; return; }
+  $("blot").innerHTML = `<thead><tr><th>Barra</th><th>Orden</th><th>Activo</th><th>Precio</th>
+    <th>Resultado</th><th>Quién la disparó</th></tr></thead><tbody>` +
+    [...rows].reverse().map(r=>`<tr><td class="dim">${r.bar}</td>
+      <td><span class="tag ${r.side}">${r.side==="BUY"?"COMPRA":"VENTA"}</span></td>
+      <td class="sym">${esc(r.symbol)}</td><td>${r.price.toFixed(2)}</td>
+      <td class="${r.pnl==null?"dim":cl(r.pnl)}">${r.pnl==null?"—":money(r.pnl)}</td>
+      <td class="why">${esc(r.by)}</td></tr>`).join("") + `</tbody>`;
+}
+
+/* ---------- una ronda ---------- */
+function round(){
+  clearAll(); unbub(); calm();
+  ["lamp-news","lamp-scan","lamp-tech"].forEach(l=>lamp(l,false));
+  $("veto").classList.remove("hit");
+  $("ticket").classList.remove("out");
+  $("wheel").classList.remove("turn");
+  $("mn-risk").classList.remove("alarm");
+
+  ri = (ri+1) % R.length;
+  const r = R[ri];
+  V.bar = r.bar;
+  $("chest").textContent = "· · ·"; $("chest").setAttribute("fill","var(--dim)");
+  $("chestbar").setAttribute("width", 0);
+
+  /* --- stops y objetivos: Ejecución actúa sola --- */
+  if(r.kind === "MECH"){
+    $("call").textContent = "No decide nadie";
+    $("call").style.color = "var(--ink)";
+    $("callwhy").innerHTML = `El stop de <b>${esc(r.symbol)}</b> ya estaba puesto desde
+      la compra. Ejecución lo dispara sin preguntar — para eso existe.`;
+    ["news","scan","tech"].forEach(k=>{$("v-"+k).textContent="—";$("v-"+k).className="dim";});
+    meter(0);
+    log("Ejecución", `${r.symbol} toca el ${r.reason} · disparo automático`);
+    at(200, ()=>{ busy("exec",true); bub("exec",
+      `<b>${r.reason === "stop-loss" ? "STOP" : "OBJETIVO"}</b><br>${esc(r.symbol)} @ ${r.price}`); });
+    at(900, ()=>{ $("hammer").classList.add("slam");
+      at(160, ()=>$("hammer").classList.remove("slam")); });
+    at(1150, ()=>{
+      $("ticket").classList.add("out");
+      V.closed++; V.realized += r.pnl; r.pnl>0 ? V.wins++ : V.losses++;
+      V.equity = r.equity;
+      rows.push({bar:r.bar, side:"SELL", symbol:r.symbol, price:r.price,
+                 pnl:r.pnl, by:`Ejecución · ${r.reason}`});
+      blotter(); stats(); drawMini(r.bar);
+      log("Ejecución", `cerrado ${r.symbol} a ${r.price} · ${money(r.pnl)}`);
+    });
+    at(1900, ()=>{ busy("dir",true); bub("dir",
+      `Ejecución cerró<br><b class="${cl(r.pnl)}">${money(r.pnl)}</b>`);
+      $("chest").textContent = r.pnl>0 ? "+" : "−";
+      $("chest").setAttribute("fill", r.pnl>0 ? "var(--pos)" : "var(--neg)"); });
+    at(3600, round);
+    return;
+  }
+
+  /* --- rondas con votación --- */
+  log("Director", `ronda sobre ${r.symbol} · barra ${r.bar}`);
+  const votes = [
+    ["news","Noticias","sin histórico", 0, "b-news", "lamp-news"],
+    ["scan","Escáner", sgn(r.scan), r.scan, "b-scan", "lamp-scan"],
+    ["tech","Técnico", sgn(r.tech), r.tech, "b-tech", "lamp-tech"],
+  ];
+  const bubTxt = {
+    news:`<b>${esc(r.symbol)}</b><br>sin histórico<br>voto 0,00`,
+    scan:`<b>${esc(r.symbol)}</b><br>fuerza relativa<br>voto <b>${sgn(r.scan)}</b>`,
+    tech:`<b>${esc(r.symbol)}</b><br>RSI·EMA·MACD<br>voto <b>${sgn(r.tech)}</b>`,
+  };
+
+  votes.forEach(([k,label,txt,val],i)=>{
+    at(250 + i*480, ()=>{
+      busy(k,true); bub(k, bubTxt[k]);
+      $("v-"+k).textContent = txt;
+      $("v-"+k).className = k==="news" ? "dim num" : (cl(val)+" num");
+      log(label, k==="news" ? "no puedo votar el pasado · voto 0,00"
+                            : `${r.symbol} → ${txt}`);
+    });
+    at(700 + i*480, ()=>{
+      capsule(TUBES[k], false, k==="news" ? "var(--sunk)" : (val>0?"var(--pos)":"var(--neg)"),
+        900, ()=>{ lamp(votes[i][5], true); busy(k,false); });
+    });
+  });
+
+  at(2500, ()=>{ busy("dir",true); bub("dir","sumando pesos…"); meter(r.comp); });
+  at(2700, ()=>{
+    $("beam").style.transform = `rotate(${(-r.comp*16).toFixed(1)}deg)`;
+    $("chestbar").setAttribute("width", (Math.min(Math.abs(r.comp),1)*116).toFixed(0));
+  });
+
+  const buy = r.kind === "BUY";
+  at(3300, ()=>{
+    unbub();
+    $("chest").textContent = sgn(r.comp);
+    $("chest").setAttribute("fill", buy ? "var(--pos)" : "var(--dim)");
+    if(buy){
+      $("call").textContent = "COMPRAR " + r.symbol;
+      $("call").style.color = "var(--pos)";
+      $("callwhy").innerHTML = `Compuesto <b>${sgn(r.comp)}</b> supera el umbral +0,35.
+        El Director manda la orden a Riesgo para que la dimensione.`;
+      bub("dir", `<b>COMPRAR</b><br>${esc(r.symbol)} ${sgn(r.comp)}`);
+      log("Director", `COMPRAR ${r.symbol} · compuesto ${sgn(r.comp)} > +0,35`);
+    } else {
+      $("call").textContent = "ESPERAR";
+      $("call").style.color = "var(--ink)";
+      $("callwhy").innerHTML = `Compuesto <b>${sgn(r.comp)}</b>, por debajo del umbral +0,35.
+        No hay consenso suficiente: no se toca nada. Esperar también es una decisión.`;
+      bub("dir", `<b>ESPERAR</b><br>${sgn(r.comp)} < +0,35`);
+      log("Director", `ESPERAR · ${r.symbol} ${sgn(r.comp)} no llega al umbral`);
+    }
+  });
+
+  if(!buy){ at(5200, round); return; }
+
+  at(3900, ()=>{ busy("dir",false);
+    capsule(TUBES.risk, false, "var(--brass)", 800, ()=>busy("risk",true)); });
+  at(4800, ()=>{
+    $("wheel").classList.add("turn");
+    $("riskface").textContent = "OK";
+    $("riskface").setAttribute("fill","var(--pos)");
+    bub("risk", `2 % de riesgo<br>stop 2×ATR<br><b class="pos">aprobado</b>`);
+    log("Riesgo", `${r.symbol} aprobado · tamaño por 2 % de riesgo, stop a 2×ATR`);
+  });
+  at(5600, ()=>{ busy("risk",false);
+    capsule(TUBES.exec, false, "var(--pos)", 700, ()=>busy("exec",true)); });
+  at(6400, ()=>{ $("hammer").classList.add("slam");
+    at(160, ()=>$("hammer").classList.remove("slam")); });
+  at(6650, ()=>{
+    $("ticket").classList.add("out");
+    bub("exec", `<b>COMPRADO</b><br>${esc(r.symbol)} @ ${r.price}`);
+    V.equity = r.equity;
+    rows.push({bar:r.bar, side:"BUY", symbol:r.symbol, price:r.price, pnl:null,
+               by:`Director · compuesto ${sgn(r.comp)}`});
+    blotter(); stats(); drawMini(r.bar);
+    log("Ejecución", `COMPRA ${r.symbol} a ${r.price} · ticket emitido`);
+    $("riskface").textContent = "2%"; $("riskface").setAttribute("fill","var(--dim)");
+  });
+  at(8300, round);
+}
+
+/* ---------- controles ---------- */
+function setSpeed(s){ speed=s; $("sp1").setAttribute("aria-pressed", s===1);
+  $("sp2").setAttribute("aria-pressed", s===2); }
+$("sp1").onclick = ()=>setSpeed(1);
+$("sp2").onclick = ()=>setSpeed(2);
+$("play").onclick = function(){
+  playing = !playing;
+  this.setAttribute("aria-pressed", playing);
+  this.textContent = playing ? "⏸ Pausa" : "▶ Seguir";
+  if(playing) round(); else { clearAll(); calm(); }
+};
+$("rst").onclick = ()=>{
+  clearAll(); ri=-1; rows=[]; wire=[];
+  Object.assign(V,{equity:BASE,closed:0,wins:0,losses:0,realized:0,bar:0});
+  blotter(); stats(); drawMini(0); $("wire").innerHTML="";
+  log("Director", "taller reiniciado · 100 dólares simulados sobre la mesa");
+  if(playing) round();
+};
+
+/* ---------- arranque ---------- */
+blotter(); stats(); drawMini(0); meter(0);
+log("Director", "taller abierto · 100 dólares simulados sobre la mesa");
+log("Escáner", "universo cargado · BTC, ETH, SOL, SPY, QQQ");
+setTimeout(round, 900);
+</script>
+</body></html>
