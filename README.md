@@ -248,7 +248,8 @@ El detalle de qué viene de dónde está en **[`NOTICE.md`](NOTICE.md)**.
 
 Ambas se abren con doble clic, sin servidor:
 
-- **`demo/taller.html`** — **PULPO DESK**, el puesto de mando. Velas diarias reales del
+- **`demo/taller.html`** — **PULPO DESK** en formato horizontal: una fila de columnas
+  a pantalla completa que se recorre de izquierda a derecha con flechas o rueda. Velas diarias reales del
   activo en juego, el anillo con los cinco agentes y el cerebro, el horno con el resultado
   de cada operación cerrada, el cono de ruina, un cartograma de 22 instrumentos vigilados,
   el registro de órdenes y la cinta de lo que se dicen entre ellos. Todo reproduce la
@@ -258,6 +259,10 @@ Ambas se abren con doble clic, sin servidor:
   decorativa: dos tercios de las neuronas de un pulpo están en los brazos, que perciben
   y actúan por su cuenta y solo mandan un resumen al cerebro. Es literalmente esta
   arquitectura — cinco hilos independientes y un orquestador que solo recibe votos.
+- **`demo/mosaico.html`** — el mismo sistema en **cuadrícula**: todo visible de una
+  sola mirada, sin scroll ninguno, con el pulpo ocupando la fila de abajo. Pensado
+  para pantalla de ordenador; comprobado a 1920×1080, 1512×982 y 1366×768. En
+  vertical o por debajo de 1150px se apila.
 - **`demo/cuadrilla.html`** — **LA CUADRILLA**, la misma sesión con los seis agentes
   como personajes trabajando codo con codo en una sola consola, en paleta roja. Cada uno
   con su cacharro delante y su piloto en el frontal; los votos viajan por la barra de luz
