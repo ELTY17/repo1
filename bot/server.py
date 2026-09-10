@@ -14,6 +14,32 @@ WEB = os.path.join(os.path.dirname(__file__), "web")
 # dashboard la pide cuando está lista, en vez de venir incrustada a mano.
 _research: dict = {"ready": False, "error": None}
 
+# La sesión de $10 del panel "turbo". Es ficción declarada y va en su propio
+# hilo para que se mueva sola mientras se mira, sin tocar nada del sistema real.
+_turbo: dict = {"sesion": None, "hilo": None, "ritmo": 3.0}
+_turbo_lock = threading.Lock()
+
+
+def _turbo_run():
+    """Una operación cada `ritmo` segundos hasta que la sesión termina."""
+    while True:
+        time.sleep(_turbo["ritmo"])
+        with _turbo_lock:
+            s = _turbo["sesion"]
+            if s is None or not s.paso():
+                _turbo["hilo"] = None
+                return
+
+
+def _turbo_lanzar(acierto=None):
+    from .turbo import Sesion
+    with _turbo_lock:
+        _turbo["sesion"] = Sesion(acierto=acierto)
+        if _turbo["hilo"] is None or not _turbo["hilo"].is_alive():
+            _turbo["hilo"] = threading.Thread(target=_turbo_run, daemon=True)
+            _turbo["hilo"].start()
+        return _turbo["sesion"].estado()
+
 
 def _compute_research():
     try:
@@ -94,6 +120,25 @@ def make_handler(orch):
                     [round(x["o"], 4), round(x["h"], 4), round(x["l"], 4),
                      round(x["c"], 4)] for x in c]}).encode()
                 return self._send(200, body)
+            if path == "/api/turbo":
+                from urllib.parse import parse_qs, urlparse
+                from .turbo import montecarlo, required_winrate
+                q = parse_qs(urlparse(self.path).query)
+                if q.get("lanzar"):
+                    p_ = q.get("acierto", [""])[0]
+                    st = _turbo_lanzar(float(p_) if p_ else None)
+                else:
+                    with _turbo_lock:
+                        s_ = _turbo["sesion"]
+                    st = s_.estado() if s_ else None
+                if st is None:                      # aún no se ha lanzado ninguna
+                    need = required_winrate(10.0, 100.0, 60, 0.50)
+                    st = {"ficcion": True, "eq": 10.0, "curva": [10.0], "ops": [],
+                          "hechas": 0, "total": 60, "inicio": 10.0, "objetivo": 100.0,
+                          "acierto": round(need, 4), "riesgo": 0.5, "pico": 10.0,
+                          "fin": None, "aciertos": 0, "x": 1.0}
+                st["mc"] = _turbo_mc()
+                return self._send(200, json.dumps(st).encode())
             if path == "/api/wide":
                 from . import feeds
                 return self._send(200, json.dumps(feeds.wide_universe()).encode())
@@ -109,6 +154,22 @@ def make_handler(orch):
             pass
 
     return Handler
+
+
+# El coste de la palanca no cambia entre peticiones: se calcula una vez.
+_mc_cache: dict = {}
+
+
+def _turbo_mc():
+    if not _mc_cache:
+        from .turbo import montecarlo, required_winrate
+        need = required_winrate(10.0, 100.0, 60, 0.50)
+        _mc_cache["need"] = round(need, 4)
+        _mc_cache["filas"] = [
+            {"p": round(p, 4), **{k: round(v, 4) for k, v in
+                                  montecarlo(10.0, 100.0, 60, 0.50, p, runs=4000).items()}}
+            for p in (need, 0.60, 0.55, 0.50)]
+    return _mc_cache
 
 
 def serve(orch, host, port):

@@ -377,6 +377,70 @@ ventaja; es la forma más común de engañarse.
 
 **Sin ventaja demostrable.** Otra vez.
 
+## La versión de $10
+
+```bash
+python3 run.py --cash 10
+```
+
+Todo el sistema funciona igual con $10: los cinco agentes, el pulpo, las
+decisiones, el dashboard. Lo que cambia es lo que el exchange te deja hacer.
+
+```
+BTC-USD   mínimo del exchange  $  3.86
+ETH-USD   mínimo del exchange  $  2.44
+SOL-USD   mínimo del exchange  $  5.99
+SPY       mínimo del exchange  $758.80     ← una acción entera
+QQQ       mínimo del exchange  $710.70     ← una acción entera
+```
+
+Con $10 las acciones desaparecen del universo (no llega ni para una sola) y en
+cripto solo caben una o dos posiciones a la vez. Medido sobre el mismo tramo:
+
+```
+$   10   retorno  +5.18%   3 operaciones
+$  100   retorno  -3.37%  22 operaciones
+$ 1000   retorno  -3.37%  22 operaciones
+```
+
+Ese **+5,18% no es una buena noticia**: es lo que sale cuando los mínimos del
+exchange bloquean 19 de las 22 operaciones y quedan tres. Tres operaciones no
+distinguen una ventaja del azar. La cifra de $1.000 es idéntica a la de $100
+porque ahí ya no hay mínimo que estorbe: **ese −3,37% es el resultado real del
+sistema**, y el de $10 es ruido con suerte.
+
+## De $10 a $100 en 5 horas
+
+Se puede preguntar y tiene respuesta exacta. `bot/turbo.py` la calcula.
+
+Multiplicar por diez en cinco horas no se consigue acertando más: se consigue
+apostando más fuerte. Con una operación cada 5 minutos (60 en total) y
+arriesgando **la mitad de la cuenta** en cada una, el acierto necesario sale de
+despejar `p·ln(1,5) + (1−p)·ln(0,5) = ln(10)/60`:
+
+```
+ACIERTO NECESARIO: 66,6%   (ganar 40 de 60)
+
+acierto     llega a 100   acaba en 0    mediana
+66,6% ←          63,0%        32,8%    $102,20
+60,0%            33,4%        62,8%      $0,91
+55,0%            16,7%        81,4%      $0,83
+50,0%             7,3%        92,2%      $0,75
+```
+
+Con el acierto exacto que hace falta, sí: dos de cada tres sesiones llegan. Pero
+**una de cada tres acaba en cero**, y esa no tiene vuelta atrás. Y ese 66,6% no
+existe — un sistema bueno de verdad ronda el 55%, y ahí **cuatro de cada cinco
+sesiones mueren**. La palanca que multiplica es exactamente la misma que divide,
+y llega antes abajo.
+
+En el dashboard hay un panel para verlo moverse (`Lanzar`), en ámbar y con la
+palabra **SIMULACIÓN** encima: las operaciones salen de un generador aleatorio
+con el acierto que elijas, no de un mercado. Sirve para ver la forma de una
+curva apalancada —sube en escalera y se cae de golpe— no para creerse el número
+final. Es la única parte de esta pantalla que no sale de datos reales, y por eso
+es la única que no es azul.
+
 ## En el móvil
 
 El dashboard no es el mosaico encogido. Por debajo de 760px el sistema se reparte en

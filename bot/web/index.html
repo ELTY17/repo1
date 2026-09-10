@@ -40,11 +40,12 @@ a{color:var(--brass)}
 .deck{height:100dvh;display:flex;flex-direction:column;overflow:hidden;padding:0}
 .mosaic{flex:1;min-height:0;display:grid;gap:12px;padding:12px 16px 16px;
   grid-template-columns:repeat(12,minmax(0,1fr));
-  grid-template-rows:minmax(0,1.06fr) minmax(0,.88fr) minmax(0,1.46fr);
+  grid-template-rows:minmax(0,1fr) minmax(0,.82fr) minmax(0,1.34fr) minmax(0,.8fr);
   grid-template-areas:
     "cap cap prc prc prc prc dec dec dec con con con"
     "agt agt ops ops ops mkt mkt mkt ord ord cnv cnv"
-    "oct oct oct oct oct oct oct oct oct evi evi evi";}
+    "oct oct oct oct oct oct oct oct oct evi evi evi"
+    "tur tur tur tur tur tur tur tur tur evi evi evi";}
 .mosaic > .p{min-height:0;min-width:0}
 .mosaic .pb{overflow:auto;min-height:0}
 .mosaic #mckv{margin-top:9px}
@@ -296,6 +297,35 @@ footer{font-size:12px;color:var(--dim);line-height:1.6;letter-spacing:-.005em}
     stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
   .tabs button[aria-selected="true"]{color:var(--blue);background:none}
 }
+
+/* ── El panel de los $10 ────────────────────────────────────────────────────
+   Todo lo demás en esta pantalla sale de datos reales. Esto no. Va en ámbar y
+   con la palabra SIMULACIÓN encima porque una curva que sube es lo más fácil
+   de confundir con una promesa. */
+#tur{outline:1px solid #7A5A12}
+.ficc{background:#3A2A05;color:#FFD426;font-size:9.5px;font-weight:700;
+  letter-spacing:.06em;padding:2px 7px;border-radius:5px;text-transform:uppercase}
+.turwrap{display:grid;grid-template-columns:190px 1fr 232px;gap:14px;min-height:0}
+.turbig{font-family:var(--disp);font-size:38px;font-weight:600;letter-spacing:-.035em;
+  line-height:1;font-variant-numeric:tabular-nums;color:#FFD426}
+.turx{font-family:var(--num);font-size:12px;color:var(--dim);margin-top:3px}
+.turbar{height:5px;background:var(--panel2);border-radius:3px;margin-top:11px;overflow:hidden}
+.turbar i{display:block;height:100%;background:#FFD426;border-radius:3px;
+  transition:width .4s;width:0}
+.turops{font-family:var(--num);font-size:11px;overflow:auto;min-height:0}
+.turops div{display:flex;justify-content:space-between;gap:8px;padding:2.5px 0;
+  border-bottom:.5px solid var(--hair)}
+.turmc{border-collapse:collapse;width:100%;font-size:11px}
+.turmc th{color:var(--faint);font-weight:500;text-align:right;padding:0 0 4px}
+.turmc th:first-child{text-align:left}
+.turmc td{font-family:var(--num);text-align:right;padding:3px 0;
+  border-top:.5px solid var(--hair)}
+.turmc td:first-child{text-align:left;font-family:var(--ui)}
+.turnote{font-size:11px;color:var(--dim);margin-top:8px;line-height:1.4}
+@media (max-width:760px){
+  .turwrap{grid-template-columns:1fr;gap:12px}
+  .turops{max-height:150px}
+}
 </style>
 <div class="deck">
   <div class="bar">
@@ -374,6 +404,35 @@ footer{font-size:12px;color:var(--dim);line-height:1.6;letter-spacing:-.005em}
       </div>
     </div>
   </section>
+<section class="p" data-a="tur" style="grid-area:tur" id="tur">
+      <div class="ph"><i class="sq" style="background:#FFD426"></i><b>De $10 a $100 en 5 horas</b>
+      <span class="ficc">simulación</span>
+      <span class="r">números inventados a propósito · aquí no hay mercado</span></div>
+      <div class="pb turwrap">
+        <div>
+          <div class="turbig" id="tEq">$10.00</div>
+          <div class="turx" id="tX">×1.00 · 0 de 60 operaciones</div>
+          <div class="turbar"><i id="tBar"></i></div>
+          <div class="ctrls" style="margin-top:12px;flex-wrap:wrap">
+            <button id="tGo">Lanzar</button>
+            <button data-p="" aria-pressed="true" class="tp">66,6%</button>
+            <button data-p="0.55" aria-pressed="false" class="tp">55%</button>
+          </div>
+          <div class="turx" id="tFin" style="margin-top:9px">—</div>
+        </div>
+        <div style="display:flex;flex-direction:column;min-height:0">
+          <svg id="tCurve" viewBox="0 0 620 150" preserveAspectRatio="none"
+            style="width:100%;height:104px" role="img"
+            aria-label="Curva de capital de la sesión simulada"></svg>
+          <div class="turops" id="tOps"></div>
+        </div>
+        <div>
+          <table class="turmc" id="tMc"></table>
+          <div class="turnote">Arriesgando la mitad de la cuenta cada 5&nbsp;min hacen
+            falta <b id="tNeed">—</b> de acierto. Un sistema bueno de verdad anda por
+            el 55%: ahí, 4 de cada 5 sesiones acaban en cero.</div>
+        </div>
+      </div></section>
 <section class="p" data-a="evi" style="grid-area:evi"><div class="ph"><i class="sq"></i>
       <b>Evidencia</b><span class="r">medido, no supuesto</span></div>
       <div class="pb" style="overflow:auto">
@@ -1163,7 +1222,7 @@ setInterval(slow, 15000);
     pulpo:   ["oct","agt","cnv"],
     capital: ["cap","dec","ops"],
     mercado: ["prc","mkt","ord"],
-    pruebas: ["con","evi"],
+    pruebas: ["tur","con","evi"],
   };
   const nav = document.querySelector(".tabs");
   if(!nav) return;
@@ -1216,5 +1275,74 @@ setInterval(slow, 15000);
       {subtree:true, childList:true, characterData:true});
     copia();
   }
+})();
+</script>
+
+<script>
+/* ── Sesión de $10 ──────────────────────────────────────────────────────────
+   Pinta lo que devuelve /api/turbo. La curva va en escala logarítmica porque
+   una cuenta que se multiplica por diez es lineal solo en logaritmo; en escala
+   normal los primeros veinte pasos serían una raya plana. */
+(function(){
+  const $ = id => document.getElementById(id);
+  if(!$("tEq")) return;
+  let acierto = "", vivo = false, arrancada = false;
+
+  function curva(pts, obj){
+    const svg = $("tCurve"); if(!svg) return;
+    const W = 620, H = 150, lo = Math.log(0.5), hi = Math.log(obj * 1.15);
+    const y = v => H - 6 - (Math.log(Math.max(v, 0.5)) - lo) / (hi - lo) * (H - 12);
+    const x = i => pts.length < 2 ? 0 : i / (pts.length - 1) * W;
+    const d = pts.map((v, i) => `${i ? "L" : "M"}${x(i).toFixed(1)} ${y(v).toFixed(1)}`).join("");
+    const fin = pts[pts.length - 1];
+    svg.innerHTML =
+      `<line x1="0" y1="${y(obj)}" x2="${W}" y2="${y(obj)}" stroke="#FFD426"
+         stroke-width="1" stroke-dasharray="3 3" opacity=".5"/>
+       <line x1="0" y1="${y(10)}" x2="${W}" y2="${y(10)}" stroke="#38383A" stroke-width="1"/>
+       <path d="${d}" fill="none" stroke="${fin >= 10 ? "#FFD426" : "#FF453A"}"
+         stroke-width="2" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>`;
+  }
+
+  function pintar(s){
+    $("tEq").textContent = "$" + s.eq.toFixed(2);
+    $("tEq").style.color = s.fin === "ruina" ? "var(--neg)" : "#FFD426";
+    $("tX").textContent = `×${s.x.toFixed(2)} · ${s.hechas} de ${s.total} operaciones`
+      + (s.hechas ? ` · ${s.aciertos} acierto${s.aciertos === 1 ? "" : "s"}` : "");
+    $("tBar").style.width = Math.min(100, s.eq / s.objetivo * 100).toFixed(1) + "%";
+    $("tFin").textContent = {objetivo: "Llegó a $100. Una de cada tres no llega ni de lejos.",
+      ruina: "Cero. No hay vuelta atrás: por debajo de $1 no se puede ni operar.",
+      agotada: "Se acabaron las 5 horas sin llegar."}[s.fin] || (s.hechas ? "En marcha…" : "—");
+    $("tFin").style.color = s.fin === "ruina" ? "var(--neg)"
+      : (s.fin === "objetivo" ? "var(--pos)" : "var(--dim)");
+    curva(s.curva, s.objetivo);
+    $("tOps").innerHTML = s.ops.map(o =>
+      `<div><span class="dim">#${o.n}</span>
+        <span class="${o.gana ? "pos" : "neg"}">${o.gana ? "▲" : "▼"} ${o.delta > 0 ? "+" : ""}${o.delta.toFixed(2)}</span>
+        <span>$${o.despues.toFixed(2)}</span></div>`).join("")
+      || '<div class="dim" style="border:0">Sin operaciones todavía.</div>';
+    if(s.mc){
+      $("tNeed").textContent = (s.mc.need * 100).toFixed(1).replace(".", ",") + "%";
+      $("tMc").innerHTML = "<tr><th>Acierto</th><th>Llega a 100</th><th>Acaba en 0</th></tr>"
+        + s.mc.filas.map(f => `<tr><td>${(f.p * 100).toFixed(1).replace(".", ",")}%</td>
+            <td class="pos">${(f.objetivo * 100).toFixed(0)}%</td>
+            <td class="neg">${(f.ruina * 100).toFixed(0)}%</td></tr>`).join("");
+    }
+    // Al lanzar, la sesión aún tiene 0 operaciones: mirar `hechas` aquí apagaba
+    // el sondeo justo en el primer tick y la curva se quedaba congelada.
+    vivo = arrancada && !s.fin;
+  }
+
+  const leer = q => fetch("/api/turbo" + (q || "")).then(r => r.json()).then(pintar).catch(()=>{});
+  $("tGo").onclick = () => {
+    arrancada = true;
+    leer("?lanzar=1" + (acierto ? "&acierto=" + acierto : ""));
+  };
+  document.querySelectorAll(".tp").forEach(b => b.onclick = () => {
+    acierto = b.dataset.p;
+    document.querySelectorAll(".tp").forEach(o =>
+      o.setAttribute("aria-pressed", String(o === b)));
+  });
+  leer();
+  setInterval(() => { if(vivo) leer(); }, 1500);
 })();
 </script>
