@@ -460,6 +460,61 @@ palanca que multiplica es exactamente la misma que divide, y llega antes abajo.
 `bot/turbo.py` tiene las dos cuentas (`camino()` y `required_winrate()`), y el
 motor de la cuenta vive en el navegador para que la demo funcione sin servidor.
 
+## ¿Y si los agentes fueran agentes de Claude?
+
+Lo primero, que es lo que más se olvida: **este bot no gasta ni un token**. Los
+cinco agentes son hilos de Python con indicadores calculados a mano. Puede
+correr años en un portátil por el precio de la electricidad. No se apaga cuando
+se acaba una sesión ni cuando se acaba una cuota.
+
+`bot/coste.py` responde la otra pregunta: si cada agente fuese una llamada a la
+API de Claude, ¿cuánto aguantaría? Se mide con los tamaños reales de lo que cada
+agente tendría que leer y con los precios publicados de la API.
+
+```
+19 activos · 90 velas diarias cada uno
+
+técnico      13.733 tokens   ← necesita la serie entera, es su trabajo
+escáner       3.254
+noticias      2.200
+riesgo          608
+ejecución       508
+sistema       4.500 (cacheado)
+TOTAL        24.803 tokens por ciclo
+```
+
+Con **10 agentes y $20**, cambiando solo cada cuánto se pregunta:
+
+```
+cadencia              ciclos/día    Opus 5   Sonnet 5    Haiku
+cada 20 s (ahora)          4.320        0h         1h       2h
+cada 5 min                   288        5h        13h      27h
+cada hora                     24        3d         7d      13d
+4 veces al día                 4       16d        40d      80d
+una vez al día                 1       64d       160d     320d
+```
+
+Ahí está la respuesta realista, y no es la velocidad: **es la cadencia**. El
+sistema opera velas **diarias**. Preguntarle a un modelo cada 20 segundos es
+pagar 4.320 opiniones al día sobre un gráfico que cambia una vez. Con $20 y una
+pregunta al día, diez agentes de Opus 5 aguantan **dos meses**; los mismos diez
+agentes al ritmo de ahora se funden los $20 **antes de una hora**.
+
+Y la comparación que zanja el asunto:
+
+```
+el sistema gana                       0,0027 $/día sobre $100
+10 agentes cada 20 s                 269,99  $/día   (99.327× lo que gana)
+10 agentes una vez al día              0,06  $/día        (23× lo que gana)
+```
+
+Incluso en la versión barata —Haiku, una pregunta al día— harían falta **$2.299
+operando solo para pagar la factura del modelo**. Por debajo de eso el modelo
+cuesta más que lo que el sistema gana, y con $10 o $100 no hay conversación
+posible.
+
+Reproducible con `python3 -m bot.coste --presupuesto 20 --agentes 10`.
+
 ## En el móvil
 
 El dashboard no es el mosaico encogido. Por debajo de 760px el sistema se reparte en
