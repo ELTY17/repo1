@@ -32,11 +32,36 @@ h1,h2,h3{margin:0;text-wrap:balance}
 a{color:var(--brass)}
 .num{font-family:var(--num);font-variant-numeric:tabular-nums}
 .pos{color:var(--pos)} .neg{color:var(--neg)} .dim{color:var(--dim)}
-.deck{max-width:1400px;margin:0 auto;padding:22px 22px 64px}
+/* Formato horizontal: una sola fila de columnas a pantalla completa que se
+   recorre de izquierda a derecha. En vertical (móvil de pie) vuelve a apilarse. */
+.deck{height:100dvh;display:flex;flex-direction:column;overflow:hidden;padding:0}
+.track{flex:1;min-height:0;display:flex;gap:14px;padding:14px 20px 10px;
+  overflow-x:auto;overflow-y:hidden;scroll-snap-type:x proximity;
+  align-items:stretch;scroll-behavior:smooth}
+.track:focus-visible{outline:none}
+.track::-webkit-scrollbar{height:9px}
+.track::-webkit-scrollbar-track{background:transparent}
+.track::-webkit-scrollbar-thumb{background:#48484A;border-radius:99px}
+.track::-webkit-scrollbar-thumb:hover{background:#5A5A5C}
+.col{flex:none;display:flex;flex-direction:column;gap:14px;min-height:0;
+  scroll-snap-align:start}
+.col > .p{min-height:0}
+.col > .p:only-child,.col > .p.grow,.col > .p:last-child{flex:1}
+.col .pb{overflow:auto;min-height:0}
+.hint{flex:none;text-align:center;color:var(--faint);font-size:11.5px;
+  padding:2px 0 10px;letter-spacing:-.005em}
+@media (max-width:1000px), (orientation:portrait){
+  .deck{height:auto;overflow:visible;padding:0 0 48px}
+  .track{flex-direction:column;overflow:visible;padding:14px;height:auto}
+  .col{width:auto!important;flex:none}
+  .col .pb{overflow:visible}
+  .hint{display:none}
+}
 
 /* barra superior */
 .bar{display:flex;flex-wrap:wrap;gap:14px;align-items:center;justify-content:space-between;
-  background:var(--panel);padding:14px 18px;border-radius:var(--r)}
+  background:var(--panel);padding:13px 18px;border-radius:var(--r);
+  margin:14px 20px 0;flex:none}
 .brand{display:flex;align-items:center;gap:11px;min-width:0}
 .brand h1{font-family:var(--disp);font-size:19px;font-weight:600;letter-spacing:-.022em;
   white-space:nowrap}
@@ -56,10 +81,6 @@ button:focus-visible{outline:2.5px solid var(--blue);outline-offset:2px}
 
 /* rejilla de paneles */
 .grid{display:grid;gap:14px;margin-top:14px}
-.r1{grid-template-columns:minmax(0,260px) minmax(0,1fr) minmax(0,330px)}
-.r3{grid-template-columns:minmax(0,1.25fr) minmax(0,1fr)}
-.r4{grid-template-columns:minmax(0,250px) minmax(0,1fr) minmax(0,1fr)}
-@media(max-width:1180px){.r1,.r3,.r4{grid-template-columns:1fr}}
 .p{background:var(--panel);border-radius:var(--r);min-width:0;display:flex;
   flex-direction:column;overflow:hidden}
 .ph{display:flex;align-items:center;gap:9px;padding:13px 17px 9px;
@@ -99,9 +120,15 @@ button:focus-visible{outline:2.5px solid var(--blue);outline-offset:2px}
   color:var(--faint);margin-top:6px}
 
 /* el anillo */
-.ringwrap{display:grid;grid-template-columns:190px minmax(0,1fr) 190px;gap:0}
-@media(max-width:1000px){.ringwrap{grid-template-columns:1fr}
-  .rail{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}}
+/* En horizontal el pulpo manda: ocupa todo el ancho de su columna y las
+   lecturas se reparten debajo, en vez de robarle sitio a los lados. */
+.ringwrap{display:flex;flex-direction:column;flex:1;min-height:0}
+.rails{display:flex;gap:0;border-top:1px solid var(--hair);flex:none}
+.rails .rail{flex:1;display:grid;grid-template-columns:repeat(auto-fit,minmax(108px,1fr));
+  border-right:1px solid var(--hair)}
+.rails .rail.rr{border-right:none;border-left:none}
+.rails .rc{border-bottom:none;border-right:1px solid var(--hair);padding:9px 12px}
+.rails .rc:last-child{border-right:none}
 .rail{border-right:1px solid var(--hair)}
 .rail.rr{border-right:none;border-left:1px solid var(--hair)}
 .rc{padding:11px 15px;border-bottom:1px solid var(--hair);font-size:12px}
@@ -112,7 +139,7 @@ button:focus-visible{outline:2.5px solid var(--blue);outline-offset:2px}
   font-variant-numeric:tabular-nums}
 .rc .n{color:var(--faint);font-size:10.5px;margin-top:2px}
 .rc.on{background:var(--panel2)}
-#ring{display:block;width:100%;height:auto}
+#ring{display:block;width:100%;flex:1;min-height:260px}
 
 /* barras de estado */
 .abar{display:flex;align-items:center;gap:10px;padding:7px 0;font-size:12px}
@@ -143,22 +170,20 @@ td.why2{font-family:var(--ui);color:var(--dim);font-size:11px}
   font-weight:600;font-family:var(--ui)}
 .tag.BUY{background:var(--pos-soft);color:var(--pos)}
 .tag.SELL{background:var(--neg-soft);color:var(--neg)}
-.scroll{max-height:230px;overflow-y:auto;overflow-x:auto}
-.wire{font-family:var(--num);font-size:11.5px;line-height:1.8;max-height:240px;
+.scroll{overflow:auto;min-height:0}
+.wire{font-family:var(--num);font-size:11.5px;line-height:1.8;
   overflow:hidden;display:flex;flex-direction:column-reverse}
 .wire p{margin:0;padding:1px 0;border-bottom:1px solid var(--hair);display:flex;gap:7px}
 .wire p:first-child{border-bottom:none}
 .wire .who{color:var(--blue);min-width:66px}
 
 /* prosa de abajo */
-.notes{margin-top:14px;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px}
-@media(max-width:900px){.notes{grid-template-columns:1fr}}
+.notes{display:flex;flex-direction:column;gap:14px}
 .notes h3{font-family:var(--disp);font-size:17px;font-weight:600;letter-spacing:-.02em;
   margin-bottom:9px}
 .notes p{margin:0 0 11px;font-size:13.5px;color:var(--dim);line-height:1.55}
 .notes strong{color:var(--ink)}
-footer{margin-top:22px;font-size:11.5px;color:var(--faint);line-height:1.65;
-  text-transform:none;letter-spacing:-.005em;padding-top:18px}
+footer{font-size:12px;color:var(--dim);line-height:1.6;letter-spacing:-.005em}
 
 /* animación */
 @keyframes flow{to{stroke-dashoffset:-64}}
@@ -170,6 +195,7 @@ footer{margin-top:22px;font-size:11.5px;color:var(--faint);line-height:1.65;
 .lidT,.lidB{transition:y .26s cubic-bezier(.4,0,.2,1)}
 .pup{transition:x .3s ease,y .26s ease,height .22s ease,rx .22s ease}
 .mantle{transition:fill .6s ease,opacity .6s ease}
+.blush{transition:opacity .55s ease,fill .55s ease}
 @keyframes bounce{0%,100%{transform:translateY(0) scale(1)}
   28%{transform:translateY(-13px) scale(1.045)}
   60%{transform:translateY(3px) scale(.985)}}
@@ -214,21 +240,15 @@ footer{margin-top:22px;font-size:11.5px;color:var(--faint);line-height:1.65;
     </div>
   </div>
 
-  <div class="grid r1">
-    <section class="p"><div class="ph"><i class="sq"></i><b>Capital</b><span class="r" id="eqr">—</span></div>
+  <div class="track" id="track" tabindex="0">
+    <div class="col" style="width:280px" data-col="Estado">
+<section class="p"><div class="ph"><i class="sq"></i><b>Capital</b><span class="r" id="eqr">—</span></div>
       <div class="pb">
         <div class="big num" id="eq">$100.00</div>
         <div class="sub" id="dl">—</div>
         <dl class="kv" id="kv"></dl>
       </div></section>
-
-    <section class="p"><div class="ph"><i class="sq"></i><b>Precio</b>
-      <span id="ckSym" style="color:var(--brass)">—</span>
-      <span class="r">90 velas diarias · dato real</span></div>
-      <div class="pb"><svg id="candles" viewBox="0 0 760 208" style="width:100%;height:208px"
-        role="img" aria-label="Velas diarias del activo en juego"></svg></div></section>
-
-    <section class="p"><div class="ph"><i class="sq"></i><b>Decisión</b>
+<section class="p"><div class="ph"><i class="sq"></i><b>Decisión</b>
       <span class="r" id="wround">—</span></div>
       <div class="pb">
         <div class="call" id="call">En espera</div>
@@ -243,57 +263,61 @@ footer{margin-top:22px;font-size:11.5px;color:var(--faint);line-height:1.65;
           <div class="glab"><span>−1,00</span><span>UMBRAL +0,35</span><span>+1,00</span></div>
         </div>
       </div></section>
-  </div>
-
-  <section class="p" style="margin-top:8px">
+    </div>
+    <div class="col" style="width:860px" data-col="El pulpo">
+<section class="p" style="margin-top:8px">
     <div class="ph"><i class="sq"></i><b>El pulpo</b>
       <span class="r">ocho brazos · cinco con instrumento · cada impulso es un voto que de verdad se mandó</span></div>
     <div class="ringwrap">
-      <div class="rail" id="railL"></div>
-      <svg id="ring" viewBox="0 0 1000 480" role="img"
+      <svg id="ring" viewBox="0 0 1000 496" preserveAspectRatio="xMidYMid meet" role="img"
         aria-label="Un pulpo cuyos ocho brazos son los agentes del sistema"></svg>
-      <div class="rail rr" id="railR"></div>
+      <div class="rails">
+        <div class="rail" id="railL"></div>
+        <div class="rail rr" id="railR"></div>
+      </div>
     </div>
   </section>
-
-  <div class="grid r3" style="margin-top:8px">
-    <section class="p"><div class="ph"><i class="sq"></i><b>Operaciones cerradas</b>
+    </div>
+    <div class="col" style="width:470px" data-col="Mercado">
+<section class="p"><div class="ph"><i class="sq"></i><b>Precio</b>
+      <span id="ckSym" style="color:var(--brass)">—</span>
+      <span class="r">90 velas diarias · dato real</span></div>
+      <div class="pb"><svg id="candles" viewBox="0 0 760 208" style="width:100%;height:208px"
+        role="img" aria-label="Velas diarias del activo en juego"></svg></div></section>
+<section class="p"><div class="ph"><i class="sq"></i><b>Operaciones cerradas</b>
       <span class="r">resultado de cada operación cerrada, en orden</span></div>
       <div class="pb"><svg id="furnace" viewBox="0 0 700 190" style="width:100%;height:190px"
         role="img" aria-label="Resultado de cada operación cerrada"></svg></div></section>
-
-    <section class="p"><div class="ph"><i class="sq"></i><b>Cono de ruina</b>
+    </div>
+    <div class="col" style="width:430px" data-col="Riesgo">
+<section class="p"><div class="ph"><i class="sq"></i><b>Cono de ruina</b>
       <span class="r">10.000 futuros · monte carlo sobre las 36 operaciones reales</span></div>
       <div class="pb"><svg id="cone" viewBox="0 0 560 190" style="width:100%;height:190px"
         role="img" aria-label="Distribución del capital en 10.000 futuros simulados"></svg>
         <div class="kv" id="mckv" style="grid-template-columns:repeat(4,1fr)"></div>
       </div></section>
-  </div>
-
-  <div class="grid r4" style="margin-top:8px">
-    <section class="p"><div class="ph"><i class="sq"></i><b>Agentes</b></div>
+<section class="p"><div class="ph"><i class="sq"></i><b>Agentes</b></div>
       <div class="pb" id="astat"></div></section>
-
-    <section class="p"><div class="ph"><i class="sq"></i><b>Mercado vigilado</b>
+    </div>
+    <div class="col" style="width:390px" data-col="Universo">
+<section class="p"><div class="ph"><i class="sq"></i><b>Mercado vigilado</b>
       <span class="r">vigilado, no operado · últimas 24 h</span></div>
       <div class="pb"><div class="cart" id="cart"></div></div></section>
-
-    <section class="p"><div class="ph"><i class="sq"></i><b>Órdenes</b>
+    </div>
+    <div class="col" style="width:490px" data-col="Actividad">
+<section class="p"><div class="ph"><i class="sq"></i><b>Órdenes</b>
       <span class="r" id="logn">0 ÓRDENES</span></div>
       <div class="pb scroll"><table id="blot"></table></div></section>
-  </div>
-
-  <section class="p" style="margin-top:8px">
+<section class="p" style="margin-top:8px">
     <div class="ph"><i class="sq"></i><b>Conversación</b><span class="r">lo que se dicen entre ellos</span></div>
     <div class="pb wire" id="wire"></div></section>
-
-  <section class="p" style="margin-top:8px">
+    </div>
+    <div class="col" style="width:620px" data-col="Evidencia">
+<section class="p" style="margin-top:8px">
     <div class="ph"><i class="sq"></i><b>Qué aportó cada mejora</b>
       <span class="r">portado de freqtrade (gpl-3.0, 54.202 ★) y medido pieza a pieza</span></div>
     <div class="pb" style="overflow-x:auto"><table id="abl"></table></div></section>
-
-  <div class="notes">
-    <section class="p"><div class="pb">
+<section class="p"><div class="pb">
       <h3>Por qué un pulpo</h3>
       <p>Dos tercios de las neuronas de un pulpo no están en su cerebro: están repartidas
         por los brazos, que perciben y actúan por su cuenta y solo le mandan al cerebro un
@@ -305,8 +329,7 @@ footer{margin-top:22px;font-size:11.5px;color:var(--faint);line-height:1.65;
         del 0,05&nbsp;%. <strong>Noticias no vota en el histórico</strong> —los titulares
         antiguos no son recuperables— y por eso su voto cuenta como cero.</p>
     </div></section>
-
-    <section class="p" style="border-top:2px solid var(--brass)"><div class="pb">
+<section class="p" style="border-top:2px solid var(--brass)"><div class="pb">
       <h3>Lo que el cono no dice</h3>
       <p>El cono remuestrea las <strong>36 operaciones reales</strong> y las reparte en otro
         orden, 10.000 veces, aplicando el mismo kill switch. Dice que con esta distribución
@@ -333,15 +356,19 @@ footer{margin-top:22px;font-size:11.5px;color:var(--faint);line-height:1.65;
         puede repartir lo que ya ocurrió; no sabe inventar el crash que no estaba en la
         muestra. Si el régimen cambia, este cono no vale nada.</p>
     </div></section>
-  </div>
-
-  <footer>
+    </div>
+    <div class="col colend" style="width:520px">
+      <section class="p" style="flex:1"><div class="ph"><i class="sq"></i><b>Aviso</b></div>
+        <div class="pb" style="overflow:auto"><footer>
     Precios reales: Kraken (cripto) y Yahoo Finance (SPY = S&amp;P&nbsp;500, QQQ = Nasdaq&nbsp;100).
     Dinero simulado en su totalidad — en el código, <span style="font-family:var(--num)">LiveBroker</span>
     lanza <span style="font-family:var(--num)">NotImplementedError</span> a propósito, así que ninguna
     ruta puede mover fondos. El rendimiento pasado no predice el futuro.
     Esto no es asesoramiento financiero.
-  </footer>
+  </footer></div></section>
+    </div>
+  </div>
+  <div class="hint" id="hint">Desliza →&nbsp;&nbsp;·&nbsp;&nbsp;flechas ← →&nbsp;&nbsp;·&nbsp;&nbsp;rueda del ratón</div>
 </div>
 
 <script>
@@ -354,6 +381,33 @@ const cl = v => v>0?"pos":(v<0?"neg":"dim");
 const pctS = v => (v>=0?"+":"−") + Math.abs(v*100).toFixed(2) + " %";
 
 const R = D.rounds, CURVE = D.curve, NB = CURVE.length, BASE = 100;
+
+/* ---- recorrido horizontal: teclado, rueda y una pista que se retira ---- */
+(function horizontal(){
+  const tr = $("track"); if(!tr) return;
+  const step = () => Math.min(tr.clientWidth * 0.8, 900);
+  addEventListener("keydown", e=>{
+    if(e.target.tagName === "BUTTON") return;
+    if(e.key === "ArrowRight"){ tr.scrollLeft += step(); e.preventDefault(); }
+    if(e.key === "ArrowLeft"){  tr.scrollLeft -= step(); e.preventDefault(); }
+    if(e.key === "Home"){ tr.scrollLeft = 0; e.preventDefault(); }
+    if(e.key === "End"){ tr.scrollLeft = tr.scrollWidth; e.preventDefault(); }
+  });
+  // la rueda vertical mueve la fila, salvo dentro de un panel que ya se desplaza
+  tr.addEventListener("wheel", e=>{
+    if(Math.abs(e.deltaY) <= Math.abs(e.deltaX)) return;
+    const sc = e.target.closest(".pb, .scroll, .wire");
+    if(sc && sc.scrollHeight > sc.clientHeight + 2){
+      const atTop = sc.scrollTop <= 0, atBot = sc.scrollTop + sc.clientHeight >= sc.scrollHeight - 2;
+      if(!((e.deltaY < 0 && atTop) || (e.deltaY > 0 && atBot))) return;
+    }
+    tr.scrollLeft += e.deltaY; e.preventDefault();
+  }, {passive:false});
+  const hint = $("hint");
+  tr.addEventListener("scroll", ()=>{ if(hint && tr.scrollLeft > 40) hint.style.opacity = "0"; },
+                      {passive:true});
+  if(hint) hint.style.transition = "opacity .4s";
+})();
 
 /* ================= EL PULPO ================= */
 /* Anatomía: manto (el saco), cabeza con los ojos a los lados y la pupila
@@ -470,7 +524,10 @@ function headSVG(){
     <ellipse cx="${cx}" cy="225" rx="28" ry="22" fill="var(--oct-dark)" opacity=".78"/>
     <clipPath id="ec-${side}"><ellipse cx="${cx}" cy="226" rx="21.5" ry="16"/></clipPath>
     <g clip-path="url(#ec-${side})">
-      <ellipse cx="${cx}" cy="226" rx="21.5" ry="16" fill="#F2EFE6"/>
+      <ellipse cx="${cx}" cy="226" rx="21.5" ry="16" fill="#F0E7D2"/>
+      <ellipse cx="${cx}" cy="226" rx="19" ry="13.5" fill="#D9A63C"/>
+      <ellipse cx="${cx}" cy="226" rx="19" ry="13.5" fill="none" stroke="#8A5F17"
+        stroke-width="1.6" opacity=".7"/>
       <rect class="pup" id="pup-${side}" x="${cx-15}" y="221" width="30" height="9.5"
         rx="4.7" fill="#0A1420"/>
       <ellipse class="glint" id="gl-${side}" cx="${cx-7*flip}" cy="222" rx="4" ry="2.7"
@@ -485,12 +542,23 @@ function headSVG(){
 
   return `<g id="octoWrap"><g id="octo">
     <ellipse class="halo" cx="500" cy="158" rx="128" ry="134" fill="var(--oct)" opacity=".10"/>
+    <defs>
+      <!-- Mancha difuminada. Nada de currentColor en un degradado: dentro de un
+           <stop> resuelve contra el propio degradado, no contra quien lo usa. -->
+      <filter id="soft" x="-40%" y="-40%" width="180%" height="180%">
+        <feGaussianBlur stdDeviation="17"/>
+      </filter>
+    </defs>
     <path d="${mantle}" fill="var(--oct)" stroke="#04100E" stroke-width="3"/>
     <clipPath id="mclip"><path d="${mantle}"/></clipPath>
     <g clip-path="url(#mclip)">
       <ellipse cx="468" cy="98" rx="42" ry="54" fill="#BFE0FF" opacity=".13"/>
       ${spots}${bumps}
       <path class="mantle" id="mantle" d="${mantle}" fill="var(--oct)" opacity="0"/>
+      ${[[462,102,44,32],[548,120,38,28],[500,176,50,32],[436,190,32,26],
+         [560,196,30,24],[494,72,30,20],[452,246,42,17],[548,246,42,17]]
+        .map(([x,y,rx,ry])=>`<ellipse class="blush" cx="${x}" cy="${y}" rx="${rx}"
+          ry="${ry}" fill="#2E8FEE" filter="url(#soft)" opacity="0"/>`).join("")}
     </g>
     <path d="M418 208 q82 40 164 0" fill="none" stroke="var(--oct-dark)"
       stroke-width="9" opacity=".38" stroke-linecap="round"/>
@@ -500,7 +568,7 @@ function headSVG(){
     <path d="M436 262 q18 20 32 11 q16 18 32 7 q16 11 32 -7 q14 9 32 -11"
       fill="var(--oct-dark)" opacity=".8" stroke="#04100E" stroke-width="2"/>
     <path id="mouth" d="M485 252 q15 3 30 0" fill="none" stroke="#08121C"
-      stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round"/>
+      stroke-width="4.8" stroke-linecap="round" stroke-linejoin="round"/>
     <text id="chest" x="500" y="308" text-anchor="middle" font-family="IBM Plex Mono,monospace"
       font-size="17" font-weight="600" fill="var(--faint)">· · ·</text>
     <text x="500" y="30" text-anchor="middle" font-family="IBM Plex Mono,monospace"
@@ -632,9 +700,9 @@ function lamp(k, on){
 const FACE = {
   neutral:{mouth:"M485 252 q15 3 30 0",            lidT:0,  lidB:0,  pup:[0,0,9.5],  skin:null,       hold:0},
   think:  {mouth:"M492 252 h16",                    lidT:5,  lidB:3,  pup:[-6,-2,9.5],skin:"#1E63B0",  hold:0},
-  happy:  {mouth:"M480 245 q20 17 40 0",            lidT:0,  lidB:9,  pup:[0,1,9],    skin:"#16A06B",  hold:2600},
+  happy:  {mouth:"M482 246 q18 15 36 0",            lidT:0,  lidB:9,  pup:[0,1,9],    skin:"#16A06B",  hold:2600},
   glad:   {mouth:"M483 247 q17 12 34 0",            lidT:0,  lidB:5,  pup:[0,0,9.5],  skin:"#1B8F72",  hold:1400},
-  sad:    {mouth:"M480 259 q20 -17 40 0",           lidT:11, lidB:0,  pup:[0,3,8],    skin:"#B0443A",  hold:2600},
+  sad:    {mouth:"M482 258 q18 -15 36 0",           lidT:11, lidB:0,  pup:[0,3,8],    skin:"#B0443A",  hold:2600},
   wow:    {mouth:"M489 243 q11 21 22 0 q-11 10 -22 0", lidT:0, lidB:0, pup:[0,-1,15], skin:"#3FA0FF",  hold:1800},
 };
 
@@ -658,11 +726,19 @@ function setFace(_, m){
       pu.setAttribute("rx", Math.min(f.pup[2]/2, 5));
     }
   });
+  // Un pulpo no se repinta entero: se le enciende una zona. Un lavado muy leve
+  // sobre todo el manto, y el color de verdad concentrado en dos manchas.
   const mt = $("mantle");
   if(mt){
     mt.setAttribute("fill", f.skin || "var(--oct)");
-    mt.setAttribute("opacity", f.skin ? ".78" : "0");
+    mt.setAttribute("opacity", f.skin ? ".22" : "0");
   }
+  document.querySelectorAll("#octo .blush").forEach((e, i)=>{
+    e.setAttribute("fill", f.skin || "#2E8FEE");
+    // opacidades distintas: el color le sube a manchas, no de golpe
+    e.setAttribute("opacity", f.skin ? String(0.62 + (i % 3) * 0.13) : "0");
+    e.style.transitionDelay = (i * 55) + "ms";
+  });
   const w = $("octoWrap");
   if(w){
     w.classList.remove("bounce", "flinch");
