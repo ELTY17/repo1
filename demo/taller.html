@@ -2,97 +2,101 @@
 <html lang="es"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Pulpo de Ocho Brazos</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Archivo:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
 <style>
 /* Puesto de mando: se compromete con un solo mundo visual — pantalla de sala de
    operaciones de madrugada — así que pinta todos sus colores a mano y no sigue
    el tema del visor. */
+/* Paleta y tipografía del sistema de Apple. Los grises son los de iOS/macOS
+   en modo oscuro; el azul, el verde y el rojo son los systemColors. La fuente no
+   se descarga: en un Mac o un iPhone esto resuelve a SF Pro y SF Mono de verdad. */
 :root{
-  --ground:#060F0E; --panel:#0B1716; --panel2:#10201D; --sunk:#081312;
-  --line:#1B302B; --hair:#152622;
-  --ink:#D9E9E2; --dim:#7B948C; --faint:#516761;
-  --brass:#E0A44C; --brass-2:#F3C173; --brass-soft:#2A2110;
-  --pos:#33C68D; --pos-soft:#0C2A21; --neg:#E86A5D; --neg-soft:#2A1310;
-  --oct:#C9704A; --oct-dark:#7A3A22; --oct-lite:#EDA97F;
-  --c-news:#E0A44C; --c-scan:#43B8A0; --c-tech:#9B7BD4;
-  --c-risk:#E8695C; --c-exec:#5E9BE0;
-  --disp:"Bricolage Grotesque",Georgia,serif;
-  --ui:"Archivo",system-ui,-apple-system,sans-serif;
-  --num:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+  --ground:#000000; --panel:#1C1C1E; --panel2:#2C2C2E; --sunk:#141416;
+  --line:#38383A; --hair:#2A2A2C;
+  --ink:#F5F5F7; --dim:#98989D; --faint:#6E6E73;
+  --blue:#0A84FF; --blue-2:#64B5FF; --blue-soft:#0B2740;
+  --brass:#0A84FF; --brass-2:#64B5FF; --brass-soft:#0B2740;
+  --pos:#30D158; --pos-soft:#0E2A16; --neg:#FF453A; --neg-soft:#33110E;
+  --oct:#2E8FEE; --oct-dark:#1B5AA8; --oct-lite:#8FC9FF;
+  --c-news:#0A84FF; --c-scan:#5AC8FA; --c-tech:#BF5AF2;
+  --c-risk:#FF9F0A; --c-exec:#30D158;
+  --ui:-apple-system,BlinkMacSystemFont,"SF Pro Text","Helvetica Neue",Arial,sans-serif;
+  --disp:-apple-system,BlinkMacSystemFont,"SF Pro Display","Helvetica Neue",Arial,sans-serif;
+  --num:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,monospace;
+  --r:12px;
 }
 *{box-sizing:border-box}
 body{margin:0;background:var(--ground);color:var(--ink);font-family:var(--ui);
-  font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased}
+  font-size:14px;line-height:1.47;letter-spacing:-.01em;
+  -webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
 h1,h2,h3{margin:0;text-wrap:balance}
 a{color:var(--brass)}
 .num{font-family:var(--num);font-variant-numeric:tabular-nums}
 .pos{color:var(--pos)} .neg{color:var(--neg)} .dim{color:var(--dim)}
-.deck{max-width:1440px;margin:0 auto;padding:14px 14px 48px}
+.deck{max-width:1400px;margin:0 auto;padding:22px 22px 64px}
 
 /* barra superior */
-.bar{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;
-  border:1px solid var(--line);background:var(--panel);padding:9px 13px}
+.bar{display:flex;flex-wrap:wrap;gap:14px;align-items:center;justify-content:space-between;
+  background:var(--panel);padding:14px 18px;border-radius:var(--r)}
 .brand{display:flex;align-items:center;gap:11px;min-width:0}
-.brand h1{font-family:var(--disp);font-size:19px;font-weight:800;letter-spacing:-.02em;
+.brand h1{font-family:var(--disp);font-size:19px;font-weight:600;letter-spacing:-.022em;
   white-space:nowrap}
 .tickerdot{width:8px;height:8px;border-radius:50%;background:var(--pos);flex:none;
   box-shadow:0 0 9px var(--pos)}
-.meta{font-family:var(--num);font-size:10.5px;color:var(--faint);letter-spacing:.04em;
-  display:flex;gap:14px;flex-wrap:wrap}
+.meta{font-size:12px;color:var(--faint);letter-spacing:-.005em;
+  display:flex;gap:16px;flex-wrap:wrap}
 .meta b{color:var(--dim);font-weight:500}
 .ctrls{display:flex;gap:5px}
-button{font-family:var(--num);font-size:10.5px;font-weight:500;letter-spacing:.06em;
-  padding:5px 10px;border:1px solid var(--line);background:var(--sunk);color:var(--dim);
-  cursor:pointer;transition:.15s}
-button:hover{border-color:var(--brass);color:var(--brass)}
-button[aria-pressed="true"]{background:var(--brass);border-color:var(--brass);color:#150F04}
-button:focus-visible{outline:2px solid var(--brass);outline-offset:1px}
+button{font-family:var(--ui);font-size:12.5px;font-weight:500;letter-spacing:-.01em;
+  padding:6px 14px;border:none;background:var(--panel2);color:var(--ink);
+  border-radius:980px;cursor:pointer;transition:background .18s,transform .12s}
+button:active{transform:scale(.96)}
+button:hover{background:#3A3A3C}
+button[aria-pressed="true"]{background:var(--blue);color:#fff}
+button:focus-visible{outline:2.5px solid var(--blue);outline-offset:2px}
 
 /* rejilla de paneles */
-.grid{display:grid;gap:8px;margin-top:8px}
+.grid{display:grid;gap:14px;margin-top:14px}
 .r1{grid-template-columns:minmax(0,260px) minmax(0,1fr) minmax(0,330px)}
 .r3{grid-template-columns:minmax(0,1.25fr) minmax(0,1fr)}
 .r4{grid-template-columns:minmax(0,250px) minmax(0,1fr) minmax(0,1fr)}
 @media(max-width:1180px){.r1,.r3,.r4{grid-template-columns:1fr}}
-.p{border:1px solid var(--line);background:var(--panel);min-width:0;display:flex;
-  flex-direction:column}
-.ph{display:flex;align-items:center;gap:8px;padding:6px 10px;border-bottom:1px solid var(--hair);
-  font-family:var(--num);font-size:9.5px;letter-spacing:.16em;text-transform:uppercase;
-  color:var(--faint);white-space:nowrap;overflow:hidden}
-.ph b{color:var(--dim);font-weight:500;letter-spacing:.16em}
-.ph .sq{width:6px;height:6px;background:var(--brass);flex:none}
-.ph .r{margin-left:auto;color:var(--faint);letter-spacing:.1em}
-.pb{padding:10px;min-width:0}
+.p{background:var(--panel);border-radius:var(--r);min-width:0;display:flex;
+  flex-direction:column;overflow:hidden}
+.ph{display:flex;align-items:center;gap:9px;padding:13px 17px 9px;
+  font-size:12.5px;font-weight:600;letter-spacing:-.01em;
+  color:var(--ink);white-space:nowrap;overflow:hidden}
+.ph b{color:var(--ink);font-weight:600}
+.ph .sq{width:7px;height:7px;border-radius:50%;background:var(--blue);flex:none}
+.ph .r{margin-left:auto;color:var(--faint);font-weight:400;font-size:11.5px;
+  letter-spacing:0;text-transform:none}
+.pb{padding:4px 17px 17px;min-width:0}
 
 /* capital */
-.big{font-family:var(--num);font-size:38px;font-weight:600;letter-spacing:-.03em;line-height:1}
+.big{font-family:var(--disp);font-size:40px;font-weight:600;letter-spacing:-.035em;
+  line-height:1;font-variant-numeric:tabular-nums}
 .sub{font-family:var(--num);font-size:12px;margin-top:3px}
 .kv{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--hair);
-  border:1px solid var(--hair);margin-top:11px}
-.kv div{background:var(--panel);padding:6px 8px}
-.kv dt{font-family:var(--num);font-size:8.5px;letter-spacing:.12em;text-transform:uppercase;
-  color:var(--faint)}
+  margin-top:15px;border-radius:9px;overflow:hidden}
+.kv div{background:var(--panel2);padding:9px 11px}
+.kv dt{font-size:11px;letter-spacing:-.005em;color:var(--faint)}
 .kv dd{margin:1px 0 0;font-family:var(--num);font-size:12.5px}
 
 /* ventana de decisión */
-.call{font-family:var(--disp);font-size:26px;font-weight:800;letter-spacing:-.02em;
-  line-height:1.05}
+.call{font-family:var(--disp);font-size:27px;font-weight:600;letter-spacing:-.03em;
+  line-height:1.06}
 .why{font-size:11.5px;color:var(--dim);margin-top:5px;min-height:44px;line-height:1.45}
 .votes{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--hair);
-  border:1px solid var(--hair);margin-top:9px}
-.votes div{background:var(--panel);padding:5px 7px}
-.votes dt{font-family:var(--num);font-size:8.5px;letter-spacing:.1em;text-transform:uppercase;
-  color:var(--faint)}
+  margin-top:13px;border-radius:9px;overflow:hidden}
+.votes div{background:var(--panel2);padding:8px 10px}
+.votes dt{font-size:11px;color:var(--faint);letter-spacing:-.005em}
 .votes dd{margin:1px 0 0;font-family:var(--num);font-size:13px}
 .gauge{margin-top:9px}
-.gtrack{height:7px;background:var(--sunk);border:1px solid var(--hair);position:relative}
-.gtrack i{position:absolute;top:0;bottom:0;left:50%;background:var(--brass);
+.gtrack{height:6px;background:var(--panel2);border-radius:3px;position:relative;overflow:visible}
+.gtrack i{position:absolute;top:0;bottom:0;left:50%;background:var(--blue);border-radius:3px;
   transition:width .5s,transform .5s,background .3s}
-.gthr{position:absolute;top:-3px;bottom:-3px;width:2px;background:var(--ink)}
-.glab{display:flex;justify-content:space-between;font-family:var(--num);font-size:8.5px;
-  color:var(--faint);margin-top:3px;letter-spacing:.06em}
+.gthr{position:absolute;top:-4px;bottom:-4px;width:2px;background:var(--ink);border-radius:1px}
+.glab{display:flex;justify-content:space-between;font-size:11px;
+  color:var(--faint);margin-top:6px}
 
 /* el anillo */
 .ringwrap{display:grid;grid-template-columns:190px minmax(0,1fr) 190px;gap:0}
@@ -100,26 +104,26 @@ button:focus-visible{outline:2px solid var(--brass);outline-offset:1px}
   .rail{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}}
 .rail{border-right:1px solid var(--hair)}
 .rail.rr{border-right:none;border-left:1px solid var(--hair)}
-.rc{padding:7px 9px;border-bottom:1px solid var(--hair);font-family:var(--num);font-size:10px}
+.rc{padding:11px 15px;border-bottom:1px solid var(--hair);font-size:12px}
 .rc:last-child{border-bottom:none}
-.rc .t{display:flex;align-items:center;gap:6px;color:var(--dim);letter-spacing:.09em;
-  text-transform:uppercase;font-size:8.5px}
-.rc .t i{width:7px;height:7px;flex:none;border-radius:2px}
-.rc .v{font-size:14px;margin-top:2px;letter-spacing:-.01em}
-.rc .n{color:var(--faint);font-size:9px;margin-top:1px}
+.rc .t{display:flex;align-items:center;gap:7px;color:var(--faint);font-size:11px}
+.rc .t i{width:8px;height:8px;flex:none;border-radius:50%}
+.rc .v{font-family:var(--num);font-size:15px;margin-top:3px;letter-spacing:-.02em;
+  font-variant-numeric:tabular-nums}
+.rc .n{color:var(--faint);font-size:10.5px;margin-top:2px}
 .rc.on{background:var(--panel2)}
 #ring{display:block;width:100%;height:auto}
 
 /* barras de estado */
-.abar{display:flex;align-items:center;gap:8px;padding:5px 0;font-family:var(--num);font-size:10px}
-.abar .nm{width:74px;color:var(--dim);text-transform:uppercase;letter-spacing:.08em;font-size:9px}
-.abar .tr{flex:1;height:6px;background:var(--sunk);border:1px solid var(--hair)}
+.abar{display:flex;align-items:center;gap:10px;padding:7px 0;font-size:12px}
+.abar .nm{width:82px;color:var(--dim);font-size:12px;letter-spacing:-.01em}
+.abar .tr{flex:1;height:6px;background:var(--panel2);border-radius:3px;overflow:hidden}
 .abar .tr i{display:block;height:100%}
-.abar .pc{width:34px;text-align:right;color:var(--faint)}
+.abar .pc{width:34px;text-align:right;color:var(--faint);font-family:var(--num)}
 
 /* cartograma */
-.cart{display:grid;grid-template-columns:repeat(auto-fill,minmax(78px,1fr));gap:3px}
-.tile{border:1px solid var(--hair);padding:5px 6px;font-family:var(--num);min-width:0}
+.cart{display:grid;grid-template-columns:repeat(auto-fill,minmax(86px,1fr));gap:6px}
+.tile{padding:8px 10px;font-family:var(--num);min-width:0;border-radius:8px}
 .tile .s{font-size:10.5px;font-weight:600;letter-spacing:.02em;overflow:hidden;
   text-overflow:ellipsis;white-space:nowrap}
 .tile .c{font-size:11px;margin-top:1px}
@@ -128,42 +132,45 @@ button:focus-visible{outline:2px solid var(--brass);outline-offset:1px}
 
 /* tablas y registro */
 table{width:100%;border-collapse:collapse;font-size:11.5px}
-th{text-align:left;font-family:var(--num);font-size:8.5px;letter-spacing:.12em;
-  text-transform:uppercase;color:var(--faint);font-weight:500;padding:0 6px 5px;
-  border-bottom:1px solid var(--line)}
-td{padding:4px 6px;border-bottom:1px solid var(--hair);font-family:var(--num);
-  font-variant-numeric:tabular-nums}
+th{text-align:left;font-size:11px;color:var(--faint);font-weight:400;
+  padding:0 8px 8px;border-bottom:1px solid var(--hair)}
+td{padding:7px 8px;border-bottom:1px solid var(--hair);font-family:var(--num);
+  font-size:12px;font-variant-numeric:tabular-nums}
 tbody tr:last-child td{border-bottom:none}
 td.sym{font-weight:600}
 td.why2{font-family:var(--ui);color:var(--dim);font-size:11px}
-.tag{display:inline-block;padding:0 5px;font-family:var(--num);font-size:9px;font-weight:600}
+.tag{display:inline-block;padding:2px 8px;border-radius:980px;font-size:10.5px;
+  font-weight:600;font-family:var(--ui)}
 .tag.BUY{background:var(--pos-soft);color:var(--pos)}
 .tag.SELL{background:var(--neg-soft);color:var(--neg)}
 .scroll{max-height:230px;overflow-y:auto;overflow-x:auto}
-.wire{font-family:var(--num);font-size:10.5px;line-height:1.65;max-height:230px;
+.wire{font-family:var(--num);font-size:11.5px;line-height:1.8;max-height:240px;
   overflow:hidden;display:flex;flex-direction:column-reverse}
 .wire p{margin:0;padding:1px 0;border-bottom:1px solid var(--hair);display:flex;gap:7px}
 .wire p:first-child{border-bottom:none}
-.wire .who{color:var(--brass);min-width:58px}
+.wire .who{color:var(--blue);min-width:66px}
 
 /* prosa de abajo */
-.notes{margin-top:20px;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px}
+.notes{margin-top:14px;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px}
 @media(max-width:900px){.notes{grid-template-columns:1fr}}
-.notes h3{font-family:var(--disp);font-size:15px;font-weight:800;margin-bottom:7px}
-.notes p{margin:0 0 9px;font-size:12.5px;color:var(--dim);line-height:1.55}
+.notes h3{font-family:var(--disp);font-size:17px;font-weight:600;letter-spacing:-.02em;
+  margin-bottom:9px}
+.notes p{margin:0 0 11px;font-size:13.5px;color:var(--dim);line-height:1.55}
 .notes strong{color:var(--ink)}
-footer{margin-top:14px;font-family:var(--num);font-size:9.5px;color:var(--faint);
-  line-height:1.7;letter-spacing:.03em;border-top:1px solid var(--line);padding-top:11px}
+footer{margin-top:22px;font-size:11.5px;color:var(--faint);line-height:1.65;
+  text-transform:none;letter-spacing:-.005em;padding-top:18px}
 
 /* animación */
 @keyframes flow{to{stroke-dashoffset:-64}}
-@keyframes corepulse{0%,100%{opacity:.30}50%{opacity:.60}}
+@keyframes corepulse{0%,100%{opacity:.22;transform:scale(1)}
+  50%{opacity:.5;transform:scale(1.06)}}
 @keyframes lampglow{0%,100%{opacity:1}50%{opacity:.45}}
 .blob{transition:transform .35s cubic-bezier(.3,1.6,.5,1);transform-box:fill-box;transform-origin:center}
 .lid{transform-box:fill-box;transform-origin:top;transform:scaleY(0);
   animation:blinkeye 7s ease-in-out infinite}
 @keyframes blinkeye{0%,94%,100%{transform:scaleY(0)}97%{transform:scaleY(1)}}
-.halo{animation:corepulse 4s ease-in-out infinite}
+.halo{transform-box:fill-box;transform-origin:center;
+  animation:corepulse 3.2s ease-in-out infinite}
 .lamp{transition:fill .3s} .lamp.lit{animation:lampglow 1.4s ease-in-out infinite}
 .blob{transition:transform .35s cubic-bezier(.3,1.6,.5,1)}
 .mantle{transition:fill 1s ease}
@@ -177,45 +184,45 @@ footer{margin-top:14px;font-family:var(--num);font-size:9.5px;color:var(--faint)
   <div class="bar">
     <div class="brand">
       <span class="tickerdot"></span>
-      <h1>PULPO DESK</h1>
+      <h1>Pulpo</h1>
       <div class="meta">
-        <span><b>5</b> AGENTES</span><span><b>22</b> INSTRUMENTOS VIGILADOS</span>
-        <span><b>402</b> BARRAS DIARIAS</span><span id="mclock">—</span>
-        <span style="color:var(--brass)">PAPEL · DINERO SIMULADO</span>
+        <span><b>5</b> agentes</span><span><b>22</b> instrumentos vigilados</span>
+        <span><b>402</b> barras diarias</span><span id="mclock">—</span>
+        <span style="color:var(--brass)">Papel · dinero simulado</span>
       </div>
     </div>
     <div class="ctrls">
-      <button id="play" aria-pressed="true">⏸ PAUSA</button>
+      <button id="play" aria-pressed="true">⏸ Pausa</button>
       <button id="sp1" aria-pressed="true">×1</button>
       <button id="sp2" aria-pressed="false">×2</button>
       <button id="sp4" aria-pressed="false">×4</button>
-      <button id="rst">↺ REINICIAR</button>
+      <button id="rst">↺ Reiniciar</button>
     </div>
   </div>
 
   <div class="grid r1">
-    <section class="p"><div class="ph"><i class="sq"></i><b>CAPITAL</b><span class="r" id="eqr">—</span></div>
+    <section class="p"><div class="ph"><i class="sq"></i><b>Capital</b><span class="r" id="eqr">—</span></div>
       <div class="pb">
         <div class="big num" id="eq">$100.00</div>
         <div class="sub" id="dl">—</div>
         <dl class="kv" id="kv"></dl>
       </div></section>
 
-    <section class="p"><div class="ph"><i class="sq"></i><b>PRECIO</b>
+    <section class="p"><div class="ph"><i class="sq"></i><b>Precio</b>
       <span id="ckSym" style="color:var(--brass)">—</span>
-      <span class="r">90 VELAS DIARIAS · DATO REAL</span></div>
+      <span class="r">90 velas diarias · dato real</span></div>
       <div class="pb"><svg id="candles" viewBox="0 0 760 208" style="width:100%;height:208px"
         role="img" aria-label="Velas diarias del activo en juego"></svg></div></section>
 
-    <section class="p"><div class="ph"><i class="sq"></i><b>VENTANA DE DECISIÓN</b>
+    <section class="p"><div class="ph"><i class="sq"></i><b>Decisión</b>
       <span class="r" id="wround">—</span></div>
       <div class="pb">
-        <div class="call" id="call">EN ESPERA</div>
+        <div class="call" id="call">En espera</div>
         <div class="why" id="why">Los brazos aún no han mandado su impulso.</div>
         <dl class="votes">
-          <div><dt>NOTICIAS</dt><dd id="v-news" class="dim">—</dd></div>
-          <div><dt>ESCÁNER</dt><dd id="v-scan" class="dim">—</dd></div>
-          <div><dt>TÉCNICO</dt><dd id="v-tech" class="dim">—</dd></div>
+          <div><dt>Noticias</dt><dd id="v-news" class="dim">—</dd></div>
+          <div><dt>Escáner</dt><dd id="v-scan" class="dim">—</dd></div>
+          <div><dt>Técnico</dt><dd id="v-tech" class="dim">—</dd></div>
         </dl>
         <div class="gauge"><div class="gtrack"><i id="gfill" style="width:0"></i>
           <span class="gthr" id="gthr"></span></div>
@@ -225,8 +232,8 @@ footer{margin-top:14px;font-family:var(--num);font-size:9.5px;color:var(--faint)
   </div>
 
   <section class="p" style="margin-top:8px">
-    <div class="ph"><i class="sq"></i><b>EL PULPO</b>
-      <span class="r">OCHO BRAZOS · CINCO CON INSTRUMENTO · CADA IMPULSO ES UN VOTO QUE DE VERDAD SE MANDÓ</span></div>
+    <div class="ph"><i class="sq"></i><b>El pulpo</b>
+      <span class="r">ocho brazos · cinco con instrumento · cada impulso es un voto que de verdad se mandó</span></div>
     <div class="ringwrap">
       <div class="rail" id="railL"></div>
       <svg id="ring" viewBox="0 0 1000 480" role="img"
@@ -236,13 +243,13 @@ footer{margin-top:14px;font-family:var(--num);font-size:9.5px;color:var(--faint)
   </section>
 
   <div class="grid r3" style="margin-top:8px">
-    <section class="p"><div class="ph"><i class="sq"></i><b>EL HORNO</b>
-      <span class="r">RESULTADO DE CADA OPERACIÓN CERRADA, EN ORDEN</span></div>
+    <section class="p"><div class="ph"><i class="sq"></i><b>Operaciones cerradas</b>
+      <span class="r">resultado de cada operación cerrada, en orden</span></div>
       <div class="pb"><svg id="furnace" viewBox="0 0 700 190" style="width:100%;height:190px"
         role="img" aria-label="Resultado de cada operación cerrada"></svg></div></section>
 
-    <section class="p"><div class="ph"><i class="sq"></i><b>CONO DE RUINA</b>
-      <span class="r">10.000 FUTUROS · MONTE CARLO SOBRE LAS 36 OPERACIONES REALES</span></div>
+    <section class="p"><div class="ph"><i class="sq"></i><b>Cono de ruina</b>
+      <span class="r">10.000 futuros · monte carlo sobre las 36 operaciones reales</span></div>
       <div class="pb"><svg id="cone" viewBox="0 0 560 190" style="width:100%;height:190px"
         role="img" aria-label="Distribución del capital en 10.000 futuros simulados"></svg>
         <div class="kv" id="mckv" style="grid-template-columns:repeat(4,1fr)"></div>
@@ -250,25 +257,25 @@ footer{margin-top:14px;font-family:var(--num);font-size:9.5px;color:var(--faint)
   </div>
 
   <div class="grid r4" style="margin-top:8px">
-    <section class="p"><div class="ph"><i class="sq"></i><b>ESTADO DE AGENTES</b></div>
+    <section class="p"><div class="ph"><i class="sq"></i><b>Agentes</b></div>
       <div class="pb" id="astat"></div></section>
 
-    <section class="p"><div class="ph"><i class="sq"></i><b>CARTOGRAMA</b>
-      <span class="r">VIGILADO, NO OPERADO · ÚLTIMAS 24 H</span></div>
+    <section class="p"><div class="ph"><i class="sq"></i><b>Mercado vigilado</b>
+      <span class="r">vigilado, no operado · últimas 24 h</span></div>
       <div class="pb"><div class="cart" id="cart"></div></div></section>
 
-    <section class="p"><div class="ph"><i class="sq"></i><b>REGISTRO</b>
+    <section class="p"><div class="ph"><i class="sq"></i><b>Órdenes</b>
       <span class="r" id="logn">0 ÓRDENES</span></div>
       <div class="pb scroll"><table id="blot"></table></div></section>
   </div>
 
   <section class="p" style="margin-top:8px">
-    <div class="ph"><i class="sq"></i><b>CINTA</b><span class="r">LO QUE SE DICEN ENTRE ELLOS</span></div>
+    <div class="ph"><i class="sq"></i><b>Conversación</b><span class="r">lo que se dicen entre ellos</span></div>
     <div class="pb wire" id="wire"></div></section>
 
   <section class="p" style="margin-top:8px">
-    <div class="ph"><i class="sq"></i><b>QUÉ APORTÓ CADA MEJORA</b>
-      <span class="r">PORTADO DE FREQTRADE (GPL-3.0, 54.202 ★) Y MEDIDO PIEZA A PIEZA</span></div>
+    <div class="ph"><i class="sq"></i><b>Qué aportó cada mejora</b>
+      <span class="r">portado de freqtrade (gpl-3.0, 54.202 ★) y medido pieza a pieza</span></div>
     <div class="pb" style="overflow-x:auto"><table id="abl"></table></div></section>
 
   <div class="notes">
@@ -315,11 +322,11 @@ footer{margin-top:14px;font-family:var(--num);font-size:9.5px;color:var(--faint)
   </div>
 
   <footer>
-    PRECIOS REALES: KRAKEN (CRIPTO) · YAHOO FINANCE (SPY = S&amp;P 500, QQQ = NASDAQ 100).
-    DINERO SIMULADO EN SU TOTALIDAD — <span style="color:var(--dim)">LiveBroker</span> LANZA
-    <span style="color:var(--dim)">NotImplementedError</span> A PROPÓSITO, ASÍ QUE NINGUNA
-    RUTA DE ESTE CÓDIGO PUEDE MOVER FONDOS. EL RENDIMIENTO PASADO NO PREDICE EL FUTURO.
-    ESTO NO ES ASESORAMIENTO FINANCIERO.
+    Precios reales: Kraken (cripto) y Yahoo Finance (SPY = S&amp;P&nbsp;500, QQQ = Nasdaq&nbsp;100).
+    Dinero simulado en su totalidad — en el código, <span style="font-family:var(--num)">LiveBroker</span>
+    lanza <span style="font-family:var(--num)">NotImplementedError</span> a propósito, así que ninguna
+    ruta puede mover fondos. El rendimiento pasado no predice el futuro.
+    Esto no es asesoramiento financiero.
   </footer>
 </div>
 
@@ -341,11 +348,11 @@ const R = D.rounds, CURVE = D.curve, NB = CURVE.length, BASE = 100;
    sujetan un instrumento; los otros tres solo se mueven. */
 
 const AG = {
-  news:{n:"NOTICIAS", c:"var(--c-news)", job:"TITULARES",      tip:[142, 92]},
-  scan:{n:"ESCÁNER",  c:"var(--c-scan)", job:"FUERZA RELATIVA",tip:[ 96,258]},
-  tech:{n:"TÉCNICO",  c:"var(--c-tech)", job:"INDICADORES",    tip:[266,424]},
-  risk:{n:"RIESGO",   c:"var(--c-risk)", job:"VETO Y TAMAÑO",  tip:[744,422]},
-  exec:{n:"EJECUCIÓN",c:"var(--c-exec)", job:"ÓRDENES",        tip:[908,162]},
+  news:{n:"Noticias", c:"var(--c-news)", job:"Titulares",      tip:[142, 92]},
+  scan:{n:"Escáner",  c:"var(--c-scan)", job:"Fuerza relativa",tip:[ 96,258]},
+  tech:{n:"Técnico",  c:"var(--c-tech)", job:"Indicadores",    tip:[266,424]},
+  risk:{n:"Riesgo",   c:"var(--c-risk)", job:"Veto y tamaño",  tip:[744,422]},
+  exec:{n:"Ejecución",c:"var(--c-exec)", job:"Órdenes",        tip:[908,162]},
 };
 const KEYS = Object.keys(AG);
 $("gthr").style.left = ((0.35+1)/2*100) + "%";
@@ -431,29 +438,33 @@ function headSVG(){
                  [572,136,14,9,12],[478,178,19,12,-14],[534,190,15,10,10],[500,128,12,8,0],
                  [446,196,11,7,26],[556,206,10,7,-20]]
     .map(([x,y,rx,ry,r])=>`<ellipse cx="${x}" cy="${y}" rx="${rx}" ry="${ry}"
-      transform="rotate(${r} ${x} ${y})" fill="var(--oct-dark)" opacity=".38"/>`).join("");
+      transform="rotate(${r} ${x} ${y})" fill="var(--oct-dark)" opacity=".20"/>`).join("");
   /* papilas: los bultitos de la piel */
   const bumps = [[452,118],[486,104],[520,112],[554,150],[418,164],[500,158],[468,144],
                  [536,132],[582,168],[440,86]]
-    .map(([x,y])=>`<circle cx="${x}" cy="${y}" r="3.1" fill="var(--oct-lite)" opacity=".28"/>`).join("");
+    .map(([x,y])=>`<circle cx="${x}" cy="${y}" r="3.1" fill="var(--oct-lite)" opacity=".34"/>`).join("");
+  /* El ojo sale de la propia piel: un abultamiento del manto con la pupila
+     dentro. Antes llevaba un arco oscuro encima que parecía la montura de unas
+     gafas; ahora el párpado es un pliegue del mismo color que el cuerpo. */
   const eye = (cx, flip)=>`<g>
-    <ellipse cx="${cx}" cy="228" rx="30" ry="24" fill="var(--oct-dark)"/>
-    <ellipse cx="${cx}" cy="226" rx="25" ry="19" fill="#EDE3D2"/>
-    <rect x="${cx-18}" y="220" width="36" height="11" rx="5.5" fill="#120D0A"/>
-    <ellipse cx="${cx-8*flip}" cy="221" rx="5" ry="3.4" fill="#fff" opacity=".92"/>
-    <path d="M${cx-28} 220 q28 -19 56 0" fill="none" stroke="var(--oct-dark)"
-      stroke-width="4.5" stroke-linecap="round"/>
-    <ellipse class="lid" cx="${cx}" cy="226" rx="26" ry="20" fill="var(--oct)"/></g>`;
+    <ellipse cx="${cx}" cy="226" rx="33" ry="27" fill="var(--oct)"/>
+    <ellipse cx="${cx}" cy="225" rx="28" ry="22" fill="var(--oct-dark)" opacity=".78"/>
+    <ellipse cx="${cx}" cy="226" rx="21.5" ry="16" fill="#F2EFE6"/>
+    <rect x="${cx-15}" y="221" width="30" height="9.5" rx="4.7" fill="#0A1420"/>
+    <ellipse cx="${cx-7*flip}" cy="222" rx="4" ry="2.7" fill="#fff" opacity=".95"/>
+    <path d="M${cx-30} 214 q30 -13 60 0 q-30 7 -60 0 z" fill="var(--oct)" opacity=".92"/>
+    <ellipse class="lid" cx="${cx}" cy="226" rx="25" ry="19" fill="var(--oct)"/></g>`;
   return `<g id="octo">
-    <ellipse class="halo" cx="500" cy="158" rx="122" ry="128" fill="var(--oct)" opacity=".07"/>
+    <ellipse class="halo" cx="500" cy="158" rx="128" ry="134" fill="var(--oct)" opacity=".10"/>
     <path d="${mantle}" fill="var(--oct)" stroke="#04100E" stroke-width="3"/>
     <clipPath id="mclip"><path d="${mantle}"/></clipPath>
     <g clip-path="url(#mclip)">
-      <ellipse cx="470" cy="96" rx="46" ry="58" fill="#fff" opacity=".09"/>
+      <ellipse cx="468" cy="98" rx="42" ry="54" fill="#BFE0FF" opacity=".13"/>
       ${spots}${bumps}
       <path class="mantle" id="mantle" d="${mantle}" fill="var(--oct)" opacity="0"/>
     </g>
-    <path d="M424 214 q76 34 152 0" fill="none" stroke="var(--oct-dark)" stroke-width="3" opacity=".55"/>
+    <path d="M418 208 q82 40 164 0" fill="none" stroke="var(--oct-dark)"
+      stroke-width="9" opacity=".38" stroke-linecap="round"/>
     <path d="M578 196 q22 6 20 26 q-14 6 -24 -8 z" fill="var(--oct-dark)"
       stroke="#04100E" stroke-width="2.4"/>
     ${eye(452,1)} ${eye(548,-1)}
@@ -489,19 +500,36 @@ const armState = {};
 ARMS.forEach((a,i)=>armState[a.k]={ph:i*2.1, amp:1});
 
 (function swim(t){
+  if(!REDUCED){
+    const oc = $("octo");
+    if(oc){
+      const dx = Math.sin(t*0.00055)*9, dy = Math.sin(t*0.00081+1.2)*7;
+      /* el manto se contrae y se expande: un pulpo respira bombeando agua */
+      const br = 1 + Math.sin(t*0.0013)*0.022;
+      oc.setAttribute("transform",
+        `translate(${(dx).toFixed(2)},${(dy).toFixed(2)}) `+
+        `rotate(${(Math.sin(t*0.00046)*1.8).toFixed(2)} 500 200) `+
+        `translate(500,200) scale(${br.toFixed(4)},${(2-br).toFixed(4)}) translate(-500,-200)`);
+    }
+  }
   ARMS.forEach(a=>{
     const st = armState[a.k];
     const on = KEYS.includes(a.k) && $("bl-"+a.k) &&
                $("bl-"+a.k).dataset.busy === "1";
-    st.amp += ((on?2.6:1) - st.amp) * 0.06;
+    st.amp += ((on?4.2:1.7) - st.amp) * 0.07;
     const w = REDUCED ? 0 : st.amp;
-    const s1 = Math.sin(t*0.0012 + st.ph), s2 = Math.sin(t*0.0017 + st.ph*1.6);
-    const bx = a.tip[0]-a.base[0], by = a.tip[1]-a.base[1];
+    const s1 = Math.sin(t*0.0019 + st.ph) + 0.35*Math.sin(t*0.0047 + st.ph*2.3);
+    const s2 = Math.sin(t*0.0026 + st.ph*1.6) + 0.3*Math.sin(t*0.0061 + st.ph);
+    const drift = REDUCED ? [0,0]
+      : [Math.sin(t*0.00055)*9, Math.sin(t*0.00081+1.2)*7];
+    const base = [a.base[0]+drift[0], a.base[1]+drift[1]];
+    const bx = a.tip[0]-base[0], by = a.tip[1]-base[1];
     const m = Math.hypot(bx,by)||1, nx = -by/m, ny = bx/m;
     /* dos combas opuestas = curva en S */
-    const c1 = [a.base[0]+bx*0.34 + nx*(a.bow[0]+s1*13*w), a.base[1]+by*0.34 + ny*(a.bow[0]+s1*13*w)];
-    const c2 = [a.base[0]+bx*0.70 + nx*(a.bow[1]+s2*15*w), a.base[1]+by*0.70 + ny*(a.bow[1]+s2*15*w)];
-    const pts = Array.from({length:NS},(_,i)=>cubic(a.base,c1,c2,a.tip,i/(NS-1)));
+    const c1 = [base[0]+bx*0.34 + nx*(a.bow[0]+s1*22*w), base[1]+by*0.34 + ny*(a.bow[0]+s1*22*w)];
+    const c2 = [base[0]+bx*0.70 + nx*(a.bow[1]+s2*26*w), base[1]+by*0.70 + ny*(a.bow[1]+s2*26*w)];
+    const tip = [a.tip[0] + s2*5*w, a.tip[1] + s1*5*w];
+    const pts = Array.from({length:NS},(_,i)=>cubic(base,c1,c2,tip,i/(NS-1)));
     const ns = normals(pts);
     $("body-"+a.k).setAttribute("d", outline(pts, ns, a.w));
     $("lk-"+a.k).setAttribute("d",
@@ -570,11 +598,11 @@ function pressButton(){}
 
 /* raíl derecho: lecturas del activo en juego */
 const RAILR = [
-  ["px",   "PRECIO"],
-  ["comp", "COMPUESTO"],
-  ["adx",  "ADX · FUERZA"],
+  ["px",   "Precio"],
+  ["comp", "Compuesto"],
+  ["adx",  "ADX · fuerza de tendencia"],
   ["rsi",  "RSI"],
-  ["pos",  "POSICIONES"],
+  ["pos",  "Posiciones"],
 ];
 $("railR").innerHTML = RAILR.map(([id,t])=>`<div class="rc">
   <div class="t"><i style="background:var(--faint)"></i>${t}</div>
@@ -587,17 +615,17 @@ function railRight(r){
   $("rn-px").textContent = r.symbol;
   $("rr-comp").textContent = sgn(r.comp);
   $("rr-comp").className = "v " + (r.comp>=0.35 ? "pos" : cl(r.comp));
-  $("rn-comp").textContent = r.comp>=0.35 ? "SUPERA EL UMBRAL" : "SIN SEÑAL";
+  $("rn-comp").textContent = r.comp>=0.35 ? "Supera el umbral" : "Sin señal";
   $("rr-adx").textContent = r.adx==null ? "—" : r.adx.toFixed(1);
-  $("rn-adx").textContent = r.adx==null ? "" : (r.adx<18 ? "LATERAL" :
-    (r.adx>25 ? "TENDENCIA FUERTE" : "TENDENCIA MEDIA"));
+  $("rn-adx").textContent = r.adx==null ? "" : (r.adx<18 ? "Lateral" :
+    (r.adx>25 ? "Tendencia fuerte" : "Tendencia media"));
   $("rr-adx").className = "v " + (r.adx==null ? "dim" : (r.adx<18 ? "neg" : "pos"));
   $("rr-rsi").textContent = r.rsi==null ? "—" : r.rsi.toFixed(1);
-  $("rn-rsi").textContent = r.rsi==null ? "" : (r.rsi>75 ? "SOBRECOMPRA" :
-    (r.rsi<30 ? "SOBREVENTA" : "ZONA NEUTRA"));
+  $("rn-rsi").textContent = r.rsi==null ? "" : (r.rsi>75 ? "Sobrecompra" :
+    (r.rsi<30 ? "Sobreventa" : "Zona neutra"));
   const open = rows.filter(x=>x.side==="BUY").length - rows.filter(x=>x.side==="SELL").length;
   $("rr-pos").textContent = `${Math.max(open,0)} / 3`;
-  $("rn-pos").textContent = "MÁXIMO 3 SIMULTÁNEAS";
+  $("rn-pos").textContent = "Máximo 3 simultáneas";
 }
 
 /* raíl izquierdo: tarjeta por agente */
@@ -712,10 +740,10 @@ function drawFurnace(upto){
       font-family="IBM Plex Mono,monospace">${mc.trades} OPERACIONES</text>`;
   $("cone").innerHTML = s;
   $("mckv").innerHTML = [
-    ["ACABA EN VERDE", (mc.prob_profit*100).toFixed(0)+" %", "pos"],
-    ["PIERDE LA MITAD", (mc.prob_ruin*100).toFixed(1)+" %", mc.prob_ruin>0.02?"neg":"pos"],
-    ["SALTA EL FRENO", (mc.prob_halt*100).toFixed(1)+" %", "dim"],
-    ["DD MEDIANO", (mc.dd_median*100).toFixed(1)+" %", "dim"],
+    ["Acaba en verde", (mc.prob_profit*100).toFixed(0)+" %", "pos"],
+    ["Pierde la mitad", (mc.prob_ruin*100).toFixed(1)+" %", mc.prob_ruin>0.02?"neg":"pos"],
+    ["Salta el freno", (mc.prob_halt*100).toFixed(1)+" %", "dim"],
+    ["Drawdown mediano", (mc.dd_median*100).toFixed(1)+" %", "dim"],
   ].map(([d,v,c])=>`<div><dt>${d}</dt><dd class="${c}">${v}</dd></div>`).join("");
 })();
 
@@ -735,8 +763,8 @@ function drawFurnace(upto){
 })();
 
 /* ================= ABLACIÓN ================= */
-$("abl").innerHTML = `<thead><tr><th>VARIANTE</th><th>RETORNO</th><th>MÁX. DRAWDOWN</th>
-  <th>OPS.</th><th>ACIERTO</th><th>PROFIT FACTOR</th></tr></thead><tbody>` +
+$("abl").innerHTML = `<thead><tr><th>Variante</th><th>Retorno</th><th>Máx. drawdown</th>
+  <th>Ops.</th><th>Acierto</th><th>Profit factor</th></tr></thead><tbody>` +
   (D.ablation||[]).map(a=>`<tr${a.on?' style="background:var(--brass-soft)"':''}>
     <td class="why2"${a.on?' style="color:var(--brass);font-weight:600"':''}>${esc(a.name)}${a.on?" ✓":""}</td>
     <td class="${cl(a.ret)}">${pctS(a.ret)}</td><td class="neg">${(a.dd*100).toFixed(2)} %</td>
@@ -765,25 +793,25 @@ function stats(){
   const ret = V.equity/BASE - 1;
   $("eq").textContent = money(V.equity);
   $("eq").className = "big num " + cl(ret);
-  $("eqr").textContent = `BARRA ${V.bar}/${NB-1}`;
+  $("eqr").textContent = `Barra ${V.bar} de ${NB-1}`;
   $("dl").innerHTML = `<span class="${cl(ret)}">${pctS(ret)}</span>
     <span class="dim"> · ${money(V.equity-BASE)} SOBRE ${money(BASE)}</span>`;
   $("kv").innerHTML = [
-    ["REALIZADO", money(V.realized), cl(V.realized)],
-    ["CERRADAS", String(V.closed), ""],
-    ["ACIERTO", V.closed?`${(V.wins/V.closed*100).toFixed(0)} %`:"—", ""],
-    ["G / P", V.closed?`${V.wins} / ${V.losses}`:"—", "dim"],
+    ["Realizado", money(V.realized), cl(V.realized)],
+    ["Cerradas", String(V.closed), ""],
+    ["Acierto", V.closed?`${(V.wins/V.closed*100).toFixed(0)} %`:"—", ""],
+    ["Ganadas / perdidas", V.closed?`${V.wins} / ${V.losses}`:"—", "dim"],
   ].map(([d,v,c])=>`<div><dt>${d}</dt><dd class="${c}">${v}</dd></div>`).join("");
 }
 function blotter(){
-  $("logn").textContent = `${rows.length} ÓRDENES`;
+  $("logn").textContent = `${rows.length} órdenes`;
   if(!rows.length){ $("blot").innerHTML =
     `<tbody><tr><td class="why2" style="text-align:center;padding:14px">
      Sin órdenes todavía.</td></tr></tbody>`; return; }
-  $("blot").innerHTML = `<thead><tr><th>BARRA</th><th>LADO</th><th>ACTIVO</th><th>PRECIO</th>
-    <th>RESULTADO</th><th>MOTIVO</th></tr></thead><tbody>` +
+  $("blot").innerHTML = `<thead><tr><th>Barra</th><th>Lado</th><th>Activo</th><th>Precio</th>
+    <th>Resultado</th><th>Motivo</th></tr></thead><tbody>` +
     [...rows].reverse().map(r=>`<tr><td class="dim">${r.bar}</td>
-      <td><span class="tag ${r.side}">${r.side==="BUY"?"COMPRA":"VENTA"}</span></td>
+      <td><span class="tag ${r.side}">${r.side==="BUY"?"Compra":"Venta"}</span></td>
       <td class="sym">${esc(r.symbol)}</td>
       <td>${r.price>=1000?r.price.toFixed(0):r.price.toFixed(3)}</td>
       <td class="${r.pnl==null?"dim":cl(r.pnl)}">${r.pnl==null?"—":money(r.pnl)}</td>
@@ -813,7 +841,7 @@ function round(){
   ri = (ri+1) % R.length;
   const r = R[ri];
   V.bar = r.bar;
-  $("wround").textContent = `RONDA ${ri+1}/${R.length} · BARRA ${r.bar}`;
+  $("wround").textContent = `Ronda ${ri+1} de ${R.length}`;
   $("chest").textContent = "· · ·";
   $("chest").setAttribute("fill","var(--faint)");
   $("mclock").textContent = `T+${String(r.bar).padStart(3,"0")}d`;
@@ -821,7 +849,7 @@ function round(){
   railRight(r);
 
   if(r.kind === "MECH"){
-    $("call").textContent = "NO DECIDE NADIE";
+    $("call").textContent = "No decide nadie";
     $("call").style.color = "var(--ink)";
     $("why").innerHTML = `El stop de <b>${esc(r.symbol)}</b> ya estaba puesto desde la
       compra. Ejecución lo dispara sin preguntar — para eso existe.`;
@@ -829,7 +857,7 @@ function round(){
     meter(0);
     log("EJECUCIÓN", `${r.symbol} toca el ${r.reason} · disparo automático`);
     at(200, ()=>{ busy("exec",true); runs.exec++; drawStatus();
-      $("rv-exec").textContent = r.reason.startsWith("stop") ? "STOP" : "OBJETIVO"; });
+      $("rv-exec").textContent = r.reason.startsWith("stop") ? "Stop" : "Objetivo"; });
     at(700, ()=>{
       V.closed++; V.realized += r.pnl; r.pnl>0 ? V.wins++ : V.losses++;
       V.equity = r.equity;
@@ -875,14 +903,14 @@ function round(){
     $("chest").textContent = sgn(r.comp);
     $("chest").setAttribute("fill", buy ? "var(--pos)" : "var(--faint)");
     if(buy){
-      $("call").textContent = "COMPRAR " + r.symbol;
+      $("call").textContent = "Comprar " + r.symbol;
       $("call").style.color = "var(--pos)";
       $("why").innerHTML = `Compuesto <b>${sgn(r.comp)}</b> supera el umbral +0,35.
         El cerebro manda la orden a Riesgo para que la dimensione.`;
       log("CEREBRO", `COMPRAR ${r.symbol} · compuesto ${sgn(r.comp)} > +0,35`);
       setFace(0,"happy");
     } else {
-      $("call").textContent = "ESPERAR";
+      $("call").textContent = "Esperar";
       $("call").style.color = "var(--ink)";
       $("why").innerHTML = `Compuesto <b>${sgn(r.comp)}</b>, por debajo del umbral +0,35.
         No hay consenso suficiente: no se toca nada. Esperar también es una decisión.`;
@@ -894,7 +922,7 @@ function round(){
   at(3550, ()=>{ sendPulse("risk", true, "var(--brass)");
     at(850, ()=>{ busy("risk",true); runs.risk++; drawStatus(); }); });
   at(4700, ()=>{
-    $("rv-risk").textContent = "APROBADO"; $("rv-risk").className = "v pos";
+    $("rv-risk").textContent = "Aprobado"; $("rv-risk").className = "v pos";
     log("RIESGO", `${r.symbol} aprobado · tamaño por 2 % de riesgo, stop a 2×ATR`);
   });
   at(5200, ()=>{ busy("risk",false); sendPulse("exec", true, "var(--pos)");
@@ -904,7 +932,7 @@ function round(){
     rows.push({bar:r.bar, side:"BUY", symbol:r.symbol, price:r.price, pnl:null,
                by:`Cerebro · compuesto ${sgn(r.comp)}`});
     blotter(); stats(); drawFurnace(r.bar);
-    $("rv-exec").textContent = "COMPRADO"; $("rv-exec").className = "v pos";
+    $("rv-exec").textContent = "Comprado"; $("rv-exec").className = "v pos";
     log("EJECUCIÓN", `COMPRA ${r.symbol} a ${r.price} · orden enviada`);
     $("rv-risk").textContent = "2 %"; $("rv-risk").className = "v dim";
   });
@@ -916,7 +944,7 @@ $("sp1").onclick=()=>setSpeed(1); $("sp2").onclick=()=>setSpeed(2); $("sp4").onc
 $("play").onclick = function(){
   playing = !playing;
   this.setAttribute("aria-pressed", playing);
-  this.textContent = playing ? "⏸ PAUSA" : "▶ SEGUIR";
+  this.textContent = playing ? "⏸ Pausa" : "▶ Seguir";
   if(playing) round(); else { clearAll(); calm(); }
 };
 $("rst").onclick = ()=>{
