@@ -11,7 +11,9 @@ import uuid
 
 
 class Position:
-    def __init__(self, symbol, qty, entry, stop, target, opened_at, atr=None):
+    def __init__(self, symbol, qty, entry, stop, target, opened_at, atr=None, side=1):
+        # side: +1 largo (se gana si sube), -1 corto (se gana si baja).
+        self.side = side
         self.symbol = symbol
         self.qty = qty
         self.entry = entry
@@ -29,15 +31,18 @@ class Position:
         return max(0.0, (now - self.opened_at) / bar_seconds)
 
     def profit_ratio(self, price):
-        return (price / self.entry - 1) if self.entry else 0.0
+        if not self.entry:
+            return 0.0
+        return self.side * (price / self.entry - 1)
 
 
 
     def market_value(self, price):
-        return self.qty * price
+        # En un corto el efectivo ya subió al vender: la posición vale en contra.
+        return self.side * self.qty * price
 
     def unrealized(self, price):
-        return (price - self.entry) * self.qty
+        return self.side * (price - self.entry) * self.qty
 
     def to_dict(self, price):
         cost = self.entry * self.qty
@@ -110,18 +115,63 @@ class PaperBroker:
             self.trades.append(t)
             return t
 
+    def short(self, symbol, qty, price, stop, target, reason="", ts=None, atr=None):
+        """Vender lo que no se tiene. Se gana si el precio baja.
+
+        El efectivo sube al abrir —se ha vendido algo prestado— pero la posición
+        vale en contra, así que el patrimonio no cambia al abrir, solo paga la
+        comisión. El coste de verdad es la financiación, que se cobra por barra
+        mientras la posición esté abierta.
+        """
+        with self.lock:
+            fill = price * (1 - self.slippage_rate)
+            proceeds = fill * qty
+            fee = proceeds * self.fee_rate
+            # Colateral: no se abre un corto mayor que el efectivo que lo respalda.
+            if qty <= 0 or proceeds > self.cash + 1e-9:
+                return None
+            self.cash += proceeds - fee
+            self.fees_paid += fee
+            self.positions[symbol] = Position(symbol, qty, fill, stop, target,
+                                              int(ts if ts else time.time()), atr, side=-1)
+            t = {"id": uuid.uuid4().hex[:8], "t": int(ts or time.time()), "side": "SHORT",
+                 "symbol": symbol, "qty": qty, "price": fill, "fee": fee,
+                 "pnl": None, "reason": reason}
+            self.trades.append(t)
+            return t
+
+    def funding(self, prices: dict[str, float], rate: float):
+        """Coste de mantener cortos abiertos, cobrado por barra.
+
+        Kraken cobra rollover en margen cada pocas horas. Un backtest de cortos
+        que no lo pague está inventando dinero.
+        """
+        if rate <= 0:
+            return 0.0
+        with self.lock:
+            pagado = 0.0
+            for s_, p in self.positions.items():
+                if p.side < 0:
+                    pagado += p.qty * prices.get(s_, p.entry) * rate
+            self.cash -= pagado
+            self.fees_paid += pagado
+            return pagado
+
     def sell(self, symbol, price, reason="", ts=None):
         with self.lock:
             pos = self.positions.pop(symbol, None)
             if not pos:
                 return None
-            fill = price * (1 - self.slippage_rate)
-            proceeds = fill * pos.qty
-            fee = proceeds * self.fee_rate
-            self.cash += proceeds - fee
+            corto = pos.side < 0
+            # Cerrar un corto es comprar: se paga el lado caro del spread.
+            fill = price * (1 + self.slippage_rate) if corto else price * (1 - self.slippage_rate)
+            bruto = fill * pos.qty
+            fee = bruto * self.fee_rate
+            self.cash += (-bruto - fee) if corto else (bruto - fee)
             self.fees_paid += fee
-            pnl = (fill - pos.entry) * pos.qty - fee
-            t = {"id": uuid.uuid4().hex[:8], "t": int(ts or time.time()), "side": "SELL",
+            pnl = pos.side * (fill - pos.entry) * pos.qty - fee
+            t = {"id": uuid.uuid4().hex[:8], "t": int(ts or time.time()),
+                 "side": "COVER" if corto else "SELL",
                  "symbol": symbol, "qty": pos.qty, "price": fill, "fee": fee,
                  "pnl": pnl, "pnl_pct": (pnl / (pos.entry * pos.qty)) if pos.entry else 0.0,
                  "reason": reason}
@@ -130,7 +180,7 @@ class PaperBroker:
 
     def stats(self, prices):
         with self.lock:
-            closed = [t for t in self.trades if t["side"] == "SELL"]
+            closed = [t for t in self.trades if t["side"] in ("SELL", "COVER")]
             wins = [t for t in closed if t["pnl"] > 0]
             losses = [t for t in closed if t["pnl"] <= 0]
             gross_win = sum(t["pnl"] for t in wins)

@@ -23,7 +23,7 @@ def trade_returns(broker, curve) -> list[float]:
     eq = broker.starting_cash
     marks = {p["t"]: p["equity"] for p in broker.equity_curve}
     for t in broker.trades:
-        if t["side"] != "SELL" or t["pnl"] is None:
+        if t["side"] not in ("SELL", "COVER") or t["pnl"] is None:
             continue
         base = marks.get(t["t"], eq) or eq
         if base > 0:

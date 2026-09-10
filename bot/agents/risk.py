@@ -113,8 +113,15 @@ class RiskAgent(Agent):
         if notional + notional * cfg.fee_rate > b.cash:
             return {"ok": False, "reason": "efectivo insuficiente"}
 
-        # Concentracion por clase de activo. El tope era 2 fijo, pensado para un
-        # universo de tres criptos; con diecisiete dejaba fuera casi todo.
+        # Concentracion. El tope por clase era un numero fijo que no distinguia
+        # entre comprar BTC y ETH —la misma apuesta con dos nombres— y comprar
+        # BTC y ATOM. Si el agente de correlacion ya tiene datos, manda el;
+        # si no, se cae al tope de siempre, que nunca deja de existir.
+        corr = getattr(self.ctx, "correlation", None)
+        if corr is not None:
+            ok, motivo = corr.permite(symbol, list(b.positions))
+            if not ok:
+                return {"ok": False, "reason": motivo}
         kind = _INST[symbol].kind
         same = sum(1 for s in b.positions if _INST[s].kind == kind)
         if same >= cfg.max_per_kind:

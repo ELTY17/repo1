@@ -50,6 +50,72 @@ scan ──┼──► score compuesto ──► agente de riesgo (veto) ──
 tech ──┘
 ```
 
+## El sexto agente: correlación
+
+Los otros cinco miran cada activo por separado. Este mira lo que tienen en
+común, que es lo que nadie estaba mirando. **No vota dirección**: es el único
+que no opina de si algo va a subir, opina de si ya lo tienes.
+
+El tope de posiciones por clase era un número fijo. Decía "no más de dos
+criptos" porque midiendo salió que cuatro empeoraban, pero no sabía **por qué**:
+no distinguía entre comprar BTC y ETH —la misma apuesta con dos nombres— y
+comprar BTC y ATOM. Correlación de Pearson sobre los rendimientos diarios de los
+últimos 60 días:
+
+```
+QQQ ~ SPY           0.89        NEAR ~ SPY    -0.10
+BTC ~ XRP           0.88        SOL  ~ SPY    -0.10
+BTC ~ ETH           0.87        ATOM ~ QQQ    -0.15
+XLM ~ XRP           0.86        ATOM ~ SPY    -0.19
+
+correlación media del universo: 0.48
+24 de 171 pares por encima de 0.75 (14%)
+```
+
+El veto mira la correlación **máxima**, no la media: una media baja puede
+esconder un par idéntico. Medido en cuatro ventanas fuera de muestra:
+
+```
+variante                    v1        v2        v3        v4     media
+tope 2 (el parche)      -0.94%    -5.78%    +3.30%    +7.05%    +0.91%
+tope 4, sin correlación -1.87%   -10.43%    -6.91%   +16.62%    -0.65%
+tope 4 + correlación    -2.49%    -8.38%    -2.35%   +17.45%    +1.06%
+```
+
+Subir el tope sin medir correlación cuesta 1,56 puntos. **El agente los
+recupera.** Lo que no hace es batir al parche por un margen demostrable
+(+1,06% contra +0,91% en cuatro ventanas es ruido). Lo que sí hace es
+convertir un número mágico en una medición que se explica sola.
+
+## Vender en corto: probado y no aporta
+
+*"Con todos los mercados que hay tiene que saber cuándo vender también."* Es
+verdad que el sistema solo compraba. Ahora sabe abrir cortos —`bot/broker.py`
+lleva `side` en la posición, `short()` y `funding()`— y el backtest los opera
+con `allow_shorts`.
+
+En la muestra entera parecía una mejora: **+1,67% con cortos contra +1,27%
+sin ellos**, y menos drawdown. Fuera de muestra:
+
+```
+ventana            sin cortos   con cortos       dif   ops corto
+barras 0-100           -0.94%       -3.45%    -2.51%          33
+barras 100-200         -5.78%       -3.02%    +2.76%          74
+barras 200-300         +3.30%       +3.63%    +0.33%          10
+barras 300-400         +7.05%       +4.87%    -2.18%          20
+
+ayuda en 2 de 4 ventanas · media -0.40%
+```
+
+Y no es el coste de financiación: quitando el rollover de Kraken (0,06%/día)
+la diferencia se mueve entre 0,10 y 0,67 puntos, nada. **El corto no acierta**,
+simplemente. Las mismas señales que no saben cuándo subir tampoco saben cuándo
+baja.
+
+Queda apagado por defecto (`allow_shorts: False`) y la maquinaria queda hecha,
+medida y documentada. Si algún día aparecen señales con ventaja, el otro lado
+del mercado ya está construido.
+
 ## Reglas de riesgo (las importantes)
 
 - **2%** del equity arriesgado por operación — el tamaño sale de la distancia al stop, no al revés.

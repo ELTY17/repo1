@@ -345,7 +345,7 @@ footer{font-size:12px;color:var(--dim);line-height:1.6;letter-spacing:-.005em}
       <span class="tickerdot" id="dot"></span>
       <h1>Pulpo · en vivo</h1>
       <div class="meta">
-        <span><b>5</b> agentes</span><span><b id="ninst">—</b> operables · <b id="nwide">—</b> vigilados</span>
+        <span><b>6</b> agentes</span><span><b id="ninst">—</b> operables · <b id="nwide">—</b> vigilados</span>
         <span>datos reales de Kraken y Yahoo</span>
         
       </div>
@@ -406,7 +406,7 @@ footer{font-size:12px;color:var(--dim);line-height:1.6;letter-spacing:-.005em}
     <div class="pb wire" id="wire"></div></section>
 <section class="p" data-a="oct" style="grid-area:oct" style="margin-top:8px">
     <div class="ph"><i class="sq"></i><b>El pulpo</b>
-      <span class="r">ocho brazos · cinco con instrumento · cada impulso es un voto que de verdad se mandó</span></div>
+      <span class="r">ocho brazos · seis con instrumento · cada impulso es un voto que de verdad se mandó</span></div>
     <div class="ringwrap">
       <svg id="ring" viewBox="0 0 1000 496" preserveAspectRatio="xMidYMid meet" role="img"
         aria-label="Un pulpo cuyos ocho brazos son los agentes del sistema"></svg>
@@ -527,6 +527,7 @@ const AG = {
   news:{n:"Noticias", c:"var(--c-news)", job:"Titulares",      tip:[142, 92]},
   scan:{n:"Escáner",  c:"var(--c-scan)", job:"Fuerza relativa",tip:[ 96,258]},
   tech:{n:"Técnico",  c:"var(--c-tech)", job:"Indicadores",    tip:[266,424]},
+  corr:{n:"Correlación",c:"#64D2FF",     job:"¿Es la misma apuesta?", tip:[956,306]},
   risk:{n:"Riesgo",   c:"var(--c-risk)", job:"Veto y tamaño",  tip:[744,422]},
   exec:{n:"Ejecución",c:"var(--c-exec)", job:"Órdenes",        tip:[908,162]},
 };
@@ -544,7 +545,7 @@ const ARMS = [
   {k:"f2",    base:[514,272], bow:[ 30,-26], w:18, tip:[612,456]},
   {k:"risk",  base:[536,264], bow:[-50,-30], w:20},
   {k:"exec",  base:[558,250], bow:[-58,-40], w:21},
-  {k:"f3",    base:[570,232], bow:[-30, 34], w:17, tip:[956,306]},
+  {k:"corr",  base:[570,232], bow:[-30, 34], w:17},
 ];
 ARMS.forEach(a=>{ if(AG[a.k]) a.tip = AG[a.k].tip; });
 
@@ -597,6 +598,19 @@ function pod(k){
     <path d="M-19 -12 l-6 10 h12 z" fill="var(--neg)" ${P}/>
     <path d="M19 -12 l-6 10 h12 z" fill="var(--pos)" ${P}/>
     <rect x="-17" y="6" width="34" height="16" rx="3" fill="var(--sunk)" ${P}/>`;
+  if(k==="corr"){
+    // una matriz 3x3: casillas encendidas donde dos activos van a la vez
+    const cel = [[0,0,1],[0,1,.25],[1,.25,.55],[.25,1,.85],[1,.85,.15],[.85,.15,1]]
+      .map((_,i)=>{ const x=-18+(i%3)*13, y=-18+Math.floor(i/3)*13,
+        v=[.95,.25,.6,.3,.9,.15,.7,.45,1][i];
+        return `<rect x="${x}" y="${y}" width="11" height="11" rx="1.5"
+          fill="${a.c}" opacity="${v.toFixed(2)}"/>`; }).join("");
+    const mas = [6,7,8].map(i=>{ const x=-18+(i%3)*13, y=-18+Math.floor(i/3)*13,
+      v=[.5,.8,.35][i-6];
+      return `<rect x="${x}" y="${y}" width="11" height="11" rx="1.5"
+        fill="${a.c}" opacity="${v}"/>`; }).join("");
+    g=`<rect x="-23" y="-23" width="46" height="46" rx="3" fill="var(--sunk)" ${P}/>${cel}${mas}`;
+  }
   if(k==="exec") g=`<path d="M-22 16 l5 -14 h34 l5 14 z" fill="var(--sunk)" ${P}/>
     <circle cy="-6" r="12" fill="var(--neg)" ${P}/>
     <circle cy="-9" r="7" fill="none" stroke="#fff" stroke-opacity=".28" stroke-width="2.4"/>`;
@@ -814,13 +828,17 @@ function lamp(k, on){
    `pup[2]` es el alto de la pupila: cuanto menos, más rasgada — un ojo de
    depredador es una ranura, no un botón. */
 const FACE = {
-  neutral:{mouth:"M485 253 q15 -1 30 0",            lidT:2,  lidB:0,  tilt:7,  pup:[0,0,8.5],  skin:null,       hold:0},
-  think:  {mouth:"M492 253 h16",                     lidT:7,  lidB:3,  tilt:13, pup:[-6,-2,7.5],skin:"#1E63B0",  hold:0},
-  happy:  {mouth:"M482 246 q18 14 36 0",             lidT:0,  lidB:8,  tilt:0,  pup:[0,1,9],    skin:"#16A06B",  hold:2600},
-  glad:   {mouth:"M483 248 q17 10 34 0",             lidT:0,  lidB:4,  tilt:3,  pup:[0,0,9],    skin:"#1B8F72",  hold:1400},
+  /* El reposo no es una cara neutra: es la cara de alguien que lleva horas
+     mirando gráficos y no se fía de ninguno. Párpado caído, ojo entrecerrado
+     y boca recta. Todo lo demás se mide contra esta. */
+  neutral:{mouth:"M483 254 h34",                     lidT:6,  lidB:0,  tilt:16, pup:[0,0,6.5],  skin:null,       hold:0},
+  think:  {mouth:"M490 254 h20",                     lidT:9,  lidB:3,  tilt:21, pup:[-6,-2,6],  skin:"#1E63B0",  hold:0},
+  /* ni ganando se le va la cara: media sonrisa torcida y el ojo sigue duro */
+  happy:  {mouth:"M484 250 q16 11 33 -4",            lidT:2,  lidB:6,  tilt:9,  pup:[0,1,8],    skin:"#16A06B",  hold:2600},
+  glad:   {mouth:"M484 252 q16 7 33 -2",             lidT:4,  lidB:3,  tilt:12, pup:[0,0,7.5],  skin:"#1B8F72",  hold:1400},
   /* la cara de perder ya no es tristeza: es que le han tocado la cuenta */
   sad:    {mouth:"M480 259 q20 -13 40 0",            lidT:13, lidB:2,  tilt:26, pup:[0,2,5.5],  skin:"#C0392B",  hold:2600, snarl:1},
-  wow:    {mouth:"M489 243 q11 21 22 0 q-11 10 -22 0", lidT:0, lidB:0, tilt:0,  pup:[0,-1,15], skin:"#3FA0FF",  hold:1800},
+  wow:    {mouth:"M489 244 q11 19 22 0 q-11 9 -22 0", lidT:0, lidB:0, tilt:4,  pup:[0,-1,13], skin:"#3FA0FF",  hold:1800},
 };
 
 function setFace(_, m){
@@ -1052,9 +1070,9 @@ function drawRails(s, best){
 function drawAgents(s){
   const mx = Math.max(1, ...(s.agents||[]).map(a=>a.runs));
   const COL = {news:"var(--c-news)", scanner:"var(--c-scan)", technical:"var(--c-tech)",
-               risk:"var(--c-risk)", execution:"var(--c-exec)"};
+               risk:"var(--c-risk)", execution:"var(--c-exec)", correlacion:"#64D2FF"};
   const NAME = {news:"Noticias", scanner:"Escáner", technical:"Técnico",
-                risk:"Riesgo", execution:"Ejecución"};
+                correlacion:"Correlación", risk:"Riesgo", execution:"Ejecución"};
   $("astat").innerHTML = (s.agents||[]).map(a=>`<div class="abar">
     <span class="nm">${NAME[a.name]||a.name}</span>
     <span class="tr"><i style="width:${(a.runs/mx*100).toFixed(0)}%;

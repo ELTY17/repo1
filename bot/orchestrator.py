@@ -11,7 +11,8 @@ import time
 from collections import deque
 
 from . import feeds
-from .agents import ExecutionAgent, NewsAgent, RiskAgent, ScannerAgent, TechnicalAgent
+from .agents import (CorrelationAgent, ExecutionAgent, NewsAgent, RiskAgent,
+                     ScannerAgent, TechnicalAgent)
 from .broker import PaperBroker
 from .config import CONFIG, UNIVERSE
 
@@ -32,9 +33,11 @@ class Orchestrator:
         self.news = NewsAgent(self)
         self.scanner = ScannerAgent(self)
         self.technical = TechnicalAgent(self)
+        self.correlation = CorrelationAgent(self)
         self.risk = RiskAgent(self)
         self.execution = ExecutionAgent(self)
-        self.agents = [self.news, self.scanner, self.technical, self.risk, self.execution]
+        self.agents = [self.news, self.scanner, self.technical,
+                       self.correlation, self.risk, self.execution]
 
     # --- utilidades compartidas ---
     def feed_event(self, entry):
@@ -46,7 +49,7 @@ class Orchestrator:
 
     def note_close(self, trade):
         """Avisa a las protecciones de que se ha cerrado una operacion."""
-        if not trade or trade.get("side") != "SELL":
+        if not trade or trade.get("side") not in ("SELL", "COVER"):
             return
         self.risk.protections.register_close(
             trade["symbol"], trade["pnl"], trade.get("pnl_pct", 0.0),

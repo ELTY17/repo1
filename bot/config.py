@@ -63,6 +63,11 @@ class Config:
 
     # --- Decision ---
     buy_threshold: float = 0.35      # score compuesto para abrir largo
+    short_threshold: float = -0.45   # score compuesto para abrir corto
+    allow_shorts: bool = False       # apagado por defecto: hay que demostrarlo
+    # Rollover de margen de Kraken, por dia y por dolar en corto. Un backtest de
+    # cortos que no lo pague esta inventando dinero.
+    short_funding_daily: float = 0.0006
     exit_threshold: float = -0.15    # score compuesto para cerrar
 
     # --- Pesos de voto de cada agente ---

@@ -17,7 +17,7 @@ ADX_CHOP = 18.0
 ADX_STRONG = 25.0
 
 
-ALL_FEATURES = {"regime", "adx", "prot", "roi", "trail"}
+ALL_FEATURES = {"regime", "adx", "prot", "roi", "trail", "corr"}
 
 
 def _feat(features):

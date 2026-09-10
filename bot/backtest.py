@@ -12,7 +12,7 @@ from __future__ import annotations
 
 import argparse
 
-from . import feeds, signals
+from . import correlacion, feeds, signals
 from .broker import PaperBroker
 from .config import CONFIG, UNIVERSE, Config
 
@@ -102,29 +102,52 @@ def run(cfg: Config = CONFIG, warmup: int = 100, features=None,
         prices = {s: w[-1]["c"] for s, w in window.items()}
         now = window[next(iter(window))][-1]["t"]
 
+        # Mantener un corto cuesta rollover cada barra. Se cobra antes de nada.
+        if cfg.allow_shorts:
+            broker.funding(prices, cfg.short_funding_daily * (bar_seconds / 86400))
+
         # --- gestion de posiciones abiertas ---
         for sym in list(broker.positions):
             pos = broker.positions[sym]
             bar = window[sym][-1]
-            pos.high_water = max(pos.high_water, bar["h"])
+            corto = pos.side < 0
+            # En un corto el "mejor precio visto" es el mínimo, no el máximo.
+            pos.high_water = min(pos.high_water, bar["l"]) if corto \
+                else max(pos.high_water, bar["h"])
             bars = pos.bars_open(now, bar_seconds)
 
-            if bar["l"] <= pos.stop:
+            # El stop de un corto está ARRIBA y el objetivo ABAJO: todo en espejo.
+            toca_stop = bar["h"] >= pos.stop if corto else bar["l"] <= pos.stop
+            toca_obj = bar["l"] <= pos.target if corto else bar["h"] >= pos.target
+            mejor = (pos.entry / bar["l"] - 1) if corto else (bar["h"] / pos.entry - 1)
+
+            if toca_stop:
                 t = broker.sell(sym, pos.stop, "stop-loss", ts=now); tag(k)
-            elif "roi" in feats and roi_reached(bar["h"] / pos.entry - 1, bars, pos.atr_pct):
+            elif "roi" in feats and roi_reached(mejor, bars, pos.atr_pct):
                 tgt = roi_target(bars, pos.atr_pct)
-                px = pos.entry * (1 + tgt)
+                px = pos.entry * (1 - tgt) if corto else pos.entry * (1 + tgt)
                 t = broker.sell(sym, px, f"objetivo {tgt*100:.1f}%", ts=now); tag(k)
-            elif bar["h"] >= pos.target:
+            elif toca_obj:
                 t = broker.sell(sym, pos.target, "take-profit", ts=now); tag(k)
             else:
                 if "trail" in feats:
-                    ns = trailing_stop(pos.entry, pos.high_water, pos.stop, pos.atr)
-                    if ns > pos.stop:
-                        pos.stop = ns
+                    if corto:
+                        # Se reutiliza el trailing de siempre reflejando el precio
+                        # sobre la entrada: así la lógica es una sola y no puede
+                        # divergir entre los dos lados.
+                        esp = lambda x: 2 * pos.entry - x                  # noqa: E731
+                        ns = esp(trailing_stop(pos.entry, esp(pos.high_water),
+                                               esp(pos.stop), pos.atr))
+                        if ns < pos.stop:
+                            pos.stop = ns
+                    else:
+                        ns = trailing_stop(pos.entry, pos.high_water, pos.stop, pos.atr)
+                        if ns > pos.stop:
+                            pos.stop = ns
                 else:
-                    r = pos.entry - pos.stop
-                    if r > 0 and bar["c"] >= pos.entry + r and pos.stop < pos.entry:
+                    r = abs(pos.entry - pos.stop)
+                    if r > 0 and pos.side * (bar["c"] - pos.entry) >= r \
+                            and pos.side * (pos.entry - pos.stop) > 0:
                         pos.stop = pos.entry
                 continue
             if t:
@@ -183,8 +206,17 @@ def run(cfg: Config = CONFIG, warmup: int = 100, features=None,
             if len(broker.positions) >= cfg.max_positions:
                 veto = f"ya hay {cfg.max_positions} posiciones abiertas"
                 break
-            if sum(1 for s in broker.positions
-                   if kinds[s] == kinds[sym]) >= cfg.max_per_kind:
+            if "corr" in feats:
+                # El agente de correlación sustituye al tope fijo: en vez de
+                # contar posiciones de la misma clase, mira si el candidato se
+                # mueve como algo que ya se tiene.
+                ok, motivo = correlacion.permite(
+                    window[sym], {s2: window[s2] for s2 in broker.positions})
+                if not ok:
+                    veto = veto or motivo
+                    continue
+            elif sum(1 for s in broker.positions
+                     if kinds[s] == kinds[sym]) >= cfg.max_per_kind:
                 veto = veto or (f"tope de {cfg.max_per_kind} posiciones "
                                 f"por clase de activo")
                 continue
@@ -218,6 +250,44 @@ def run(cfg: Config = CONFIG, warmup: int = 100, features=None,
             compradas += 1
             anota(k, sym, "BUY", f"score {sc:+.2f}", price, None,
                   partes[sym], detalles[sym])
+
+        # --- cortos: el otro lado del mercado -------------------------------
+        if cfg.allow_shorts:
+            for sym, sc in sorted(scores.items(), key=lambda x: x[1]):
+                if sc > cfg.short_threshold or sym in broker.positions:
+                    continue
+                if len(broker.positions) >= cfg.max_positions:
+                    break
+                if sum(1 for s2 in broker.positions
+                       if kinds[s2] == kinds[sym]) >= cfg.max_per_kind:
+                    continue
+                if kinds[sym] != "crypto":
+                    continue            # en acciones al contado no se vende corto
+                if prot:
+                    ok, motivo = prot.check(sym, now)
+                    if not ok:
+                        blocked_entries += 1
+                        continue
+                a = atr(window[sym], 14)
+                price = prices[sym]
+                stop_dist = max((a * cfg.stop_atr_mult) if a else price * 0.03,
+                                price * 0.005)
+                qty = (eq * cfg.risk_per_trade) / stop_dist
+                max_notional = min(eq * cfg.max_position_weight, broker.cash * 0.98)
+                if qty * price > max_notional:
+                    qty = max_notional / price
+                if qty * price < 1.0:
+                    continue
+                if enforce_minimums and qty * price < min_notional(_BY_SYMBOL[sym], price):
+                    rejected += 1
+                    continue
+                if broker.short(sym, qty, price, price + stop_dist,
+                                price - stop_dist * cfg.take_profit_r,
+                                f"score {sc:+.2f}", ts=now, atr=a):
+                    tag(k)
+                    compradas += 1
+                    anota(k, sym, "SHORT", f"score {sc:+.2f}", price, None,
+                          partes[sym], detalles[sym])
 
         # Esperar es la decision que el sistema toma la mayor parte del tiempo;
         # se apunta una vez por barra, sobre el mejor candidato del momento.
