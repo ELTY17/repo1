@@ -412,10 +412,12 @@ sistema**, y el de $10 es ruido con suerte.
 ## Tu cuenta de $10
 
 El panel está justo encima del pulpo, y el pulpo reacciona a lo que le pasa:
-pone cara al ganar y al perder. Empieza en **$10**, tiene **objetivo en $100** y
-**stop en $1** (por debajo ningún exchange acepta la orden), y corre
-indefinidamente hasta tocar uno de los dos o hasta que le des a Parar. Se guarda
-sola: si cierras la pestaña, sigue donde estaba.
+pone cara al ganar y al perder. Empieza en **$10** y **no tiene techo** — sube
+hasta donde llegue, la escala del gráfico crece con ella. Solo se para en dos
+sitios: si toca **$1**, porque por debajo ningún exchange acepta la orden y ahí
+se acabó, o cuando le des a **Parar**. Se puede **ingresar más dinero en marcha**
+(+$10, +$20, +$50, +$100), y a **×60** hace sesenta operaciones por segundo. Se
+guarda sola: si cierras la pestaña, sigue donde estaba.
 
 Lo que la hace realista es de dónde salen las operaciones: **cada una es un
 resultado real** de las 44 que el sistema hizo en el backtest, resampleadas

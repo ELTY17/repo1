@@ -227,15 +227,21 @@ footer{font-size:12px;color:var(--dim);line-height:1.6;letter-spacing:-.005em}
 #tur{outline:1px solid #7A5A12}
 .ficc{background:#3A2A05;color:#FFD426;font-size:9.5px;font-weight:700;
   letter-spacing:.06em;padding:2px 7px;border-radius:5px;text-transform:uppercase}
-.turwrap{display:grid;grid-template-columns:190px 1fr 250px;gap:14px;min-height:0}
-.turwrap > div:last-child{display:flex;flex-direction:column;min-height:0}
+.turwrap{display:flex;flex-direction:column;gap:10px;min-height:0}
+.turcols{display:grid;grid-template-columns:172px 1fr 232px;gap:14px;min-height:0;flex:1}
+.turcifra,.turgraf,.turlado{display:flex;flex-direction:column;min-height:0}
+.turctl{display:flex;align-items:center;gap:5px;flex-wrap:wrap;flex:none;
+  padding-top:9px;border-top:.5px solid var(--hair)}
+.turctl button{padding:5px 11px;font-size:12px}
+.tlab{font-size:10.5px;color:var(--faint);letter-spacing:.04em;text-transform:uppercase}
+.tsep{width:1px;align-self:stretch;background:var(--hair);margin:0 5px}
 .turbig{font-family:var(--disp);font-size:38px;font-weight:600;letter-spacing:-.035em;
   line-height:1;font-variant-numeric:tabular-nums;color:#FFD426}
 .turx{font-family:var(--num);font-size:11.5px;color:var(--dim);margin-top:3px;line-height:1.4}
 .turbar{height:5px;background:var(--panel2);border-radius:3px;margin-top:11px;overflow:hidden}
 .turbar i{display:block;height:100%;background:#FFD426;border-radius:3px;
   transition:width .4s;width:0}
-.turops{font-family:var(--num);font-size:11px;overflow:auto;min-height:0}
+.turops{font-family:var(--num);font-size:11px;overflow:auto;flex:1;min-height:46px}
 .turops div{display:flex;justify-content:space-between;gap:8px;padding:2.5px 0;
   border-bottom:.5px solid var(--hair)}
 .turmc{border-collapse:collapse;width:100%;font-size:11px}
@@ -286,8 +292,11 @@ footer{font-size:12px;color:var(--dim);line-height:1.6;letter-spacing:-.005em}
     width:auto;height:auto;pointer-events:auto}
   .rails .rail{position:static;display:flex;flex-direction:column;gap:1px;
     width:auto;height:auto;align-items:stretch;transform:none}
-  .turwrap{grid-template-columns:1fr;gap:12px}
-  .turops{max-height:150px}
+  .turcols{grid-template-columns:1fr;gap:12px}
+  .turops{max-height:150px;flex:none}
+  .turctl{gap:6px}
+  .turctl button{min-height:38px}
+  .tsep{display:none}
   .mosaic > .p[data-hide]{display:none}
   .tabs{display:grid;grid-template-columns:repeat(4,1fr);position:fixed;
     left:0;right:0;bottom:0;z-index:50;
@@ -387,33 +396,40 @@ footer{font-size:12px;color:var(--dim);line-height:1.6;letter-spacing:-.005em}
 <section class="p" data-a="tur" style="grid-area:tur" id="tur">
       <div class="ph"><i class="sq" style="background:#FFD426"></i><b>Tu cuenta de $10</b>
       <span class="ficc">simulación</span>
-      <span class="r">objetivo $100 · stop $1 · cada operación es un resultado real del sistema</span></div>
+      <span class="r">sin techo · solo se para en cero o cuando la pares tú · cada operación es un resultado real del sistema</span></div>
       <div class="pb turwrap">
-        <div>
-          <div class="turbig" id="tEq">$10.00</div>
-          <div class="turx" id="tX">×1.00 · 0 operaciones</div>
-          <div class="turx" id="tT" style="color:var(--faint)">0 días de mercado</div>
-          <div class="turbar"><i id="tBar"></i></div>
-          <div class="ctrls" style="margin-top:12px;flex-wrap:wrap;gap:5px">
-            <button id="tGo">Lanzar</button>
-            <button id="tStop">Parar</button>
-            <button id="tReset">Reiniciar</button>
+        <div class="turcols">
+          <div class="turcifra">
+            <div class="turbig" id="tEq">$10.00</div>
+            <div class="turx" id="tX">×1.00 · 0 operaciones</div>
+            <div class="turx" id="tT" style="color:var(--faint)">0 días de mercado</div>
+            <div class="turx" id="tFin" style="margin-top:8px">Parada. Dale a Lanzar.</div>
           </div>
-          <div class="ctrls" style="margin-top:6px;gap:5px">
-            <button class="tv" data-v="1000" aria-pressed="true">×1</button>
-            <button class="tv" data-v="100" aria-pressed="false">×10</button>
-            <button class="tv" data-v="16" aria-pressed="false">×60</button>
+          <div class="turgraf">
+            <svg id="tCurve" viewBox="0 0 620 150" style="width:100%;height:104px;flex:none"
+              role="img" aria-label="Capital de la cuenta simulada, escala logarítmica"></svg>
+            <div class="turops" id="tOps"></div>
           </div>
-          <div class="turx" id="tFin" style="margin-top:10px">Parada. Dale a Lanzar.</div>
+          <div class="turlado">
+            <dl class="kv" id="tKv" style="margin-top:0"></dl>
+            <div class="turnote" id="tNota"></div>
+          </div>
         </div>
-        <div style="display:flex;flex-direction:column;min-height:0">
-          <svg id="tCurve" viewBox="0 0 620 150" style="width:100%;height:118px"
-            role="img" aria-label="Capital de la cuenta simulada, escala logarítmica entre 1 y 100 dólares"></svg>
-          <div class="turops" id="tOps"></div>
-        </div>
-        <div>
-          <dl class="kv" id="tKv" style="margin-top:0"></dl>
-          <div class="turnote" id="tNota"></div>
+        <div class="turctl">
+          <button id="tGo">Lanzar</button>
+          <button id="tStop">Parar</button>
+          <button id="tReset">Vaciar</button>
+          <span class="tsep"></span>
+          <span class="tlab">velocidad</span>
+          <button class="tv" data-v="1" aria-pressed="true">×1</button>
+          <button class="tv" data-v="10" aria-pressed="false">×10</button>
+          <button class="tv" data-v="60" aria-pressed="false">×60</button>
+          <span class="tsep"></span>
+          <span class="tlab">ingresar</span>
+          <button class="td" data-d="10">+$10</button>
+          <button class="td" data-d="20">+$20</button>
+          <button class="td" data-d="50">+$50</button>
+          <button class="td" data-d="100">+$100</button>
         </div>
       </div></section>
 <section class="p" data-a="evi" style="grid-area:evi"><div class="ph"><i class="sq"></i>
@@ -1225,55 +1241,65 @@ setTimeout(round, 800);
   }
 })();
 
-/* ── La cuenta de $10 ───────────────────────────────────────────────────────
-   Esto ya no inventa nada: cada operación se saca de las 44 que el sistema hizo
-   de verdad en el backtest (bootstrap). Por eso sube y baja como sube y baja el
-   sistema real, y por eso llegar a $100 tarda lo que tarda.
+/* ── Tu cuenta ──────────────────────────────────────────────────────────────
+   Cada operación se saca de las 44 que el sistema hizo de verdad en el
+   backtest (bootstrap), con su tamaño y su signo tal cual salieron. Por eso no
+   gana siempre: la mitad son perdedoras y la peor se lleva un 2,15%.
 
-   Objetivo en $100 y stop en $1, que es donde el exchange deja de aceptar
-   ordenes. Corre indefinidamente hasta tocar uno de los dos o hasta que la
-   pares tú, y se guarda sola: si cierras la pestaña, sigue donde estaba. */
+   No hay techo. Sube hasta donde llegue. Solo se para en dos sitios: si toca
+   $1 —por debajo el exchange no acepta la orden y se acabó— o cuando le des a
+   Parar. Puedes ingresar más dinero en marcha con los botones de abajo. */
 (function(){
   const $ = id => document.getElementById(id);
   if(!$("tEq")) return;
   const R = D.retornos || [0];
-  const INI = 10, META = 100, STOP = 1, CLAVE = "pulpo.cuenta.v1";
+  const STOP = 1, CLAVE = "pulpo.cuenta.v2";
 
-  let eq = INI, ops = 0, ganadas = 0, pico = INI, hundido = 0;
-  let curva = [INI], cinta = [], reloj = null, ritmo = 1000, fin = null;
+  let eq = 10, puesto = 10, ops = 0, ganadas = 0, pico = 10, hundido = 0;
+  let curva = [10], cinta = [], reloj = null, veloc = 1, fin = null;
 
   try{
     const g = JSON.parse(localStorage.getItem(CLAVE) || "null");
     if(g && typeof g.eq === "number"){
-      ({eq, ops, ganadas, pico, hundido, fin} = g);
-      curva = g.curva || [INI]; cinta = g.cinta || [];
+      ({eq, puesto, ops, ganadas, pico, hundido, fin} = g);
+      curva = g.curva || [eq]; cinta = g.cinta || [];
     }
   }catch(e){}
 
   const guardar = () => { try{ localStorage.setItem(CLAVE, JSON.stringify(
-    {eq, ops, ganadas, pico, hundido, fin, curva: curva.slice(-600), cinta: cinta.slice(0,12)})); }catch(e){} };
+    {eq, puesto, ops, ganadas, pico, hundido, fin,
+     curva: curva.slice(-800), cinta: cinta.slice(0,12)})); }catch(e){} };
 
-  /* ── la curva, en log: entre $1 y $100 hay dos órdenes de magnitud y en
-     escala normal el tramo de abajo sería una raya pegada al suelo ── */
-  const W = 620, H = 150, LO = Math.log(0.75), HI = Math.log(135);
-  const yOf = v => H - 12 - (Math.log(Math.min(Math.max(v, .75), 135)) - LO)/(HI-LO)*(H-24);
-  const xOf = (i,n) => 28 + (n<2 ? 0 : i/(n-1))*(W-40);
+  /* ── la curva ───────────────────────────────────────────────────────────
+     Escala logarítmica y con el techo abierto: la parte de arriba crece con la
+     cuenta, así que da igual que llegue a $100 o a $10.000, siempre cabe. */
+  const W = 620, H = 150;
+  function marcas(hi){
+    const out = [];
+    for(let v = 1; v <= hi; v *= 10) out.push(v);
+    return out;
+  }
   function dibujar(){
-    /* miles de puntos no caben en 600px: se enseña una muestra regular */
+    const alto = Math.max(pico * 1.35, 120);
+    const LO = Math.log(0.75), HI = Math.log(alto);
+    const yOf = v => H - 12 - (Math.log(Math.min(Math.max(v, .75), alto)) - LO)/(HI-LO)*(H-24);
+    const xOf = (i,n) => 34 + (n<2 ? 0 : i/(n-1))*(W-46);
     const p = curva.length > 600
       ? curva.filter((_,i)=> i % Math.ceil(curva.length/600) === 0).concat(curva[curva.length-1])
       : curva;
     const n = p.length, ult = p[n-1];
-    const guia = (v,c,extra,txt) => `<line x1="28" y1="${yOf(v).toFixed(1)}" x2="${W-12}"
-        y2="${yOf(v).toFixed(1)}" stroke="${c}" stroke-width="1" ${extra}/>
+    const eti = v => v >= 1000 ? "$" + (v/1000) + "k" : "$" + v;
+    let g = marcas(alto).map(v => `<line x1="34" y1="${yOf(v).toFixed(1)}" x2="${W-12}"
+        y2="${yOf(v).toFixed(1)}" stroke="var(--hair)" stroke-width="1"/>
       <text x="0" y="${(yOf(v)+3.5).toFixed(1)}" fill="var(--faint)" font-size="9"
-        font-family="var(--num)">${txt}</text>`;
+        font-family="var(--num)">${eti(v)}</text>`).join("");
+    g += `<line x1="34" y1="${yOf(STOP).toFixed(1)}" x2="${W-12}" y2="${yOf(STOP).toFixed(1)}"
+        stroke="var(--neg)" stroke-width="1" stroke-dasharray="3 3" opacity=".75"/>`;
+    g += `<line x1="34" y1="${yOf(puesto).toFixed(1)}" x2="${W-12}" y2="${yOf(puesto).toFixed(1)}"
+        stroke="var(--dim)" stroke-width="1" stroke-dasharray="2 5" opacity=".6"/>`;
     const d = p.map((v,i)=>`${i?"L":"M"}${xOf(i,n).toFixed(1)} ${yOf(v).toFixed(1)}`).join(" ");
-    const col = eq >= INI ? "#FFD426" : "var(--neg)";
-    $("tCurve").innerHTML =
-        guia(META, "var(--pos)", 'stroke-dasharray="3 3" opacity=".7"', "$100")
-      + guia(INI,  "var(--hair)", "", "$10")
-      + guia(STOP, "var(--neg)", 'stroke-dasharray="3 3" opacity=".7"', "$1")
+    const col = eq >= puesto ? "#FFD426" : "var(--neg)";
+    $("tCurve").innerHTML = g
       + `<path d="${d}" fill="none" stroke="${col}" stroke-width="1.6"
            stroke-linejoin="round"/>`
       + (n>1 ? `<circle cx="${xOf(n-1,n).toFixed(1)}" cy="${yOf(ult).toFixed(1)}"
@@ -1283,23 +1309,22 @@ setTimeout(round, 800);
   const anos = () => ops / 252;          // el backtest es diario: 1 op ≈ 1 día de mercado
   function pintar(){
     $("tEq").textContent = "$" + eq.toFixed(2);
-    $("tEq").style.color = eq < INI ? "var(--neg)" : "#FFD426";
-    $("tX").textContent = `×${(eq/INI).toFixed(2)} · ${ops.toLocaleString("es")} operaciones`;
+    $("tEq").style.color = eq < puesto ? "var(--neg)" : "#FFD426";
+    $("tX").textContent = `×${(eq/puesto).toFixed(2)} sobre $${puesto.toFixed(0)} `
+      + `· ${ops.toLocaleString("es")} operaciones`;
     $("tT").textContent = ops < 252
       ? `${ops} días de mercado`
       : `${anos().toFixed(1)} años de mercado`;
-    /* la barra mide el camino en logaritmo, que es el que de verdad se recorre */
-    const av = (Math.log(Math.max(eq,STOP)) - Math.log(INI)) / (Math.log(META) - Math.log(INI));
-    $("tBar").style.width = Math.max(0, Math.min(100, av*100)).toFixed(1) + "%";
     $("tKv").innerHTML = [
-      ["Ganadoras", ops ? (ganadas/ops*100).toFixed(0) + " %" : "—"],
+      ["Ingresado", "$" + puesto.toFixed(2)],
       ["Máximo", "$" + pico.toFixed(2)],
+      ["Ganadoras", ops ? (ganadas/ops*100).toFixed(0) + " %" : "—"],
       ["Caída máx.", (hundido*100).toFixed(1) + " %"],
-      ["Por operación", ops ? ((Math.pow(eq/INI, 1/ops)-1)*100).toFixed(3) + " %" : "—"],
     ].map(([k,v]) => `<div><dt>${k}</dt><dd>${v}</dd></div>`).join("");
     $("tOps").innerHTML = cinta.length ? cinta.map(o =>
-      `<div><span class="dim">#${o.n}</span>
-        <span class="${o.r>=0?"pos":"neg"}">${o.r>=0?"▲":"▼"} ${(o.r*100).toFixed(2)} %</span>
+      `<div><span class="dim">${o.dep ? "ingreso" : "#" + o.n}</span>
+        <span class="${o.r>=0?"pos":"neg"}">${o.dep ? "+$" + o.r.toFixed(0)
+          : (o.r>=0?"▲":"▼") + " " + (o.r*100).toFixed(2) + " %"}</span>
         <span>$${o.eq.toFixed(2)}</span></div>`).join("")
       : '<div class="dim" style="border:0;padding:6px 0">Sin operaciones todavía.</div>';
     dibujar();
@@ -1307,15 +1332,15 @@ setTimeout(round, 800);
 
   function parar(txt, cls){
     clearInterval(reloj); reloj = null;
-    if(txt){ fin = {txt, cls}; }
-    const f = fin || {txt: txt || "Parada.", cls: ""};
+    if(txt) fin = {txt, cls};
+    const f = fin || {txt: "Parada.", cls: ""};
     $("tFin").textContent = f.txt;
     $("tFin").style.color = f.cls === "mal" ? "var(--neg)"
       : (f.cls === "bien" ? "var(--pos)" : "var(--dim)");
     guardar();
   }
 
-  function paso(){
+  function operacion(){
     const r = R[Math.floor(Math.random()*R.length)];
     eq *= 1 + r; ops++; if(r > 0) ganadas++;
     pico = Math.max(pico, eq);
@@ -1323,48 +1348,73 @@ setTimeout(round, 800);
     curva.push(eq);
     if(curva.length > 4000) curva = curva.filter((_,i)=> i % 2 === 0);
     cinta.unshift({n: ops, r, eq}); if(cinta.length > 12) cinta.pop();
-    /* el pulpo reacciona a lo que le pasa a la cuenta */
+    return r;
+  }
+
+  /* A ×60 no vale con acortar el intervalo: los navegadores no bajan de ~4ms y
+     además lo estrangulan en pestañas de fondo. Se hacen varias por tick. */
+  function tick(){
+    let ultima = 0;
+    const tanda = veloc === 1 ? 1 : Math.max(1, Math.round(veloc / 10));
+    for(let i = 0; i < tanda; i++){
+      ultima = operacion();
+      if(eq <= STOP){
+        pintar();
+        return parar(`Cero. Tocó $1 en la operación ${ops.toLocaleString("es")}. `
+          + `Por debajo ningún exchange acepta la orden: se acabó.`, "mal");
+      }
+    }
     if(typeof setFace === "function"){
-      if(r > 0.02) setFace(null, "happy");
-      else if(r < -0.015) setFace(null, "sad");
+      if(ultima > 0.02) setFace(null, "happy");
+      else if(ultima < -0.015) setFace(null, "sad");
       else if(ops % 7 === 0) setFace(null, "think");
     }
-    if(ops % 25 === 0) guardar();
+    if(ops % 25 < tanda) guardar();
     pintar();
-    if(eq >= META)      parar(`Objetivo. $${eq.toFixed(2)} en ${ops.toLocaleString("es")} operaciones — ${anos().toFixed(1)} años de mercado.`, "bien");
-    else if(eq <= STOP) parar(`Stop de $1. Por debajo, ningún exchange acepta la orden.`, "mal");
   }
 
   function arrancar(){
-    if(reloj) return;
-    if(eq >= META || eq <= STOP) return;
+    if(reloj || eq <= STOP) return;
     fin = null;
-    $("tFin").textContent = "En marcha…"; $("tFin").style.color = "var(--dim)";
-    reloj = setInterval(paso, ritmo);
+    $("tFin").textContent = "En marcha… no para hasta que la pares.";
+    $("tFin").style.color = "var(--dim)";
+    /* ×1 → una operación por segundo; ×10 y ×60 → tandas cada 100 ms */
+    reloj = setInterval(tick, veloc === 1 ? 1000 : 100);
   }
 
   $("tGo").onclick = arrancar;
   $("tStop").onclick = () => parar("Parada a mano. Dale a Lanzar para seguir.", "");
   $("tReset").onclick = () => {
     clearInterval(reloj); reloj = null;
-    eq = INI; ops = 0; ganadas = 0; pico = INI; hundido = 0;
-    curva = [INI]; cinta = []; fin = null;
+    eq = 10; puesto = 10; ops = 0; ganadas = 0; pico = 10; hundido = 0;
+    curva = [10]; cinta = []; fin = null;
     guardar(); pintar();
-    $("tFin").textContent = "De vuelta a $10."; $("tFin").style.color = "var(--dim)";
+    $("tFin").textContent = "Cuenta vaciada, de vuelta a $10.";
+    $("tFin").style.color = "var(--dim)";
   };
   document.querySelectorAll(".tv").forEach(b => b.onclick = () => {
-    ritmo = parseInt(b.dataset.v, 10);
+    veloc = parseInt(b.dataset.v, 10);
     document.querySelectorAll(".tv").forEach(o =>
       o.setAttribute("aria-pressed", String(o === b)));
-    if(reloj){ clearInterval(reloj); reloj = setInterval(paso, ritmo); }
+    if(reloj){ clearInterval(reloj); reloj = null; arrancar(); }
+  });
+  /* Ingresar dinero en marcha: entra en la cuenta y sube el listón contra el
+     que se mide, para que el ×N no mienta. */
+  document.querySelectorAll(".td").forEach(b => b.onclick = () => {
+    const d = parseFloat(b.dataset.d);
+    if(eq <= STOP){ eq = 0; }                 // reflotar una cuenta muerta
+    eq += d; puesto += d; pico = Math.max(pico, eq);
+    curva.push(eq);
+    cinta.unshift({n: ops, r: d, eq, dep: true}); if(cinta.length > 12) cinta.pop();
+    if(fin && fin.cls === "mal"){ fin = null; $("tFin").textContent = "Cuenta reflotada."; }
+    guardar(); pintar();
   });
 
-  /* Lo que dice el banco de pruebas sobre este mismo camino, medido con las
-     mismas 44 operaciones y 20.000 simulaciones. */
-  $("tNota").innerHTML = `Resampleando las <b>${R.length} operaciones reales</b> del
-    sistema: llega a $100 el <b>95,9%</b> de las veces y toca el stop de $1 el 4,1%.
-    Pero la mediana son <b>6.647 operaciones</b> — a una al día, <b>26 años</b>.
-    Esa es la ventaja real que hay medida: existe, y es así de lenta.`;
+  $("tNota").innerHTML = `Cada operación es una de las <b>${R.length} reales</b> del
+    sistema, elegida al azar: la mitad pierden y la peor se lleva un 2,15%. Sin techo,
+    pero el suelo existe — desde $10 la cuenta muere el <b>4,1%</b> de las veces antes
+    de multiplicarse por diez, y cuando no muere tarda una <b>mediana de 6.647
+    operaciones</b>: a una al día, veintiséis años.`;
 
   pintar();
   if(fin){ parar(); } else { arrancar(); }

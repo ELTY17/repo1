@@ -23,6 +23,11 @@ def _compute_research():
 
         cfg = Config()
         stats, broker = run(cfg, verbose=False, timeframe="1d")
+
+        # La cuenta de $10 del panel usa estos mismos resultados. Se calculan
+        # aquí, en el hilo de fondo, porque el recorrido de $10 a $100 son
+        # miles de operaciones por simulación y no cabe en una petición web.
+        _llenar_turbo(broker)
         curve = [round(p["equity"], 4) for p in broker.equity_curve]
 
         abl = []
@@ -117,17 +122,16 @@ def make_handler(orch):
 _turbo_cache: dict = {}
 
 
+def _llenar_turbo(broker):
+    from .montecarlo import trade_returns
+    from .turbo import camino
+    rets = [round(x, 6) for x in trade_returns(broker, broker.equity_curve)]
+    _turbo_cache.update({"retornos": rets, "listo": True, **camino(rets, runs=5000)})
+
+
 def _turbo_datos():
-    if not _turbo_cache:
-        from .backtest import run
-        from .config import Config
-        from .montecarlo import trade_returns
-        from .turbo import camino
-        cfg = Config()
-        _, br = run(cfg, verbose=False, timeframe="1d", enforce_minimums=True)
-        rets = [round(x, 6) for x in trade_returns(br, br.equity_curve)]
-        _turbo_cache.update({"retornos": rets, **camino(rets)})
-    return _turbo_cache
+    """Lo que haya. Si aún no está, el panel espera y vuelve a preguntar."""
+    return _turbo_cache or {"listo": False, "retornos": []}
 
 
 def serve(orch, host, port):
