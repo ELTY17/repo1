@@ -334,6 +334,63 @@ están portadas de [freqtrade](https://github.com/freqtrade/freqtrade) (GPL-3.0,
 está inspirada en [TauricResearch/TradingAgents](https://github.com/TauricResearch/TradingAgents).
 El detalle de qué viene de dónde está en **[`NOTICE.md`](NOTICE.md)**.
 
+## Las 100 estrategias y el conmutador por régimen
+
+`bot/playbook.py` reúne **105 reglas** en ocho familias — las que la gente corre de
+verdad, no inventos: cruces de EMA y SMA (incluida la cruz dorada), RSI por los dos
+lados, MACD, Bollinger, Donchian (las Tortugas), Supertrend, estocástico, ADX/DI,
+Heikin-Ashi, SAR parabólico, Keltner, momentum y combos como la triple pantalla.
+Cada una es una función `(pre, i) -> bool`, así que todas se miden con el mismo
+listón y las mismas comisiones.
+
+`bot/regime.py` es la parte de "que sepa cambiar según lo que pase": clasifica cada
+día en cuatro regímenes usando **solo datos pasados** (índice equiponderado contra su
+SMA50; volatilidad de 20 días contra su mediana histórica) y asigna a cada régimen la
+estrategia que mejor se portó **en el entrenamiento**. Cambiar de estrategia paga
+comisión, como en la vida real.
+
+```
+alcista tranquilo  →  adx>25 +di>-di      +48.50%   (listón +14.23%)
+alcista nervioso   →  roc5<-5% (rebote)    +3.76%   (listón  -8.51%)
+bajista tranquilo  →  2 supertrend        +54.34%   (listón  -4.16%)
+bajista nervioso   →  bb20 2.5 baja       +14.51%   (listón  -8.18%)
+
+PRUEBA (nunca vista)
+  conmutador por régimen   +8.55%
+  mejor suelta (rsi7<25)  -38.21%
+  comprar y esperar       -26.36%
+```
+
+Parece el hallazgo del año: +34,91 puntos sobre no hacer nada. **No lo es**, y
+`python3 -m bot.regime --robust` es lo que lo demuestra:
+
+```
+VENTANAS SUCESIVAS   gana al listón en 1/3 · diferencia media +2.64%
+CONTRA EL AZAR       400 asignaciones aleatorias: mediana -26.11%, p90 +32.69%
+                     la nuestra: +8.55% → percentil 80
+```
+
+Traducido: el p90 del azar ya supera nuestro resultado, y en ventanas sucesivas gana
+una de tres. La cifra buena venía de **tener cuatro estrategias cualesquiera** en un
+tramo bajista, no de haberlas elegido por régimen. Un solo tramo bonito no es una
+ventaja; es la forma más común de engañarse.
+
+**Sin ventaja demostrable.** Otra vez.
+
+## En el móvil
+
+El dashboard no es el mosaico encogido. Por debajo de 760px el sistema se reparte en
+cuatro pestañas con barra inferior al alcance del pulgar — **Pulpo, Capital, Mercado,
+Pruebas** — y el capital sube a una cabecera fija que se ve desde cualquiera de ellas.
+Son los mismos paneles, no una segunda versión: al ensanchar la ventana vuelve el
+mosaico entero sin recargar, y la pestaña elegida se recuerda.
+
+Detalles que importan en un teléfono: `viewport` y `doctype` de verdad (sin ellos
+Chrome renderiza a 980px y entra en modo quirks), objetivos táctiles de 46px, respeto
+al notch con `env(safe-area-inset-*)`, los raíles del pulpo bajan a dos columnas
+debajo de él en vez de ahogarlo, y las tablas anchas ruedan ellas — la página nunca
+se desplaza en horizontal. Comprobado a 390×844 y 1512×900.
+
 ## El dashboard en vivo
 
 `python3 run.py` levanta el sistema y sirve **el pulpo conectado a lo que está pasando

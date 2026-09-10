@@ -1,3 +1,8 @@
+<!doctype html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#000000">
+<meta name="apple-mobile-web-app-capable" content="yes">
 <title>Pulpo · en vivo</title>
 <style>
 /* Puesto de mando: se compromete con un solo mundo visual — pantalla de sala de
@@ -54,6 +59,8 @@ a{color:var(--brass)}
   .mosaic > .p{grid-area:auto!important;min-height:220px}
   .mosaic .pb{overflow:visible}
 }
+
+
 
 
 /* barra superior */
@@ -215,6 +222,80 @@ footer{font-size:12px;color:var(--dim);line-height:1.6;letter-spacing:-.005em}
 @media (prefers-reduced-motion:reduce){
   .halo,.lamp.lit,.lid,#octoWrap.bounce,#octoWrap.flinch{animation:none}
 }
+/* ─────────────── MÓVIL ───────────────
+   Un teléfono no es un monitor estrecho. Apilar once paneles deja una página
+   de scroll infinito donde nada se encuentra. Así que en móvil el sistema se
+   reparte en cuatro pestañas con barra inferior al alcance del pulgar, y lo
+   único que está siempre a la vista —el capital— sube a una cabecera fija.
+   Los objetivos táctiles no bajan de 44px y se respeta el notch. */
+.tabs{display:none}
+.mhead{display:none}
+@media (max-width:760px){
+  body{padding-bottom:calc(78px + env(safe-area-inset-bottom))}
+  .bar{display:none}
+
+  /* cabecera fija: capital, variación y pulso, nada más */
+  .mhead{display:flex;position:sticky;top:0;z-index:40;align-items:center;gap:10px;
+    padding:calc(9px + env(safe-area-inset-top)) 16px 9px;
+    background:rgba(20,20,22,.82);-webkit-backdrop-filter:saturate(180%) blur(20px);
+    backdrop-filter:saturate(180%) blur(20px);border-bottom:.5px solid var(--line)}
+  .mhead .tickerdot{width:7px;height:7px}
+  .mhead h1{font-family:var(--disp);font-size:15px;font-weight:600;letter-spacing:-.02em}
+  .mhead .me{margin-left:auto;text-align:right;line-height:1.15}
+  .mhead .me b{font-family:var(--num);font-size:17px;font-weight:600;
+    font-variant-numeric:tabular-nums;display:block}
+  .mhead .me span{font-family:var(--num);font-size:11px}
+
+  .mosaic{padding:10px 10px 14px;gap:10px}
+  .mosaic > .p{min-height:0}
+  .p{border-radius:14px}
+  .ph{padding:12px 14px 7px;font-size:13px}
+  /* el subtítulo del panel es contexto, no titular: dos líneas y punto */
+  .ph .r{font-size:10.5px;max-width:44%;white-space:normal;text-align:right;
+    line-height:1.25;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;
+    overflow:hidden}
+  .pb{padding:4px 14px 14px}
+  .big{font-size:34px}
+  .call{font-size:22px}
+  .why{min-height:0}
+  .kv,.votes{grid-template-columns:1fr 1fr}
+  .mosaic #mckv{grid-template-columns:1fr 1fr!important}
+  /* las tablas anchas hacen scroll ellas, la página nunca */
+  .pb.scroll,.pb table{max-width:100%}
+  .pb > table{display:block;overflow-x:auto}
+  /* una cifra partida en dos líneas no es una cifra: que la tabla ruede */
+  .pb > table th,.pb > table td{white-space:nowrap}
+  #cone{height:170px}
+  /* el pulpo necesita ancho: en vertical se le da altura fija y aire */
+  .ringwrap{min-height:0}
+  /* alto automático: forzar píxeles deja franjas negras arriba y abajo,
+     porque el viewBox del pulpo es muy apaisado */
+  #ring{height:auto;width:100%;aspect-ratio:1000/496}
+  /* los raíles no caben a los lados de un teléfono: bajan debajo del pulpo,
+     a dos columnas, que es donde sí se leen */
+  .ringwrap{display:block}
+  .rails{position:static;display:grid;grid-template-columns:1fr 1fr;gap:1px;
+    background:var(--hair);margin:2px 14px 14px;border-radius:10px;overflow:hidden;
+    width:auto;height:auto;pointer-events:auto}
+  .rails .rail{position:static;display:flex;flex-direction:column;gap:1px;
+    width:auto;height:auto;align-items:stretch;transform:none}
+
+  /* una pestaña a la vez */
+  .mosaic > .p[data-hide]{display:none}
+
+  .tabs{display:grid;grid-template-columns:repeat(4,1fr);position:fixed;
+    left:0;right:0;bottom:0;z-index:50;
+    padding:6px 4px calc(6px + env(safe-area-inset-bottom));
+    background:rgba(20,20,22,.86);-webkit-backdrop-filter:saturate(180%) blur(20px);
+    backdrop-filter:saturate(180%) blur(20px);border-top:.5px solid var(--line)}
+  .tabs button{display:flex;flex-direction:column;align-items:center;gap:2px;
+    min-height:46px;justify-content:center;background:none;border-radius:10px;
+    color:var(--faint);font-size:10.5px;font-weight:500;padding:4px 2px}
+  .tabs button:hover{background:none}
+  .tabs button svg{width:21px;height:21px;fill:none;stroke:currentColor;
+    stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+  .tabs button[aria-selected="true"]{color:var(--blue);background:none}
+}
 </style>
 <div class="deck">
   <div class="bar">
@@ -232,19 +313,20 @@ footer{font-size:12px;color:var(--dim);line-height:1.6;letter-spacing:-.005em}
       <span id="mode" style="color:var(--blue)">…</span>
     </div>
   </div>
+  <header class="mhead"><i class="tickerdot"></i><h1>Pulpo</h1><div class="me"><b id="mEq">—</b><span id="mDl" class="dim">—</span></div></header>
   <main class="mosaic">
-<section class="p" style="grid-area:cap"><div class="ph"><i class="sq"></i><b>Capital</b><span class="r" id="eqr">—</span></div>
+<section class="p" data-a="cap" style="grid-area:cap"><div class="ph"><i class="sq"></i><b>Capital</b><span class="r" id="eqr">—</span></div>
       <div class="pb">
         <div class="big num" id="eq">$100.00</div>
         <div class="sub" id="dl">—</div>
         <dl class="kv" id="kv"></dl>
       </div></section>
-<section class="p" style="grid-area:prc"><div class="ph"><i class="sq"></i><b>Precio</b>
+<section class="p" data-a="prc" style="grid-area:prc"><div class="ph"><i class="sq"></i><b>Precio</b>
       <span id="ckSym" style="color:var(--brass)">—</span>
       <span class="r">90 velas diarias · dato real</span></div>
       <div class="pb"><svg id="candles" viewBox="0 0 760 208" style="width:100%;height:208px"
         role="img" aria-label="Velas diarias del activo en juego"></svg></div></section>
-<section class="p" style="grid-area:dec"><div class="ph"><i class="sq"></i><b>Decisión</b>
+<section class="p" data-a="dec" style="grid-area:dec"><div class="ph"><i class="sq"></i><b>Decisión</b>
       <span class="r" id="wround">—</span></div>
       <div class="pb">
         <div class="call" id="call">En espera</div>
@@ -259,28 +341,28 @@ footer{font-size:12px;color:var(--dim);line-height:1.6;letter-spacing:-.005em}
           <div class="glab"><span>−1,00</span><span>UMBRAL +0,35</span><span>+1,00</span></div>
         </div>
       </div></section>
-<section class="p" style="grid-area:con"><div class="ph"><i class="sq"></i><b>Cono de ruina</b>
+<section class="p" data-a="con" style="grid-area:con"><div class="ph"><i class="sq"></i><b>Cono de ruina</b>
       <span class="r">10.000 futuros · monte carlo sobre las 36 operaciones reales</span></div>
       <div class="pb"><svg id="cone" viewBox="0 0 560 190" style="width:100%;height:150px"
         role="img" aria-label="Distribución del capital en 10.000 futuros simulados"></svg>
         <div class="kv" id="mckv" style="grid-template-columns:repeat(4,1fr)"></div>
       </div></section>
-<section class="p" style="grid-area:agt"><div class="ph"><i class="sq"></i><b>Agentes</b></div>
+<section class="p" data-a="agt" style="grid-area:agt"><div class="ph"><i class="sq"></i><b>Agentes</b></div>
       <div class="pb" id="astat"></div></section>
-<section class="p" style="grid-area:ops"><div class="ph"><i class="sq"></i><b>Operaciones cerradas</b>
+<section class="p" data-a="ops" style="grid-area:ops"><div class="ph"><i class="sq"></i><b>Operaciones cerradas</b>
       <span class="r">resultado de cada operación cerrada, en orden</span></div>
       <div class="pb"><svg id="furnace" viewBox="0 0 700 190" style="width:100%;height:190px"
         role="img" aria-label="Resultado de cada operación cerrada"></svg></div></section>
-<section class="p" style="grid-area:mkt"><div class="ph"><i class="sq"></i><b>Mercado vigilado</b>
+<section class="p" data-a="mkt" style="grid-area:mkt"><div class="ph"><i class="sq"></i><b>Mercado vigilado</b>
       <span class="r">vigilado, no operado · últimas 24 h</span></div>
       <div class="pb"><div class="cart" id="cart"></div></div></section>
-<section class="p" style="grid-area:ord"><div class="ph"><i class="sq"></i><b>Órdenes</b>
+<section class="p" data-a="ord" style="grid-area:ord"><div class="ph"><i class="sq"></i><b>Órdenes</b>
       <span class="r" id="logn">0 ÓRDENES</span></div>
       <div class="pb scroll"><table id="blot"></table></div></section>
-<section class="p" style="grid-area:cnv" style="margin-top:8px">
+<section class="p" data-a="cnv" style="grid-area:cnv" style="margin-top:8px">
     <div class="ph"><i class="sq"></i><b>Conversación</b><span class="r">lo que se dicen entre ellos</span></div>
     <div class="pb wire" id="wire"></div></section>
-<section class="p" style="grid-area:oct" style="margin-top:8px">
+<section class="p" data-a="oct" style="grid-area:oct" style="margin-top:8px">
     <div class="ph"><i class="sq"></i><b>El pulpo</b>
       <span class="r">ocho brazos · cinco con instrumento · cada impulso es un voto que de verdad se mandó</span></div>
     <div class="ringwrap">
@@ -292,7 +374,7 @@ footer{font-size:12px;color:var(--dim);line-height:1.6;letter-spacing:-.005em}
       </div>
     </div>
   </section>
-<section class="p" style="grid-area:evi"><div class="ph"><i class="sq"></i>
+<section class="p" data-a="evi" style="grid-area:evi"><div class="ph"><i class="sq"></i>
       <b>Evidencia</b><span class="r">medido, no supuesto</span></div>
       <div class="pb" style="overflow:auto">
         <table id="abl"></table>
@@ -1068,4 +1150,71 @@ tick(); slow();
 setInterval(tick, 2000);
 setInterval(slow, 15000);
 
+</script>
+
+<nav class="tabs" role="tablist" aria-label="Secciones"><button role="tab" data-t="pulpo" aria-selected="true"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="9" r="6"/><path d="M6 13c-1 3-2 4-3 5m6-4c-.5 3-.5 5-.5 6m6-6c.5 3 .5 5 .5 6m2.5-7c1 3 2 4 3 5"/></svg><span>Pulpo</span></button><button role="tab" data-t="capital" aria-selected="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 17l5-6 4 3 5-7 4 4"/><path d="M3 21h18"/></svg><span>Capital</span></button><button role="tab" data-t="mercado" aria-selected="false"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="8" width="4" height="10" rx="1"/><rect x="10" y="4" width="4" height="14" rx="1"/><rect x="16" y="11" width="4" height="7" rx="1"/></svg><span>Mercado</span></button><button role="tab" data-t="pruebas" aria-selected="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 3v6l-5 9a2 2 0 001.7 3h12.6a2 2 0 001.7-3l-5-9V3"/><path d="M8 3h8"/></svg><span>Pruebas</span></button></nav>
+<script>
+/* ── Pestañas de móvil ──────────────────────────────────────────────────────
+   No hay dos versiones de la página: son los mismos paneles del mosaico, solo
+   que en pantalla estrecha se enseñan por grupos. Al pasar a ancho se quitan
+   todas las marcas y vuelve el mosaico entero, sin recargar. */
+(function(){
+  const GRUPOS = {
+    pulpo:   ["oct","agt","cnv"],
+    capital: ["cap","dec","ops"],
+    mercado: ["prc","mkt","ord"],
+    pruebas: ["con","evi"],
+  };
+  const nav = document.querySelector(".tabs");
+  if(!nav) return;
+  const paneles = [...document.querySelectorAll(".mosaic > .p[data-a]")];
+  const estrecho = matchMedia("(max-width:760px)");
+  let activa = localStorage.getItem("pulpo.tab") || "pulpo";
+  if(!GRUPOS[activa]) activa = "pulpo";
+
+  function pintar(){
+    if(!estrecho.matches){                       // en ancho no se esconde nada
+      paneles.forEach(p => p.removeAttribute("data-hide"));
+      return;
+    }
+    const vis = GRUPOS[activa];
+    paneles.forEach(p => {
+      if(vis.includes(p.dataset.a)) p.removeAttribute("data-hide");
+      else p.setAttribute("data-hide","");
+    });
+    // el orden del grupo manda: así el pulpo sale primero en su pestaña
+    vis.forEach(a => {
+      const el = paneles.find(p => p.dataset.a === a);
+      if(el) el.parentNode.appendChild(el);
+    });
+    nav.querySelectorAll("button").forEach(b =>
+      b.setAttribute("aria-selected", String(b.dataset.t === activa)));
+  }
+
+  nav.addEventListener("click", e => {
+    const b = e.target.closest("button");
+    if(!b) return;
+    activa = b.dataset.t;
+    localStorage.setItem("pulpo.tab", activa);
+    pintar();
+    window.scrollTo({top:0, behavior:"smooth"});
+  });
+  estrecho.addEventListener("change", pintar);
+  pintar();
+
+  /* El capital vive en su panel; en móvil hay que verlo desde cualquier
+     pestaña. En vez de duplicar la lógica de actualización, se copia. */
+  const eq = document.getElementById("eq"), dl = document.getElementById("dl");
+  const mEq = document.getElementById("mEq"), mDl = document.getElementById("mDl");
+  if(eq && mEq){
+    const copia = () => {
+      mEq.textContent = eq.textContent;
+      mDl.textContent = dl ? dl.textContent : "";
+      mDl.className = dl ? dl.className.replace("sub","").trim() || "dim" : "dim";
+    };
+    new MutationObserver(copia).observe(document.querySelector(".mosaic"),
+      {subtree:true, childList:true, characterData:true});
+    copia();
+  }
+})();
 </script>
