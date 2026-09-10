@@ -1,69 +1,58 @@
 # Qué falta para operar con dinero real
 
-El sistema **funciona** como está: corre, opera en papel con precios reales, se mide
-a sí mismo y publica sus resultados. Lo que sigue es lo que faltaría para que moviera
-dinero de verdad, en orden de importancia.
+**Actualizado.** Los puntos 1–6 ya están construidos y probados. Lo que queda es
+el punto 0 y la clave, que no depende del código.
 
-## 0. Lo que no se arregla programando
+## Estado
 
-**Una estrategia con ventaja demostrable.** No la hay: la validación out-of-sample
-(`python3 -m bot.oos`) muestra que las mejoras no baten a no hacer nada, y con comisión
-y mínimos reales el sistema pierde. Todo lo que viene debajo es fontanería; sin esto,
-la fontanería solo sirve para perder dinero más rápido y con mejor registro.
+| | Estado |
+|---|---|
+| **0. Una estrategia con ventaja demostrable** | ❌ **no la hay** — `python3 -m bot.oos` |
+| 1. Cliente de la API privada de Kraken | ✅ `bot/kraken.py` · firma verificada |
+| 2. Máquina de estados de la orden | ✅ `bot/live.py` · parciales, idempotencia |
+| 3. Persistencia y reconciliación | ✅ `bot/store.py` · SQLite, sobrevive reinicios |
+| 4. Stops puestos en el exchange | ✅ `bot/live.py::place_stop` |
+| 5. Secretos | ✅ `.env` fuera del repo, `.env.example` |
+| 6. Alertas | ✅ `bot/alerts.py` |
+| **La clave de API** | 🔑 **la tienes que poner tú, en tu máquina** |
 
-## 1. `LiveBroker` contra la API privada de Kraken
+## Cómo se probó sin tener cuenta
 
-`bot/broker.py` tiene la interfaz y lanza `NotImplementedError` a propósito. Habría que:
+- **La firma** (`tests/test_signature.py`) se comprueba contra el vector de ejemplo
+  que publica Kraken. O sale exactamente esa firma o el exchange rechaza todo; no
+  admite un "parece que va".
+- **El resto** (`tests/test_live.py`) contra un Kraken de mentira que imita la API,
+  incluidas las **ejecuciones parciales**, que son lo que de verdad rompe los bots.
+  9 pruebas: redondeos, mínimos, parciales, stop en el exchange, mover el stop,
+  cancelarlo al vender, modo validación, `userref` único y reinicio.
+- **Los metadatos de los pares** se leen del Kraken real: `AssetPairs` es público.
 
-- Firmar las peticiones privadas (HMAC-SHA512 sobre nonce + payload).
-- `AddOrder` con `validate=true` primero, para probar sin ejecutar.
-- Traducir cantidades y precios a los decimales que acepta cada par (`pair_decimals`,
-  `lot_decimals` de `AssetPairs`), o el exchange rechaza la orden.
+## Las tres barreras que hay que cruzar a la vez para mover dinero
 
-## 2. Máquina de estados de la orden
+1. `--live --real` en la línea de comandos.
+2. `KRAKEN_API_KEY` y `KRAKEN_API_SECRET` en el entorno.
+3. `LIVE_TRADING_CONFIRMED=yes-i-understand-the-risk`.
 
-Lo que hoy es `buy()` devolviendo un fill instantáneo, en real es un proceso:
-enviada → aceptada → parcialmente ejecutada → completa | rechazada | cancelada.
+Falta cualquiera de las tres y el sistema entra en **modo validación**: manda la
+orden con `validate=true`, Kraken la comprueba de arriba abajo y **no la ejecuta**.
 
-- **Ejecuciones parciales**: una orden puede llenarse a medias. La posición y el stop
-  tienen que reflejar lo realmente ejecutado, no lo pedido.
-- **Idempotencia**: si la respuesta se pierde por red, reintentar sin un identificador
-  propio (`userref`) duplica la orden. Es de los errores que más dinero cuestan.
-- **Reintentos y límites de tasa**: Kraken tiene un contador que penaliza; pasarse
-  bloquea la cuenta temporalmente.
+## Lo que YO no voy a hacer
 
-## 3. Persistencia y reconciliación
+No voy a manejar tu clave de API. Tú la creas, tú la pones en tu `.env`, en tu
+máquina. Que un proceso que no controlas tenga credenciales que mueven tu dinero
+es mala idea aunque me lo pidas — y no cambia porque sean 19 dólares.
 
-Hoy las posiciones viven en memoria: si el proceso se reinicia, el bot cree que no
-tiene nada abierto mientras el exchange sí las tiene.
+Cuando la crees, **quítale el permiso de retirada** (`Withdraw Funds`). Con eso,
+en el peor caso alguien puede hacer operaciones tontas, pero no puede sacar el
+dinero de tu cuenta.
 
-- Guardar estado en disco (SQLite basta).
-- **Al arrancar, preguntar al exchange** cuál es el saldo y las posiciones reales, y
-  creer eso antes que el estado local.
+## Y el punto 0 sigue ahí
 
-## 4. Stops en el exchange, no en el bot
+Toda esta fontanería está bien hecha y probada. No convierte una estrategia sin
+ventaja en una que gane: solo hace que pierda de forma ordenada, protegida y con
+buen registro. La validación out-of-sample dice que las mejoras no baten a no hacer
+nada, y con comisión y mínimos reales el sistema pierde.
 
-Ahora el stop-loss lo vigila `ExecutionAgent` en un hilo. Si el bot se cae, la posición
-queda **sin protección**. En real el stop tiene que estar puesto en el exchange
-(`ordertype=stop-loss`) para que exista aunque el bot no.
-
-Este es el punto que convierte "el sistema falla" en "el sistema falla y además pierdes
-dinero mientras está caído".
-
-## 5. Secretos
-
-Claves en un `.env` fuera del repositorio, permisos mínimos en la API key (operar sí,
-retirar **no**), y nunca en logs ni en mensajes de error.
-
-## 6. Observabilidad
-
-Alertas cuando algo se sale de lo previsto: una orden rechazada, el drawdown acercándose
-al kill switch, el bot sin latir. Un bot que falla en silencio es peor que no tener bot.
-
-## Orden sensato
-
-1. Semanas de papel con datos en vivo (`python3 run.py`), que ya funciona y cuesta cero.
-2. `LiveBroker` con `validate=true`: manda órdenes que el exchange comprueba pero no ejecuta.
-3. Stops en el exchange + persistencia + reconciliación.
-4. Cantidades mínimas, con dinero que dé igual perder.
-5. Y solo si en algún momento aparece una ventaja real, medida fuera de muestra.
+Mi recomendación no ha cambiado: `python3 run.py --live` unas semanas. Manda las
+órdenes al exchange de verdad, Kraken las valida de verdad, y no se ejecuta nada.
+Ahí se ve si la fontanería aguanta sin arriesgar un euro.

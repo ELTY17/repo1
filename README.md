@@ -13,6 +13,9 @@ Sin dependencias. Solo Python 3.10+.
 
 ```bash
 python3 run.py                  # $100 simulados, dashboard en http://127.0.0.1:8787
+python3 run.py --live           # conecta con Kraken en modo VALIDACIÓN (no ejecuta)
+python3 -m tests.test_signature # la firma, contra el vector de Kraken
+python3 -m tests.test_live      # el broker en vivo, contra un Kraken de mentira
 python3 run.py --cash 250       # otro capital
 python3 run.py --port 9000      # otro puerto
 python3 -m bot.backtest         # backtest: 2 años de velas diarias reales
@@ -206,7 +209,15 @@ bot/broker.py          bróker en papel · LiveBroker bloqueado
 bot/orchestrator.py    agrega votos y decide
 bot/backtest.py        replay de la misma lógica sobre histórico
 bot/agents/            los cinco agentes
+bot/kraken.py          cliente de la API de Kraken (firma HMAC verificada)
+bot/live.py            broker real: parciales, idempotencia, stops en el exchange
+bot/store.py           estado en SQLite: sobrevive a reinicios
+bot/limits.py          mínimos de orden del exchange
+bot/alerts.py          avisos cuando algo se sale de lo previsto
+bot/oos.py             validación out-of-sample
+bot/montecarlo.py      cono de ruina
 bot/web/index.html     dashboard
+tests/                 pruebas que corren sin credenciales
 ```
 
 ## Qué NO es esto

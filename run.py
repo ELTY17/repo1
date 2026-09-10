@@ -7,12 +7,25 @@
 """
 import argparse
 import sys
+import threading
+import time
 import time
 import webbrowser
 
+from bot.alerts import Alerts
 from bot.config import CONFIG
 from bot.orchestrator import Orchestrator
 from bot.server import serve
+
+
+def _watch(orch, alerts):
+    """Vigilante: comprueba periódicamente que todo sigue en pie."""
+    while True:
+        time.sleep(30)
+        try:
+            alerts.check(orch)
+        except Exception:                                    # noqa: BLE001,S110
+            pass
 
 
 def main():
@@ -22,6 +35,11 @@ def main():
     ap.add_argument("--host", default=CONFIG.host)
     ap.add_argument("--tick", type=int, default=CONFIG.tick_seconds)
     ap.add_argument("--no-browser", action="store_true")
+    ap.add_argument("--live", action="store_true",
+                    help="conecta con Kraken en modo VALIDACIÓN (no ejecuta nada)")
+    ap.add_argument("--real", action="store_true",
+                    help="ejecuta órdenes de verdad. Exige --live, credenciales y "
+                         "LIVE_TRADING_CONFIRMED. Puedes perder dinero.")
     args = ap.parse_args()
 
     CONFIG.starting_cash = args.cash
@@ -30,14 +48,38 @@ def main():
     CONFIG.tick_seconds = args.tick
 
     orch = Orchestrator(CONFIG)
+
+    if args.live:
+        from bot.kraken import KrakenError
+        from bot.live import LiveBroker
+        try:
+            lb = LiveBroker(validate=not args.real)
+            lb.arm()
+            orch.broker = lb
+            CONFIG.starting_cash = lb.starting_cash or CONFIG.starting_cash
+        except KrakenError as e:
+            print(f"\n  No se pudo conectar con el exchange: {e}\n")
+            return 2
+    elif args.real:
+        print("\n  --real necesita también --live.\n")
+        return 2
+
+    alerts = Alerts()
+    orch.alerts = alerts
+    threading.Thread(target=_watch, args=(orch, alerts), daemon=True).start()
     orch.start()
 
     httpd = serve(orch, args.host, args.port)
     url = f"http://{args.host}:{args.port}"
     print("=" * 62)
-    print("  SISTEMA MULTI-AGENTE DE TRADING  ·  MODO PAPEL (dinero simulado)")
+    print("  SISTEMA MULTI-AGENTE DE TRADING")
     print("=" * 62)
-    print(f"  Capital inicial : ${args.cash:,.2f} simulados")
+    modo = ("REAL · MUEVE DINERO" if (args.live and args.real)
+            else "VALIDACIÓN · el exchange comprueba, no ejecuta" if args.live
+            else "PAPEL · dinero simulado")
+    print(f"  Modo            : {modo}")
+    print(f"  Capital inicial : ${CONFIG.starting_cash:,.2f}"
+          + ("" if args.live else " simulados"))
     print(f"  Agentes         : noticias, escaner, tecnico, riesgo, ejecucion")
     print(f"  Dashboard       : {url}")
     print(f"  Ctrl+C para parar")
