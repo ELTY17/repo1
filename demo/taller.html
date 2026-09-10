@@ -166,6 +166,20 @@ footer{margin-top:22px;font-size:11.5px;color:var(--faint);line-height:1.65;
   50%{opacity:.5;transform:scale(1.06)}}
 @keyframes lampglow{0%,100%{opacity:1}50%{opacity:.45}}
 .blob{transition:transform .35s cubic-bezier(.3,1.6,.5,1);transform-box:fill-box;transform-origin:center}
+#mouth{transition:d .28s cubic-bezier(.4,0,.2,1)}
+.lidT,.lidB{transition:y .26s cubic-bezier(.4,0,.2,1)}
+.pup{transition:x .3s ease,y .26s ease,height .22s ease,rx .22s ease}
+.mantle{transition:fill .6s ease,opacity .6s ease}
+@keyframes bounce{0%,100%{transform:translateY(0) scale(1)}
+  28%{transform:translateY(-13px) scale(1.045)}
+  60%{transform:translateY(3px) scale(.985)}}
+@keyframes flinch{0%,100%{transform:translate(0,0) rotate(0)}
+  20%{transform:translate(-6px,5px) rotate(-1.6deg)}
+  55%{transform:translate(5px,4px) rotate(1.2deg)}
+  80%{transform:translate(-2px,2px) rotate(-.5deg)}}
+#octoWrap{transform-box:view-box;transform-origin:500px 200px}
+#octoWrap.bounce{animation:bounce .85s cubic-bezier(.3,1.4,.5,1)}
+#octoWrap.flinch{animation:flinch .7s ease-out}
 .lid{transform-box:fill-box;transform-origin:top;transform:scaleY(0);
   animation:blinkeye 7s ease-in-out infinite}
 @keyframes blinkeye{0%,94%,100%{transform:scaleY(0)}97%{transform:scaleY(1)}}
@@ -175,7 +189,7 @@ footer{margin-top:22px;font-size:11.5px;color:var(--faint);line-height:1.65;
 .blob{transition:transform .35s cubic-bezier(.3,1.6,.5,1)}
 .mantle{transition:fill 1s ease}
 @media (prefers-reduced-motion:reduce){
-  .halo,.lamp.lit,.lid{animation:none}
+  .halo,.lamp.lit,.lid,#octoWrap.bounce,#octoWrap.flinch{animation:none}
 }
 </style>
 
@@ -372,6 +386,10 @@ const ARMS = [
 ];
 ARMS.forEach(a=>{ if(AG[a.k]) a.tip = AG[a.k].tip; });
 
+/* el humor se declara aquí porque el bucle de animación, que arranca más
+   abajo pero se ejecuta al definirse, ya lo consulta */
+let moodUntil = 0, mood = "neutral";
+
 const NS = 30;                                     // muestras por brazo
 function cubic(p0,c1,c2,p3,t){
   const u=1-t, a=u*u*u, b=3*u*u*t, c=3*u*t*t, d=t*t*t;
@@ -444,17 +462,28 @@ function headSVG(){
                  [536,132],[582,168],[440,86]]
     .map(([x,y])=>`<circle cx="${x}" cy="${y}" r="3.1" fill="var(--oct-lite)" opacity=".34"/>`).join("");
   /* El ojo sale de la propia piel: un abultamiento del manto con la pupila
-     dentro. Antes llevaba un arco oscuro encima que parecía la montura de unas
-     gafas; ahora el párpado es un pliegue del mismo color que el cuerpo. */
-  const eye = (cx, flip)=>`<g>
+     dentro. Nada de arcos oscuros encima, que parecían la montura de unas gafas.
+     Los párpados son dos trozos de piel que entran recortados al globo: el de
+     arriba cae cuando está triste, el de abajo sube cuando sonríe. */
+  const eye = (side, cx, flip)=>`<g>
     <ellipse cx="${cx}" cy="226" rx="33" ry="27" fill="var(--oct)"/>
     <ellipse cx="${cx}" cy="225" rx="28" ry="22" fill="var(--oct-dark)" opacity=".78"/>
-    <ellipse cx="${cx}" cy="226" rx="21.5" ry="16" fill="#F2EFE6"/>
-    <rect x="${cx-15}" y="221" width="30" height="9.5" rx="4.7" fill="#0A1420"/>
-    <ellipse cx="${cx-7*flip}" cy="222" rx="4" ry="2.7" fill="#fff" opacity=".95"/>
+    <clipPath id="ec-${side}"><ellipse cx="${cx}" cy="226" rx="21.5" ry="16"/></clipPath>
+    <g clip-path="url(#ec-${side})">
+      <ellipse cx="${cx}" cy="226" rx="21.5" ry="16" fill="#F2EFE6"/>
+      <rect class="pup" id="pup-${side}" x="${cx-15}" y="221" width="30" height="9.5"
+        rx="4.7" fill="#0A1420"/>
+      <ellipse class="glint" id="gl-${side}" cx="${cx-7*flip}" cy="222" rx="4" ry="2.7"
+        fill="#fff" opacity=".95"/>
+      <rect class="lidT" id="lidT-${side}" x="${cx-26}" y="188" width="52" height="22"
+        fill="var(--oct)"/>
+      <rect class="lidB" id="lidB-${side}" x="${cx-26}" y="243" width="52" height="22"
+        fill="var(--oct)"/>
+    </g>
     <path d="M${cx-30} 214 q30 -13 60 0 q-30 7 -60 0 z" fill="var(--oct)" opacity=".92"/>
     <ellipse class="lid" cx="${cx}" cy="226" rx="25" ry="19" fill="var(--oct)"/></g>`;
-  return `<g id="octo">
+
+  return `<g id="octoWrap"><g id="octo">
     <ellipse class="halo" cx="500" cy="158" rx="128" ry="134" fill="var(--oct)" opacity=".10"/>
     <path d="${mantle}" fill="var(--oct)" stroke="#04100E" stroke-width="3"/>
     <clipPath id="mclip"><path d="${mantle}"/></clipPath>
@@ -467,14 +496,16 @@ function headSVG(){
       stroke-width="9" opacity=".38" stroke-linecap="round"/>
     <path d="M578 196 q22 6 20 26 q-14 6 -24 -8 z" fill="var(--oct-dark)"
       stroke="#04100E" stroke-width="2.4"/>
-    ${eye(452,1)} ${eye(548,-1)}
-    <path d="M436 254 q18 22 32 12 q16 20 32 8 q16 12 32 -8 q14 10 32 -12"
-      fill="var(--oct-dark)" opacity=".85" stroke="#04100E" stroke-width="2"/>
+    ${eye("l",452,1)} ${eye("r",548,-1)}
+    <path d="M436 262 q18 20 32 11 q16 18 32 7 q16 11 32 -7 q14 9 32 -11"
+      fill="var(--oct-dark)" opacity=".8" stroke="#04100E" stroke-width="2"/>
+    <path id="mouth" d="M485 252 q15 3 30 0" fill="none" stroke="#08121C"
+      stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round"/>
     <text id="chest" x="500" y="308" text-anchor="middle" font-family="IBM Plex Mono,monospace"
       font-size="17" font-weight="600" fill="var(--faint)">· · ·</text>
     <text x="500" y="30" text-anchor="middle" font-family="IBM Plex Mono,monospace"
       font-size="9" letter-spacing="2.6" fill="var(--faint)">CEREBRO</text>
-  </g>`;
+  </g></g>`;
 }
 
 (function buildOcto(){
@@ -511,6 +542,16 @@ ARMS.forEach((a,i)=>armState[a.k]={ph:i*2.1, amp:1});
         `rotate(${(Math.sin(t*0.00046)*1.8).toFixed(2)} 500 200) `+
         `translate(500,200) scale(${br.toFixed(4)},${(2-br).toFixed(4)}) translate(-500,-200)`);
     }
+  }
+  if(!REDUCED && performance.now() > moodUntil && mood === "neutral"){
+    // cuando no hay nada que decidir, el bicho mira alrededor
+    const dx = Math.sin(t*0.00037)*4.5, dy = Math.sin(t*0.00052+2.1)*1.8;
+    ["l","r"].forEach(side=>{
+      const pu = $("pup-"+side); if(!pu) return;
+      const cx = side === "l" ? 452 : 548;
+      pu.setAttribute("x", (cx - 15 + dx).toFixed(1));
+      pu.setAttribute("y", (221.25 + dy).toFixed(1));
+    });
   }
   ARMS.forEach(a=>{
     const st = armState[a.k];
@@ -585,15 +626,52 @@ function lamp(k, on){
   e.classList.toggle("lit", on);
   e.setAttribute("fill", on ? AG[k].c : "var(--sunk)");
 }
-/* los pulpos cambian de color de verdad: el manto vira según cómo vaya */
-const MOOD = {neutral:"var(--oct)", happy:"#2F8F63", sad:"#8E2F22",
-              think:"#A05A3E", wow:"#2F8F63"};
-function setFace(_, mood){
-  const m = $("mantle"); if(!m) return;
-  m.setAttribute("fill", MOOD[mood] || MOOD.neutral);
-  m.setAttribute("opacity", mood && mood!=="neutral" ? ".72" : "0");
+/* ---- la cara ----
+   Cada humor mueve cuatro cosas: la boca, los dos párpados, la pupila y el tono
+   de la piel. Los pulpos cambian de color de verdad, así que el manto acompaña. */
+const FACE = {
+  neutral:{mouth:"M485 252 q15 3 30 0",            lidT:0,  lidB:0,  pup:[0,0,9.5],  skin:null,       hold:0},
+  think:  {mouth:"M492 252 h16",                    lidT:5,  lidB:3,  pup:[-6,-2,9.5],skin:"#1E63B0",  hold:0},
+  happy:  {mouth:"M480 245 q20 17 40 0",            lidT:0,  lidB:9,  pup:[0,1,9],    skin:"#16A06B",  hold:2600},
+  glad:   {mouth:"M483 247 q17 12 34 0",            lidT:0,  lidB:5,  pup:[0,0,9.5],  skin:"#1B8F72",  hold:1400},
+  sad:    {mouth:"M480 259 q20 -17 40 0",           lidT:11, lidB:0,  pup:[0,3,8],    skin:"#B0443A",  hold:2600},
+  wow:    {mouth:"M489 243 q11 21 22 0 q-11 10 -22 0", lidT:0, lidB:0, pup:[0,-1,15], skin:"#3FA0FF",  hold:1800},
+};
+
+function setFace(_, m){
+  const f = FACE[m] || FACE.neutral;
+  const now = performance.now();
+  // una emoción fuerte se queda puesta un rato: si no, la siguiente ronda la borra
+  if(now < moodUntil && !f.hold) return;
+  mood = m; moodUntil = f.hold ? now + f.hold : 0;
+
+  const mo = $("mouth"); if(mo) mo.setAttribute("d", f.mouth);
+  ["l","r"].forEach(side=>{
+    const t = $("lidT-"+side), b = $("lidB-"+side), pu = $("pup-"+side);
+    if(t) t.setAttribute("y", 188 + f.lidT);
+    if(b) b.setAttribute("y", 243 - f.lidB);
+    if(pu){
+      const cx = side === "l" ? 452 : 548;
+      pu.setAttribute("x", cx - 15 + f.pup[0]);
+      pu.setAttribute("y", 226 - f.pup[2]/2 + f.pup[1]);
+      pu.setAttribute("height", f.pup[2]);
+      pu.setAttribute("rx", Math.min(f.pup[2]/2, 5));
+    }
+  });
+  const mt = $("mantle");
+  if(mt){
+    mt.setAttribute("fill", f.skin || "var(--oct)");
+    mt.setAttribute("opacity", f.skin ? ".78" : "0");
+  }
+  const w = $("octoWrap");
+  if(w){
+    w.classList.remove("bounce", "flinch");
+    void w.offsetWidth;                       // reinicia la animación
+    if(m === "happy" || m === "wow") w.classList.add("bounce");
+    if(m === "sad") w.classList.add("flinch");
+  }
 }
-function allFaces(m){ setFace(0,m); }
+function allFaces(m){ setFace(0, m); }
 function pressButton(){}
 
 /* raíl derecho: lecturas del activo en juego */
@@ -864,7 +942,7 @@ function round(){
       rows.push({bar:r.bar, side:"SELL", symbol:r.symbol, price:r.price,
                  pnl:r.pnl, by:`Ejecución · ${r.reason}`});
       blotter(); stats(); drawFurnace(r.bar);
-      allFaces(r.pnl>0 ? "happy" : "sad");
+      allFaces(r.pnl > 0 ? (r.pnl > 1.2 ? "wow" : "happy") : "sad");
       $("chest").textContent = money(r.pnl);
       $("chest").setAttribute("fill", r.pnl>0 ? "var(--pos)" : "var(--neg)");
       log("EJECUCIÓN", `cerrado ${r.symbol} a ${r.price} · ${money(r.pnl)}`);
@@ -908,7 +986,7 @@ function round(){
       $("why").innerHTML = `Compuesto <b>${sgn(r.comp)}</b> supera el umbral +0,35.
         El cerebro manda la orden a Riesgo para que la dimensione.`;
       log("CEREBRO", `COMPRAR ${r.symbol} · compuesto ${sgn(r.comp)} > +0,35`);
-      setFace(0,"happy");
+      setFace(0,"glad");
     } else {
       $("call").textContent = "Esperar";
       $("call").style.color = "var(--ink)";
