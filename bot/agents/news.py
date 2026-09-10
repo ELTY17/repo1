@@ -19,6 +19,8 @@ FEEDS = [
     ("https://feeds.a.dj.com/rss/RSSMarketsMain.xml", "equity"),
     ("https://news.google.com/rss/search?q=stock+market+OR+nasdaq+OR+s%26p+500&hl=en-US&gl=US&ceid=US:en", "equity"),
     ("https://news.google.com/rss/search?q=bitcoin+OR+ethereum+OR+solana&hl=en-US&gl=US&ceid=US:en", "crypto"),
+    ("https://news.google.com/rss/search?q=xrp+OR+cardano+OR+chainlink+OR+avalanche+OR+litecoin&hl=en-US&gl=US&ceid=US:en", "crypto"),
+    ("https://news.google.com/rss/search?q=altcoins+OR+defi+OR+uniswap+OR+aave+OR+cosmos&hl=en-US&gl=US&ceid=US:en", "crypto"),
 ]
 
 POSITIVE = {
@@ -45,6 +47,20 @@ KEYWORDS = {
     "BTC-USD": ["bitcoin", "btc"],
     "ETH-USD": ["ethereum", "ether", "eth"],
     "SOL-USD": ["solana", "sol"],
+    "XRP-USD": ["xrp", "ripple"],
+    "ADA-USD": ["cardano", "ada"],
+    "DOT-USD": ["polkadot", "dot"],
+    "LINK-USD": ["chainlink", "link"],
+    "AVAX-USD": ["avalanche", "avax"],
+    "LTC-USD": ["litecoin", "ltc"],
+    "ATOM-USD": ["cosmos", "atom"],
+    "UNI-USD": ["uniswap", "uni"],
+    "AAVE-USD": ["aave"],
+    "FIL-USD": ["filecoin", "fil"],
+    "NEAR-USD": ["near protocol", "near"],
+    "XLM-USD": ["stellar", "xlm", "lumens"],
+    "BCH-USD": ["bitcoin cash", "bch"],
+    "ETC-USD": ["ethereum classic", "etc"],
     "SPY": ["s&p", "s&p 500", "sp500", "wall street", "stocks", "equities", "spy"],
     "QQQ": ["nasdaq", "tech stocks", "qqq", "big tech"],
 }
@@ -110,7 +126,10 @@ class NewsAgent(Agent):
 
         sentiment = {}
         for inst in UNIVERSE:
-            kws = KEYWORDS[inst.symbol]
+            # Un instrumento nuevo sin palabras clave no debe tumbar al agente:
+            # se queda con el tono general de su clase, que es el reparto por
+            # defecto de todas formas.
+            kws = KEYWORDS.get(inst.symbol, [])
             hits = [h for h in scored
                     if any(k in h["title"].lower() for k in kws)]
             if not hits:

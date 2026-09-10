@@ -113,10 +113,11 @@ class RiskAgent(Agent):
         if notional + notional * cfg.fee_rate > b.cash:
             return {"ok": False, "reason": "efectivo insuficiente"}
 
-        # Concentracion por clase de activo (max 2 posiciones del mismo tipo)
+        # Concentracion por clase de activo. El tope era 2 fijo, pensado para un
+        # universo de tres criptos; con diecisiete dejaba fuera casi todo.
         kind = _INST[symbol].kind
         same = sum(1 for s in b.positions if _INST[s].kind == kind)
-        if same >= 2:
+        if same >= cfg.max_per_kind:
             return {"ok": False, "reason": f"ya hay {same} posiciones en {kind}"}
 
         return {"ok": True, "qty": qty, "stop": stop, "target": target,

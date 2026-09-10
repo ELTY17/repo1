@@ -31,16 +31,21 @@ def kraken_minimums(ttl: int = 3600) -> dict[str, dict]:
         d = feeds._get_json(
             "https://api.kraken.com/0/public/AssetPairs?pair=" + ",".join(codes))
         raw = d.get("result", {})
+        # Kraken publica el nombre pedido en `altname`. Emparejar por prefijos
+        # del codigo funcionaba con tres pares y se rompe en cuanto entran LINK
+        # y LTC, o ADA y ALGO: "LIN" y "LT" casan con quien no toca.
+        by_alt = {(v.get("altname") or "").upper(): v for v in raw.values()}
         for inst in UNIVERSE:
             if inst.venue != "kraken":
                 continue
-            for k, v in raw.items():
-                base = k.replace("ZUSD", "").replace("USD", "").lstrip("X")
-                want = inst.code.replace("USD", "").replace("XBT", "BT")
-                if base.startswith(want[:3]) or want[:3] in base:
-                    out[inst.symbol] = {"ordermin": float(v.get("ordermin", 0) or 0),
-                                        "costmin": float(v.get("costmin", 0) or 0)}
-                    break
+            v = by_alt.get(inst.code.upper())
+            if v is None:                       # algunos responden con el nombre largo
+                v = next((x for k, x in raw.items()
+                          if k.upper() == inst.code.upper()), None)
+            if v is None:
+                continue
+            out[inst.symbol] = {"ordermin": float(v.get("ordermin", 0) or 0),
+                                "costmin": float(v.get("costmin", 0) or 0)}
     except Exception:                                    # noqa: BLE001,S110
         pass
     _cache = (time.time(), out)

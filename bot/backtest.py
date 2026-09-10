@@ -50,7 +50,7 @@ BAR_SECONDS = {"1h": 3600, "1d": 86400}
 
 def run(cfg: Config = CONFIG, warmup: int = 100, features=None,
         verbose: bool = True, timeframe: str = "1d", enforce_minimums: bool = False,
-        trade_from: int = 0, trade_to: int | None = None):
+        trade_from: int = 0, trade_to: int | None = None, record: bool = False):
     """`trade_from`/`trade_to` limitan las barras en las que se OPERA.
 
     Los indicadores siguen usando todo el histórico anterior a cada barra —eso no
@@ -72,6 +72,24 @@ def run(cfg: Config = CONFIG, warmup: int = 100, features=None,
     halted = False
     blocked_entries = 0
     rejected = 0
+    # Con `record` el backtest deja constancia de cada decision —comprar, vender,
+    # esperar y por que— para poder reproducir la sesion en las demos. No cambia
+    # nada de lo que hace: solo lo apunta.
+    broker.rounds = []
+
+    def anota(bar, sym, kind, reason, price, pnl=None, sc=None, det=None):
+        if not record:
+            return
+        d = det or {}
+        broker.rounds.append({
+            "bar": bar - warmup, "symbol": sym, "kind": kind,
+            "tech": round((sc or {}).get("tech", 0.0), 3),
+            "scan": round((sc or {}).get("scan", 0.0), 3),
+            "comp": round((sc or {}).get("comp", 0.0), 3),
+            "adx": round(d["adx"], 1) if d.get("adx") is not None else None,
+            "rsi": d.get("rsi"), "price": round(price, 4),
+            "pnl": round(pnl, 4) if pnl is not None else None,
+            "reason": reason, "equity": round(broker.equity(prices), 2)})
 
     def tag(bar):
         if broker.trades:
@@ -109,6 +127,9 @@ def run(cfg: Config = CONFIG, warmup: int = 100, features=None,
                     if r > 0 and bar["c"] >= pos.entry + r and pos.stop < pos.entry:
                         pos.stop = pos.entry
                 continue
+            if t:
+                anota(k, sym, "MECH", t["reason"], t.get("price", prices[sym]),
+                      t.get("pnl"))
             if prot and t:
                 prot.register_close(sym, t["pnl"], t.get("pnl_pct", 0.0),
                                     t["reason"], now, broker.equity(prices))
@@ -128,15 +149,22 @@ def run(cfg: Config = CONFIG, warmup: int = 100, features=None,
             continue
 
         scores = {}
+        partes = {}
+        detalles = {}
         for s, w in window.items():
-            t_sc, _ = signals.technical_score(w, features=feats)
-            s_sc, _ = signals.scanner_score(w, features=feats)
+            t_sc, t_det = signals.technical_score(w, features=feats)
+            s_sc, s_det = signals.scanner_score(w, features=feats)
             scores[s] = w_tech * t_sc + w_scan * s_sc
+            partes[s] = {"tech": t_sc, "scan": s_sc, "comp": scores[s]}
+            detalles[s] = {"rsi": t_det.get("rsi"), "adx": t_det.get("adx")}
 
         for sym, sc in scores.items():
             if sym in broker.positions and sc <= cfg.exit_threshold:
                 t = broker.sell(sym, prices[sym], f"senal debil ({sc:+.2f})", ts=now)
                 tag(k)
+                if t:
+                    anota(k, sym, "SELL", t["reason"], prices[sym], t.get("pnl"),
+                          {"comp": sc}, detalles.get(sym))
                 if prot and t:
                     prot.register_close(sym, t["pnl"], t.get("pnl_pct", 0.0),
                                         t["reason"], now, broker.equity(prices))
@@ -144,17 +172,27 @@ def run(cfg: Config = CONFIG, warmup: int = 100, features=None,
         if bar_i < trade_from:
             continue
 
+        compradas = 0
+        veto = None                       # por que no se compro, para la demo
         for sym, sc in sorted(scores.items(), key=lambda x: -x[1]):
-            if sc < cfg.buy_threshold or sym in broker.positions:
+            if sc < cfg.buy_threshold:
+                veto = veto or f"score {sc:+.2f} < umbral {cfg.buy_threshold:+.2f}"
+                continue
+            if sym in broker.positions:
                 continue
             if len(broker.positions) >= cfg.max_positions:
+                veto = f"ya hay {cfg.max_positions} posiciones abiertas"
                 break
-            if sum(1 for s in broker.positions if kinds[s] == kinds[sym]) >= 2:
+            if sum(1 for s in broker.positions
+                   if kinds[s] == kinds[sym]) >= cfg.max_per_kind:
+                veto = veto or (f"tope de {cfg.max_per_kind} posiciones "
+                                f"por clase de activo")
                 continue
             if prot:
-                ok, _ = prot.check(sym, now)
+                ok, motivo = prot.check(sym, now)
                 if not ok:
                     blocked_entries += 1
+                    veto = veto or f"proteccion activa: {motivo}"
                     continue
             a = atr(window[sym], 14)
             price = prices[sym]
@@ -164,16 +202,29 @@ def run(cfg: Config = CONFIG, warmup: int = 100, features=None,
             if qty * price > max_notional:
                 qty = max_notional / price
             if qty * price < 1.0:
+                veto = veto or "tamano por debajo de $1"
                 continue
             if enforce_minimums:
                 need = min_notional(_BY_SYMBOL[sym], price)
                 if qty * price < need:
                     rejected += 1
+                    veto = veto or (f"minimo del exchange ${need:.2f} > "
+                                    f"${qty * price:.2f} que toca poner")
                     continue
             broker.buy(sym, qty, price, price - stop_dist,
                        price + stop_dist * cfg.take_profit_r, f"score {sc:+.2f}",
                        ts=now, atr=a)
             tag(k)
+            compradas += 1
+            anota(k, sym, "BUY", f"score {sc:+.2f}", price, None,
+                  partes[sym], detalles[sym])
+
+        # Esperar es la decision que el sistema toma la mayor parte del tiempo;
+        # se apunta una vez por barra, sobre el mejor candidato del momento.
+        if record and not compradas and scores:
+            mejor = max(scores, key=scores.get)
+            anota(k, mejor, "WAIT", veto or "sin candidato nuevo",
+                  prices[mejor], None, partes[mejor], detalles[mejor])
 
     final = {s: c[-1]["c"] for s, c in series.items()}
     last_t = series[next(iter(series))][-1]["t"]

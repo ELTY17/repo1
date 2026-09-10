@@ -11,10 +11,28 @@ class Instrument:
     label: str
 
 
+# Los cinco de siempre se quedaron cortos: con tres criptos, el escaner casi
+# nunca tenia entre que elegir y el sistema pasaba semanas mirando los mismos
+# graficos. Ahora se opera todo el bloque liquido de Kraken en USD, que es el
+# mismo universo sobre el que se hicieron los barridos de bot/sweep.py.
 UNIVERSE = [
     Instrument("BTC-USD", "kraken", "XBTUSD", "crypto", "Bitcoin"),
     Instrument("ETH-USD", "kraken", "ETHUSD", "crypto", "Ethereum"),
     Instrument("SOL-USD", "kraken", "SOLUSD", "crypto", "Solana"),
+    Instrument("XRP-USD", "kraken", "XRPUSD", "crypto", "XRP"),
+    Instrument("ADA-USD", "kraken", "ADAUSD", "crypto", "Cardano"),
+    Instrument("DOT-USD", "kraken", "DOTUSD", "crypto", "Polkadot"),
+    Instrument("LINK-USD", "kraken", "LINKUSD", "crypto", "Chainlink"),
+    Instrument("AVAX-USD", "kraken", "AVAXUSD", "crypto", "Avalanche"),
+    Instrument("LTC-USD", "kraken", "LTCUSD", "crypto", "Litecoin"),
+    Instrument("ATOM-USD", "kraken", "ATOMUSD", "crypto", "Cosmos"),
+    Instrument("UNI-USD", "kraken", "UNIUSD", "crypto", "Uniswap"),
+    Instrument("AAVE-USD", "kraken", "AAVEUSD", "crypto", "Aave"),
+    Instrument("FIL-USD", "kraken", "FILUSD", "crypto", "Filecoin"),
+    Instrument("NEAR-USD", "kraken", "NEARUSD", "crypto", "NEAR"),
+    Instrument("XLM-USD", "kraken", "XLMUSD", "crypto", "Stellar"),
+    Instrument("BCH-USD", "kraken", "BCHUSD", "crypto", "Bitcoin Cash"),
+    Instrument("ETC-USD", "kraken", "ETCUSD", "crypto", "Ethereum Classic"),
     Instrument("SPY", "yahoo", "SPY", "equity", "S&P 500 (SPY)"),
     Instrument("QQQ", "yahoo", "QQQ", "equity", "Nasdaq 100 (QQQ)"),
 ]
@@ -28,7 +46,12 @@ class Config:
 
     # --- Riesgo ---
     risk_per_trade: float = 0.02     # 2% del equity arriesgado por operacion
-    max_positions: int = 3
+    max_positions: int = 5      # mas universo, mas sitio donde repartir
+    # Tope por clase de activo. Con 17 criptos daba la impresion de que habia
+    # que subirlo; medido, aflojarlo empeora: con 4 el sistema pierde -15.29% y
+    # salta el kill switch, con 2 hace +1.09%. Se queda en 2 por medicion, no
+    # por costumbre.  (python3 -m bot.backtest --fees)
+    max_per_kind: int = 2
     max_position_weight: float = 0.35   # max 35% del equity en un solo activo
     stop_atr_mult: float = 2.0       # stop = entrada - 2*ATR
     take_profit_r: float = 2.0       # objetivo = 2R (2x el riesgo)
