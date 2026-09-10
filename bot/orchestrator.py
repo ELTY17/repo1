@@ -11,8 +11,8 @@ import time
 from collections import deque
 
 from . import feeds
-from .agents import (CorrelationAgent, ExecutionAgent, NewsAgent, RiskAgent,
-                     ScannerAgent, TechnicalAgent)
+from .agents import (CorrelationAgent, ExecutionAgent, LearningAgent, NewsAgent,
+                     RiskAgent, ScannerAgent, TechnicalAgent)
 from .broker import PaperBroker
 from .config import CONFIG, UNIVERSE
 
@@ -34,10 +34,11 @@ class Orchestrator:
         self.scanner = ScannerAgent(self)
         self.technical = TechnicalAgent(self)
         self.correlation = CorrelationAgent(self)
+        self.learning = LearningAgent(self)
         self.risk = RiskAgent(self)
         self.execution = ExecutionAgent(self)
         self.agents = [self.news, self.scanner, self.technical,
-                       self.correlation, self.risk, self.execution]
+                       self.correlation, self.learning, self.risk, self.execution]
 
     # --- utilidades compartidas ---
     def feed_event(self, entry):

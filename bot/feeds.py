@@ -66,7 +66,8 @@ def _yahoo_ohlc(code: str, rng: str = "60d", interval: str = "1h") -> list[dict]
 
 # --- Fallback sintetico ------------------------------------------------------
 _SEED_PRICE = {"BTC-USD": 78000.0, "ETH-USD": 2900.0, "SOL-USD": 135.0,
-               "SPY": 640.0, "QQQ": 580.0}
+               "XRP-USD": 1.35, "DOGE-USD": 0.16, "HBAR-USD": 0.19,
+               "TRX-USD": 0.28, "APT-USD": 3.4}
 
 
 def _synthetic(symbol: str, n: int = 400) -> list[dict]:
@@ -126,9 +127,10 @@ def last_price(inst) -> float:
 
 WIDE_CRYPTO = ["XBTUSD", "ETHUSD", "SOLUSD", "XRPUSD", "ADAUSD", "DOTUSD",
                "LINKUSD", "AVAXUSD", "LTCUSD", "ATOMUSD", "UNIUSD", "AAVEUSD",
-               "ALGOUSD", "FILUSD", "NEARUSD", "INJUSD", "TIAUSD", "SUIUSD"]
-WIDE_EQUITY = [("SPY", "S&P 500"), ("QQQ", "Nasdaq 100"),
-               ("DIA", "Dow Jones"), ("IWM", "Russell 2000")]
+               "ALGOUSD", "FILUSD", "NEARUSD", "INJUSD", "TIAUSD", "SUIUSD",
+               "XDGUSD", "BCHUSD", "ETCUSD", "XLMUSD", "HBARUSD", "TRXUSD",
+               "APTUSD", "ARBUSD", "OPUSD", "SEIUSD", "ENAUSD", "ONDOUSD"]
+WIDE_EQUITY: list[tuple[str, str]] = []      # solo cripto: no hay bolsa que mirar
 
 
 def wide_universe() -> list[dict]:

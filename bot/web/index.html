@@ -40,10 +40,11 @@ a{color:var(--brass)}
 .deck{height:100dvh;display:flex;flex-direction:column;overflow:hidden;padding:0}
 .mosaic{flex:1;min-height:0;display:grid;gap:12px;padding:12px 16px 16px;
   grid-template-columns:repeat(12,minmax(0,1fr));
-  grid-template-rows:minmax(0,.94fr) minmax(0,.78fr) minmax(0,1.05fr) minmax(0,1.23fr);
+  grid-template-rows:minmax(0,.86fr) minmax(0,.7fr) minmax(0,.92fr) minmax(0,.98fr) minmax(0,1.14fr);
   grid-template-areas:
     "cap cap prc prc prc prc dec dec dec con con con"
     "agt agt ops ops ops mkt mkt mkt ord ord cnv cnv"
+    "apr apr apr apr apr apr apr apr apr evi evi evi"
     "tur tur tur tur tur tur tur tur tur evi evi evi"
     "oct oct oct oct oct oct oct oct oct evi evi evi";}
 .mosaic > .p{min-height:0;min-width:0}
@@ -338,6 +339,49 @@ footer{font-size:12px;color:var(--dim);line-height:1.6;letter-spacing:-.005em}
   .turctl button{min-height:38px}
   .tsep{display:none}
 }
+
+/* ── Aprendizaje ────────────────────────────────────────────────────────────
+   Dos columnas: lo que ya está demostrado y lo que sigue en juicio. La barra
+   no es decorativa — sale de cuántas observaciones faltan para que la ventaja
+   de esa regla se distinga del cero. */
+.aprwrap{display:grid;grid-template-columns:1fr 1fr 168px;gap:14px;min-height:0}
+.aprcol{display:flex;flex-direction:column;min-height:0;overflow:hidden}
+.aprcab{font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;
+  color:var(--faint);padding-bottom:6px;border-bottom:.5px solid var(--hair);
+  display:flex;justify-content:space-between;flex:none}
+.aprlista{overflow:auto;min-height:0;flex:1}
+.aprfila{padding:6px 0;border-bottom:.5px solid var(--hair)}
+.aprfila .l1{display:flex;justify-content:space-between;gap:8px;align-items:baseline}
+.aprfila .nm{font-size:12px}
+.aprfila .vl{font-family:var(--num);font-size:11.5px}
+.aprfila .bar{height:3px;background:var(--panel2);border-radius:2px;margin-top:4px;
+  overflow:hidden}
+.aprfila .bar i{display:block;height:100%;border-radius:2px;transition:width .5s}
+.aprfila .sub{font-size:10px;color:var(--faint);font-family:var(--num);margin-top:2px}
+.aprok .bar i{background:var(--pos)}
+.aprgo .bar i{background:var(--brass)}
+.aprglob{font-family:var(--disp);font-size:30px;font-weight:600;letter-spacing:-.03em;
+  line-height:1}
+.aprnota{font-size:11px;color:var(--dim);line-height:1.45;margin-top:9px}
+
+/* ── Agresividad ────────────────────────────────────────────────────────────
+   De verde a rojo porque es lo que significa: a la derecha se arriesga más por
+   operación y se aguantan más posiciones a la vez. */
+.agr{display:flex;align-items:center;gap:10px;flex:none;padding-top:9px;
+  border-top:.5px solid var(--hair);flex-wrap:wrap}
+.agr input[type=range]{-webkit-appearance:none;appearance:none;height:5px;
+  border-radius:3px;flex:1;min-width:130px;
+  background:linear-gradient(90deg,#30D158,#9BD15A,#FFD426,#FF9F0A,#FF453A)}
+.agr input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:17px;
+  height:17px;border-radius:50%;background:#fff;cursor:pointer;
+  box-shadow:0 1px 4px rgba(0,0,0,.55)}
+.agr input[type=range]::-moz-range-thumb{width:17px;height:17px;border:none;
+  border-radius:50%;background:#fff;cursor:pointer}
+.agr .val{font-family:var(--num);font-size:12px;min-width:104px;text-align:right}
+@media (max-width:760px){
+  .aprwrap{grid-template-columns:1fr;gap:12px}
+  .aprlista{max-height:170px}
+}
 </style>
 <div class="deck">
   <div class="bar">
@@ -416,6 +460,27 @@ footer{font-size:12px;color:var(--dim);line-height:1.6;letter-spacing:-.005em}
       </div>
     </div>
   </section>
+<section class="p" data-a="apr" style="grid-area:apr" id="apr">
+      <div class="ph"><i class="sq" style="background:var(--pos)"></i><b>Lo que ha aprendido</b>
+      <span class="r">una regla no se aprende porque acierte: se aprende cuando su ventaja se separa del cero</span></div>
+      <div class="pb aprwrap">
+        <div class="aprcol">
+          <div class="aprcab"><span>Aprendido</span><span id="aprN">—</span></div>
+          <div class="aprlista" id="aprOK"></div>
+        </div>
+        <div class="aprcol">
+          <div class="aprcab"><span>Aprendiendo</span><span id="aprM">—</span></div>
+          <div class="aprlista" id="aprGO"></div>
+        </div>
+        <div class="aprcol">
+          <div class="aprglob" id="aprPct">—</div>
+          <div class="turx" style="color:var(--faint)">de avance medio</div>
+          <dl class="kv" id="aprKv" style="margin-top:11px"></dl>
+          <div class="aprnota">Cada observación es una señal real contra lo que
+            hizo el precio al día siguiente, con comisión descontada. La barra
+            mide cuántas faltan para poder decidir.</div>
+        </div>
+      </div></section>
 <section class="p" data-a="tur" style="grid-area:tur" id="tur">
       <div class="ph"><i class="sq" style="background:#FFD426"></i><b>Tu cuenta de $10</b>
       <span class="ficc">simulación</span>
@@ -438,6 +503,12 @@ footer{font-size:12px;color:var(--dim);line-height:1.6;letter-spacing:-.005em}
             <div class="turnote" id="tNota"></div>
           </div>
         </div>
+        <div class="agr">
+          <span class="tlab">agresividad</span>
+          <input type="range" id="agrR" min="0" max="100" value="30"
+            aria-label="Nivel de agresividad">
+          <span class="val" id="agrV">—</span>
+        </div>
         <div class="turctl">
           <button id="tGo">Lanzar</button>
           <button id="tStop">Parar</button>
@@ -447,6 +518,8 @@ footer{font-size:12px;color:var(--dim);line-height:1.6;letter-spacing:-.005em}
           <button class="tv" data-v="1" aria-pressed="true">×1</button>
           <button class="tv" data-v="2" aria-pressed="false">×2</button>
           <button class="tv" data-v="5" aria-pressed="false">×5</button>
+          <button class="tv" data-v="20" aria-pressed="false">×20</button>
+          <button class="tv" data-v="50" aria-pressed="false">×50</button>
           <span class="tsep"></span>
           <span class="tlab">ingresar</span>
           <button class="td" data-d="10">+$10</button>
@@ -1277,7 +1350,7 @@ setInterval(slow, 15000);
     pulpo:   ["tur","oct","agt","cnv"],
     capital: ["cap","dec","ops"],
     mercado: ["prc","mkt","ord"],
-    pruebas: ["con","evi"],
+    pruebas: ["apr","con","evi"],
   };
   const nav = document.querySelector(".tabs");
   if(!nav) return;
@@ -1354,7 +1427,7 @@ setInterval(slow, 15000);
   const STOP = 1, CLAVE = "pulpo.cuenta.viva.v3";
   /* ×1 = un día de mercado cada dos segundos. Es rápido, pero es un
      calendario: una hora mirando son unos siete años de mercado. */
-  const MS = {1: 2000, 2: 1000, 5: 400};
+  const MS = {1: 2000, 2: 1000, 5: 400, 20: 100, 50: 40};
 
   let eq = 10, puesto = 10, dias = 0, ops = 0, ganadas = 0, pico = 10, hundido = 0;
   let curva = [10], cinta = [], reloj = null, veloc = 1, fin = null;
@@ -1453,8 +1526,10 @@ setInterval(slow, 15000);
       if(dias % 30 === 0) pintar();
       return;
     }
-    const r = R[Math.floor(Math.random()*R.length)];
-    eq *= 1 + r; ops++; if(r > 0) ganadas++;
+    // La agresividad escala el tamaño de la posición, así que multiplica
+    // ganancias Y pérdidas por igual. No hay ajuste que sea solo al alza.
+    const r = R[Math.floor(Math.random()*R.length)] * (window.__agresividad || 1);
+    eq *= 1 + Math.max(r, -0.98); ops++; if(r > 0) ganadas++;
     pico = Math.max(pico, eq);
     hundido = Math.max(hundido, (pico - eq)/pico);
     curva.push(eq);

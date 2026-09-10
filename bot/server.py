@@ -100,6 +100,10 @@ def make_handler(orch):
                 return self._send(200, body)
             if path == "/api/turbo":
                 return self._send(200, json.dumps(_turbo_datos()).encode())
+            if path == "/api/aprendizaje":
+                ag = getattr(orch, "learning", None)
+                body = json.dumps(ag.output if ag else {}, default=str).encode()
+                return self._send(200, body)
             if path == "/api/wide":
                 from . import feeds
                 return self._send(200, json.dumps(feeds.wide_universe()).encode())

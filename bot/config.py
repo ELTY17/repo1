@@ -15,26 +15,31 @@ class Instrument:
 # nunca tenia entre que elegir y el sistema pasaba semanas mirando los mismos
 # graficos. Ahora se opera todo el bloque liquido de Kraken en USD, que es el
 # mismo universo sobre el que se hicieron los barridos de bot/sweep.py.
+# Solo cripto. Las acciones se van: con $10 o $100 no llega ni para una sola
+# accion de SPY (cuesta $758), y ademas solo operan de lunes a viernes en
+# horario de Nueva York, asi que la mitad del tiempo el sistema miraba un
+# mercado cerrado. Los veinte pares mas liquidos de Kraken en USD.
 UNIVERSE = [
     Instrument("BTC-USD", "kraken", "XBTUSD", "crypto", "Bitcoin"),
     Instrument("ETH-USD", "kraken", "ETHUSD", "crypto", "Ethereum"),
-    Instrument("SOL-USD", "kraken", "SOLUSD", "crypto", "Solana"),
     Instrument("XRP-USD", "kraken", "XRPUSD", "crypto", "XRP"),
+    Instrument("SOL-USD", "kraken", "SOLUSD", "crypto", "Solana"),
+    Instrument("DOGE-USD", "kraken", "XDGUSD", "crypto", "Dogecoin"),
     Instrument("ADA-USD", "kraken", "ADAUSD", "crypto", "Cardano"),
-    Instrument("DOT-USD", "kraken", "DOTUSD", "crypto", "Polkadot"),
     Instrument("LINK-USD", "kraken", "LINKUSD", "crypto", "Chainlink"),
     Instrument("AVAX-USD", "kraken", "AVAXUSD", "crypto", "Avalanche"),
+    Instrument("DOT-USD", "kraken", "DOTUSD", "crypto", "Polkadot"),
     Instrument("LTC-USD", "kraken", "LTCUSD", "crypto", "Litecoin"),
-    Instrument("ATOM-USD", "kraken", "ATOMUSD", "crypto", "Cosmos"),
-    Instrument("UNI-USD", "kraken", "UNIUSD", "crypto", "Uniswap"),
-    Instrument("AAVE-USD", "kraken", "AAVEUSD", "crypto", "Aave"),
-    Instrument("FIL-USD", "kraken", "FILUSD", "crypto", "Filecoin"),
-    Instrument("NEAR-USD", "kraken", "NEARUSD", "crypto", "NEAR"),
-    Instrument("XLM-USD", "kraken", "XLMUSD", "crypto", "Stellar"),
     Instrument("BCH-USD", "kraken", "BCHUSD", "crypto", "Bitcoin Cash"),
+    Instrument("UNI-USD", "kraken", "UNIUSD", "crypto", "Uniswap"),
+    Instrument("NEAR-USD", "kraken", "NEARUSD", "crypto", "NEAR"),
+    Instrument("APT-USD", "kraken", "APTUSD", "crypto", "Aptos"),
+    Instrument("ATOM-USD", "kraken", "ATOMUSD", "crypto", "Cosmos"),
+    Instrument("FIL-USD", "kraken", "FILUSD", "crypto", "Filecoin"),
     Instrument("ETC-USD", "kraken", "ETCUSD", "crypto", "Ethereum Classic"),
-    Instrument("SPY", "yahoo", "SPY", "equity", "S&P 500 (SPY)"),
-    Instrument("QQQ", "yahoo", "QQQ", "equity", "Nasdaq 100 (QQQ)"),
+    Instrument("XLM-USD", "kraken", "XLMUSD", "crypto", "Stellar"),
+    Instrument("HBAR-USD", "kraken", "HBARUSD", "crypto", "Hedera"),
+    Instrument("TRX-USD", "kraken", "TRXUSD", "crypto", "TRON"),
 ]
 
 

@@ -5,3 +5,4 @@ __pycache__/
 state.db
 *.db
 .research_cache.json
+.aprendizaje.json

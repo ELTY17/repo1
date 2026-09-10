@@ -16,8 +16,8 @@ from .base import Agent
 
 FEEDS = [
     ("https://cointelegraph.com/rss", "crypto"),
-    ("https://feeds.a.dj.com/rss/RSSMarketsMain.xml", "equity"),
-    ("https://news.google.com/rss/search?q=stock+market+OR+nasdaq+OR+s%26p+500&hl=en-US&gl=US&ceid=US:en", "equity"),
+    ("https://cointelegraph.com/rss/tag/altcoin", "crypto"),
+    ("https://news.google.com/rss/search?q=crypto+market+OR+bitcoin+price&hl=en-US&gl=US&ceid=US:en", "crypto"),
     ("https://news.google.com/rss/search?q=bitcoin+OR+ethereum+OR+solana&hl=en-US&gl=US&ceid=US:en", "crypto"),
     ("https://news.google.com/rss/search?q=xrp+OR+cardano+OR+chainlink+OR+avalanche+OR+litecoin&hl=en-US&gl=US&ceid=US:en", "crypto"),
     ("https://news.google.com/rss/search?q=altcoins+OR+defi+OR+uniswap+OR+aave+OR+cosmos&hl=en-US&gl=US&ceid=US:en", "crypto"),
@@ -61,8 +61,10 @@ KEYWORDS = {
     "XLM-USD": ["stellar", "xlm", "lumens"],
     "BCH-USD": ["bitcoin cash", "bch"],
     "ETC-USD": ["ethereum classic", "etc"],
-    "SPY": ["s&p", "s&p 500", "sp500", "wall street", "stocks", "equities", "spy"],
-    "QQQ": ["nasdaq", "tech stocks", "qqq", "big tech"],
+    "DOGE-USD": ["dogecoin", "doge"],
+    "APT-USD": ["aptos", "apt"],
+    "HBAR-USD": ["hedera", "hbar"],
+    "TRX-USD": ["tron", "trx"],
 }
 
 _WORD = re.compile(r"[a-z&\-]+")

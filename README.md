@@ -50,6 +50,74 @@ scan ──┼──► score compuesto ──► agente de riesgo (veto) ──
 tech ──┘
 ```
 
+## Solo cripto: 20 monedas, fuera la bolsa
+
+SPY y QQQ se van del universo. Dos razones y ninguna es de gusto:
+
+- Con $10 o $100 **no llega ni para una acción** de SPY, que cuesta $758. El
+  agente de riesgo las vetaba siempre; estaban de adorno.
+- Operan de lunes a viernes en horario de Nueva York. **La mitad del tiempo el
+  sistema miraba un mercado cerrado**, mientras el cripto sigue abierto.
+
+En su lugar, los veinte pares más líquidos de Kraken en USD: BTC, ETH, XRP, SOL,
+DOGE, ADA, LINK, AVAX, DOT, LTC, BCH, UNI, NEAR, APT, ATOM, FIL, ETC, XLM, HBAR
+y TRX. Quitar Yahoo del universo tiene un efecto lateral bueno: el histórico
+común pasa de 400 a **620 barras diarias**, porque ya no lo limita la serie más
+corta de un ETF.
+
+Y aquí hay una lección que casi me cuelo yo solo:
+
+```
+20 monedas, ventana común de 327 días   →  +13,99%   37 ops
+16 monedas con histórico largo, 620 días →   +1,84%   64 ops
+```
+
+El +13,99% **no es el universo nuevo, es la ventana**. Las cuatro monedas
+recién llegadas (DOGE, APT, HBAR, TRX) tienen menos histórico y recortan la
+muestra común a los últimos 327 días, que resultan ser buenos. Con histórico
+largo el sistema hace +1,84%. Mismo veredicto de siempre, mejor muestra.
+
+## Lo que ha aprendido
+
+`bot/aprendizaje.py` y el agente 7. **"Aprender" aquí no es "le funcionó dos
+veces".** Cada regla del catálogo se evalúa contra lo que hizo el precio al día
+siguiente, con comisión descontada, y se acumulan sus resultados. Una regla pasa
+a **APRENDIDA** solo cuando su ventaja media se separa del cero por más de dos
+errores estándar con muestra suficiente (t ≥ 2, n ≥ 60).
+
+Lo demás está **APRENDIENDO**, y se puede decir exactamente cuánto le falta:
+despejando n de `t = media / (desv/√n)` sale cuántas observaciones más harían
+falta para que ese efecto sea concluyente. **Eso es lo que llena la barra.** No
+es decorativa: una regla con ventaja grande y estable la llena deprisa; una
+mediocre no la llena nunca.
+
+```
+104 reglas · 293.871 observaciones
+APRENDIDAS 2  ·  DESCARTADAS 85  ·  en juicio 17
+
+regla                estado         n      media      t   faltan
+bb baja + rsi14<40   aprendido    463    +0,816%   3,23        —
+bb20 toca baja       aprendido    496    +0,723%   3,00        —
+rsi2<10              aprendiendo 1432    +0,178%   1,48    1.192
+donchian20 máx       aprendiendo  428    +0,330%   1,07    1.064
+bb20 rompe alta      aprendiendo  656    +0,242%   1,04    1.775
+```
+
+**85 de 104 descartadas.** Y las dos que sobreviven dicen lo mismo por dos
+caminos: comprar cuando el precio toca la banda baja de Bollinger. Que dos
+reglas independientes coincidan es mejor señal que una sola brillante.
+
+La promoción **se puede perder**: el estado se recalcula con todo lo acumulado,
+así que una regla que deje de funcionar vuelve al banquillo sola.
+
+## Agresividad, de verde a rojo
+
+Una barra en el panel de la cuenta, de "Muy prudente" a "Temeraria". No es un
+adorno: multiplica el tamaño de cada operación, así que **multiplica ganancias y
+pérdidas por igual**. No existe el ajuste que sea solo al alza — a la derecha el
+suelo de $1 deja de ser una hipótesis. Y velocidades nuevas: ×1, ×2, ×5, ×20 y
+×50.
+
 ## El sexto agente: correlación
 
 Los otros cinco miran cada activo por separado. Este mira lo que tienen en
