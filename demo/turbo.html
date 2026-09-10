@@ -1,0 +1,316 @@
+<title>Diez a cien en cinco horas</title>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Archivo:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+/* Un solo mundo visual, elegido a propósito: la pantalla de un terminal a las
+   tres de la mañana. Por eso no hay tema claro — todos los colores se pintan a
+   mano y la página se sostiene sobre cualquier fondo del visor. */
+:root{
+  --ground:#0B0E14;      /* negro con sesgo azul, no negro puro */
+  --surface:#141926;
+  --sunk:#0F131C;
+  --line:#232B3B;
+  --hair:#1A202C;
+  --ink:#E6EAF2;
+  --dim:#8492AC;
+  --faint:#5B6880;
+  --oro:#F2B23E;         /* el capital, y solo el capital */
+  --oro-soft:#3A2C0E;
+  --sube:#3FB68B;
+  --baja:#E5534B;
+  --serif:"Instrument Serif",Georgia,"Times New Roman",serif;
+  --ui:"Archivo",-apple-system,BlinkMacSystemFont,"Helvetica Neue",Arial,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--ground);color:var(--ink);font-family:var(--ui);
+  font-size:15px;line-height:1.6;-webkit-font-smoothing:antialiased;
+  padding:0 20px;padding-block:0}
+.wrap{max-width:660px;margin:0 auto;padding-block:46px 64px;
+  display:flex;flex-direction:column;gap:44px}
+h1,h2{margin:0;text-wrap:balance}
+.mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
+
+/* ── portada ─────────────────────────────────────────────────────────────── */
+.eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--faint)}
+h1{font-family:var(--serif);font-size:clamp(38px,10vw,62px);font-weight:400;
+  line-height:1.02;letter-spacing:-.015em;margin-top:14px}
+h1 em{font-style:italic;color:var(--oro)}
+.lead{color:var(--dim);margin-top:18px;max-width:52ch}
+.lead b{color:var(--ink);font-weight:600}
+
+/* La ecuación es el instrumento propio de este asunto: se muestra, no se
+   resume. Rueda ella sola si no cabe; la página nunca se mueve de lado. */
+.eq{margin-top:26px;border-left:2px solid var(--oro);padding:14px 0 14px 18px;
+  overflow-x:auto}
+.eq code{font-family:var(--mono);font-size:14px;white-space:nowrap;color:var(--ink)}
+.eq span{display:block;font-size:12px;color:var(--faint);margin-top:7px;
+  font-family:var(--ui);white-space:normal}
+.veredicto{font-family:var(--serif);font-size:clamp(24px,6vw,32px);line-height:1.2;
+  margin-top:30px}
+.veredicto b{color:var(--oro);font-style:italic;font-weight:400}
+
+h2{font-family:var(--ui);font-size:13px;font-weight:600;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--dim);
+  padding-bottom:11px;border-bottom:1px solid var(--line)}
+.sec{display:flex;flex-direction:column;gap:20px}
+.nota{font-size:13.5px;color:var(--dim)}
+.nota b{color:var(--ink);font-weight:600}
+
+/* ── la sesión en marcha ─────────────────────────────────────────────────── */
+.tablero{background:var(--surface);border:1px solid var(--line);border-radius:4px;
+  overflow:hidden}
+.cabeza{display:flex;align-items:flex-end;gap:16px;flex-wrap:wrap;
+  padding:20px 20px 16px;border-bottom:1px solid var(--hair)}
+.capital{font-family:var(--mono);font-size:clamp(38px,11vw,52px);font-weight:600;
+  line-height:.95;letter-spacing:-.03em;color:var(--oro);
+  font-variant-numeric:tabular-nums}
+.capital.muerto{color:var(--baja)}
+.marcador{margin-left:auto;text-align:right;font-family:var(--mono);font-size:12px;
+  color:var(--dim);line-height:1.5}
+.marcador b{color:var(--ink);font-weight:500}
+.pista{height:3px;background:var(--sunk)}
+.pista i{display:block;height:100%;width:0;background:var(--oro);
+  transition:width .45s cubic-bezier(.22,.8,.3,1)}
+.grafica{padding:10px 20px 0;background:var(--sunk)}
+svg{display:block;width:100%;height:186px;max-width:100%}
+.tape{font-family:var(--mono);font-size:12.5px;background:var(--sunk);
+  max-height:158px;overflow-y:auto}
+.tape div{display:grid;grid-template-columns:38px 1fr auto;gap:12px;
+  padding:6px 20px;border-top:1px solid var(--hair);align-items:baseline}
+.tape .n{color:var(--faint)}
+.tape .d{font-weight:500}
+.sube{color:var(--sube)} .baja{color:var(--baja)}
+.vacio{padding:16px 20px;color:var(--faint);font-family:var(--mono);font-size:12.5px}
+.mandos{display:flex;gap:8px;flex-wrap:wrap;align-items:center;
+  padding:16px 20px;border-top:1px solid var(--hair)}
+button{font-family:var(--ui);font-size:13px;font-weight:500;padding:9px 17px;
+  min-height:40px;border:1px solid var(--line);background:transparent;color:var(--ink);
+  border-radius:3px;cursor:pointer;transition:border-color .15s,color .15s,background .15s}
+button:hover{border-color:var(--dim)}
+button:focus-visible{outline:2px solid var(--oro);outline-offset:2px}
+#lanzar{background:var(--oro);border-color:var(--oro);color:#1A1204;font-weight:600}
+#lanzar:hover{background:#FFC768}
+.tp[aria-pressed="true"]{border-color:var(--oro);color:var(--oro);background:var(--oro-soft)}
+.desenlace{padding:0 20px 18px;font-size:13.5px;color:var(--dim);min-height:20px}
+.desenlace.bien{color:var(--sube)} .desenlace.mal{color:var(--baja)}
+
+/* ── la tabla de las 10.000 sesiones ─────────────────────────────────────── */
+table{width:100%;border-collapse:collapse;font-size:13.5px}
+th{font-family:var(--ui);font-size:11px;font-weight:500;letter-spacing:.07em;
+  text-transform:uppercase;color:var(--faint);text-align:right;
+  padding:0 0 9px;white-space:nowrap}
+th:first-child{text-align:left}
+td{font-family:var(--mono);text-align:right;padding:11px 0;
+  border-top:1px solid var(--hair);font-variant-numeric:tabular-nums}
+td:first-child{text-align:left}
+tr.clave td{background:linear-gradient(var(--oro-soft),var(--oro-soft));
+  box-shadow:inset 2px 0 0 var(--oro)}
+tr.clave td:first-child{padding-left:10px}
+/* la barra codifica la ruina en forma, no solo en número */
+.barra{display:block;height:4px;margin:5px 0 0 auto;background:var(--baja);
+  border-radius:2px;opacity:.85}
+.cierre{font-family:var(--serif);font-size:clamp(20px,5vw,26px);line-height:1.35;
+  color:var(--dim);border-top:1px solid var(--line);padding-top:26px}
+.cierre b{color:var(--ink);font-weight:400;font-style:italic}
+.pie{font-size:12px;color:var(--faint);font-family:var(--mono)}
+.pie a{color:var(--dim)}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<div class="wrap">
+
+  <header>
+    <p class="eyebrow">Simulación · aquí no hay mercado</p>
+    <h1>De diez dólares<br>a cien en <em>cinco horas</em></h1>
+    <p class="lead">La pregunta tiene respuesta exacta, y no es una estrategia. Multiplicar
+      por diez en una tarde no se consigue acertando más: se consigue <b>apostando más
+      fuerte</b>. Con una operación cada cinco minutos —sesenta en total— arriesgando
+      la mitad de la cuenta en cada una, el acierto necesario sale de despejar una línea:</p>
+    <div class="eq">
+      <code>p·ln(1,5) + (1−p)·ln(0,5) = ln(10) / 60</code>
+      <span>El crecimiento medio por operación, en logaritmo, tiene que dar diez al cabo de sesenta.</span>
+    </div>
+    <p class="veredicto">Hay que acertar <b>40 de 60</b>. Un 66,6%.<br>
+      Un sistema bueno de verdad ronda el 55%.</p>
+  </header>
+
+  <section class="sec">
+    <h2>Una sesión, en directo</h2>
+    <div class="tablero">
+      <div class="cabeza">
+        <div class="capital" id="cap">$10.00</div>
+        <div class="marcador">
+          <div><b id="mult">×1.00</b> sobre lo puesto</div>
+          <div id="cuenta">0 de 60 operaciones</div>
+        </div>
+      </div>
+      <div class="pista"><i id="pista"></i></div>
+      <div class="grafica">
+        <svg id="curva" viewBox="0 0 620 186" role="img"
+          aria-label="Capital de la sesión, en escala logarítmica de 1 a 100 dólares"></svg>
+      </div>
+      <div class="tape" id="tape"><div class="vacio">Sin operaciones todavía.</div></div>
+      <div class="mandos">
+        <button id="lanzar">Lanzar sesión</button>
+        <button class="tp" data-p="0.666" aria-pressed="true">acierto 66,6%</button>
+        <button class="tp" data-p="0.55" aria-pressed="false">acierto 55%</button>
+      </div>
+      <div class="desenlace" id="fin">El suelo está en <b>$1</b>: por debajo de ahí ningún
+        exchange acepta la orden y la sesión se acaba.</div>
+    </div>
+    <p class="nota">Las operaciones salen de un generador aleatorio con el acierto que
+      elijas, no de un mercado. Lo que hay que mirar no es el número final sino la
+      <b>forma</b>: sube en escalera y se cae de golpe. Lánzala varias veces.</p>
+  </section>
+
+  <section class="sec">
+    <h2>Diez mil sesiones</h2>
+    <table>
+      <thead><tr><th>Acierto</th><th>Llega a $100</th><th>Acaba en cero</th><th>Mediana</th></tr></thead>
+      <tbody id="mc"><tr><td colspan="4" class="mono" style="color:var(--faint)">Calculando…</td></tr></tbody>
+    </table>
+    <p class="nota">Con el acierto exacto que hace falta, dos de cada tres sesiones llegan.
+      Pero <b>una de cada tres acaba en cero</b>, y esa no tiene vuelta atrás. Con un 55%
+      —que ya sería un sistema bueno— mueren cuatro de cada cinco.</p>
+  </section>
+
+  <p class="cierre"><b>La palanca que multiplica es exactamente la misma que divide.</b>
+    Y llega antes abajo, porque para volver de $5 a $10 hay que ganar el doble de lo que
+    perdiste.</p>
+
+  <p class="pie">bot/turbo.py · comisión de Kraken 0,26% por lado, cobrada a la ida y a la
+    vuelta · suelo de orden $1</p>
+</div>
+
+<script>
+/* ───────────────────────────────────────────────────────────────────────────
+   Toda la aritmética vive aquí: es la misma de bot/turbo.py, en el navegador,
+   para que la página funcione sola sin servidor. */
+const INICIO = 10, OBJETIVO = 100, OPS = 60, RIESGO = 0.5, FEE = 0.0026, SUELO = 1;
+const $ = id => document.getElementById(id);
+
+/* Acierto necesario: se despeja p de p·ln(1+r) + (1−p)·ln(1−r) = ln(10)/60. */
+const necesario = () => {
+  const need = Math.log(OBJETIVO / INICIO) / OPS;
+  return (need - Math.log(1 - RIESGO)) / (Math.log(1 + RIESGO) - Math.log(1 - RIESGO));
+};
+
+function operar(eq, gana){
+  eq *= 1 - 2 * FEE;                       // entrar y salir se paga dos veces
+  return eq * (gana ? 1 + RIESGO : 1 - RIESGO);
+}
+
+/* ── la curva ──────────────────────────────────────────────────────────────
+   Escala logarítmica: una cuenta que se multiplica por diez solo es lineal en
+   logaritmo. En escala normal los primeros veinte pasos serían una raya plana. */
+const W = 620, H = 186, PAD = 30, LO = Math.log(0.6), HI = Math.log(140);
+const yOf = v => H - 22 - (Math.log(Math.max(v, 0.6)) - LO) / (HI - LO) * (H - 40);
+const xOf = (i, n) => PAD + (n < 2 ? 0 : i / (n - 1)) * (W - PAD - 12);
+
+function pintarCurva(pts){
+  const n = pts.length, fin = pts[n - 1];
+  const linea = v => `<line x1="${PAD}" y1="${yOf(v).toFixed(1)}" x2="${W - 12}"
+      y2="${yOf(v).toFixed(1)}" stroke="${v === OBJETIVO ? '#F2B23E' : '#232B3B'}"
+      stroke-width="1" ${v === OBJETIVO ? 'stroke-dasharray="2 4" opacity=".65"' : ''}/>
+    <text x="0" y="${(yOf(v) + 4).toFixed(1)}" fill="#5B6880" font-size="11"
+      font-family="IBM Plex Mono, monospace">$${v}</text>`;
+  const d = pts.map((v, i) => `${i ? 'L' : 'M'}${xOf(i, n).toFixed(1)} ${yOf(v).toFixed(1)}`).join(' ');
+  const color = fin >= INICIO ? '#F2B23E' : '#E5534B';
+  $("curva").innerHTML = linea(100) + linea(10) + linea(1)
+    + `<path d="${d}" fill="none" stroke="${color}" stroke-width="1.75"
+         stroke-linejoin="round" stroke-linecap="round"/>`
+    + (n > 1 ? `<circle cx="${xOf(n - 1, n).toFixed(1)}" cy="${yOf(fin).toFixed(1)}"
+         r="3.5" fill="${color}"/>` : '');
+}
+
+/* ── la sesión ─────────────────────────────────────────────────────────── */
+let acierto = necesario(), curva = [INICIO], eq = INICIO, hechos = 0, aciertos = 0, reloj = null;
+
+function reiniciar(){
+  clearInterval(reloj); reloj = null;
+  eq = INICIO; curva = [INICIO]; hechos = 0; aciertos = 0;
+  $("tape").innerHTML = '<div class="vacio">Sin operaciones todavía.</div>';
+  $("fin").textContent = "En marcha…"; $("fin").className = "desenlace";
+  pintar();
+}
+
+function pintar(){
+  const muerto = eq < SUELO;
+  $("cap").textContent = "$" + eq.toFixed(2);
+  $("cap").classList.toggle("muerto", muerto);
+  $("mult").textContent = "×" + (eq / INICIO).toFixed(2);
+  $("cuenta").textContent = `${hechos} de ${OPS} operaciones`
+    + (hechos ? ` · ${aciertos} acierto${aciertos === 1 ? "" : "s"}` : "");
+  $("pista").style.width = Math.min(100, eq / OBJETIVO * 100).toFixed(1) + "%";
+  pintarCurva(curva);
+}
+
+function paso(){
+  const antes = eq;
+  const gana = Math.random() < acierto;
+  eq = operar(eq, gana); curva.push(eq); hechos++; if(gana) aciertos++;
+  const fila = document.createElement("div");
+  fila.innerHTML = `<span class="n">#${hechos}</span>
+    <span class="d ${gana ? 'sube' : 'baja'}">${gana ? '▲' : '▼'} ${(eq - antes >= 0 ? '+' : '')}${(eq - antes).toFixed(2)}</span>
+    <span>$${eq.toFixed(2)}</span>`;
+  const tape = $("tape");
+  if(tape.firstElementChild?.className === "vacio") tape.innerHTML = "";
+  tape.prepend(fila);
+  pintar();
+
+  if(eq >= OBJETIVO)      terminar("Llegó a $100. Una de cada tres sesiones acaba en cero por el mismo camino.", "bien");
+  else if(eq < SUELO)     terminar("Cero. Por debajo de $1 no se puede ni poner una orden: no hay vuelta atrás.", "mal");
+  else if(hechos >= OPS)  terminar("Se acabaron las cinco horas sin llegar.", "");
+}
+
+function terminar(texto, clase){
+  clearInterval(reloj); reloj = null;
+  $("fin").textContent = texto;
+  $("fin").className = "desenlace " + clase;
+}
+
+$("lanzar").addEventListener("click", () => {
+  reiniciar();
+  reloj = setInterval(paso, 620);
+});
+document.querySelectorAll(".tp").forEach(b => b.addEventListener("click", () => {
+  acierto = b.dataset.p === "0.666" ? necesario() : parseFloat(b.dataset.p);
+  document.querySelectorAll(".tp").forEach(o => o.setAttribute("aria-pressed", String(o === b)));
+}));
+
+/* ── diez mil sesiones ─────────────────────────────────────────────────── */
+function montecarlo(p, runs = 10000){
+  let llega = 0, ruina = 0; const finales = [];
+  for(let r = 0; r < runs; r++){
+    let e = INICIO;
+    for(let i = 0; i < OPS; i++){
+      if(e < SUELO) break;
+      e = operar(e, Math.random() < p);
+      if(e >= OBJETIVO) break;
+    }
+    if(e >= OBJETIVO) llega++;
+    if(e < SUELO) ruina++;
+    finales.push(e);
+  }
+  finales.sort((a, b) => a - b);
+  return {llega: llega / runs, ruina: ruina / runs, mediana: finales[runs >> 1]};
+}
+
+const need = necesario();
+const pct = x => (x * 100).toFixed(0) + "%";
+$("mc").innerHTML = [need, 0.60, 0.55, 0.50].map(p => {
+  const r = montecarlo(p);
+  return `<tr${Math.abs(p - need) < 1e-9 ? ' class="clave"' : ''}>
+    <td>${(p * 100).toFixed(1).replace(".", ",")}%</td>
+    <td class="sube">${pct(r.llega)}</td>
+    <td class="baja">${pct(r.ruina)}
+      <i class="barra" style="width:${(r.ruina * 100).toFixed(0)}%"></i></td>
+    <td>$${r.mediana.toFixed(2)}</td></tr>`;
+}).join("");
+
+pintar();
+/* Arranca sola: la página en reposo tiene que enseñar lo que hace, no un hueco. */
+setTimeout(() => $("lanzar").click(), 700);
+</script>

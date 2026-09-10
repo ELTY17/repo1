@@ -497,6 +497,10 @@ Reproducen una sesión grabada del backtest. Se abren con doble clic, sin servid
   con su cacharro delante y su piloto en el frontal; los votos viajan por la barra de luz
   hasta el Director. Mismos paneles de datos que el puesto de mando.
 - **`demo/mesa.html`** — el mismo backtest en formato panel de instrumentos.
+- **`demo/turbo.html`** — **DIEZ A CIEN EN CINCO HORAS**: la sesión de $10 apalancada,
+  entera en el navegador y sin servidor. La aritmética de bot/turbo.py en directo — la
+  ecuación, una sesión que se lanza y se ve caer, y las diez mil sesiones simuladas al
+  vuelo. Pensada para el móvil.
 
 El dashboard con datos en vivo es el de `python3 run.py`.
 
