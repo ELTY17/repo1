@@ -526,6 +526,47 @@ palanca que multiplica es exactamente la misma que divide, y llega antes abajo.
 `bot/turbo.py` tiene las dos cuentas (`camino()` y `required_winrate()`), y el
 motor de la cuenta vive en el navegador para que la demo funcione sin servidor.
 
+## ¿10 operaciones por segundo?
+
+Un bot **puede**. Lo hacen a diario los de alta frecuencia. Pero antes de
+acelerar conviene ver dónde está el cuello de botella, porque no es el que
+parece. `bot/velocidad.py` mide los cuatro:
+
+```
+1. LA RED — ida y vuelta real a Kraken desde aquí
+   mediana 277 ms → 3,6 peticiones/s en serie
+   una operación son dos (abrir y cerrar) → 1,8 ops/s
+
+2. EL CONTADOR DE KRAKEN — tope 15, baja 0,33/s
+   ráfaga: 15 órdenes seguidas y te paras
+   sostenido: una cada 3 segundos
+   para 10 ops/s harían falta 61× ese límite
+
+3. LA COMISIÓN — taker real de Kraken 0,26% + 0,05% de deslizamiento
+   cada ida y vuelta cuesta 0,62% de lo movido
+   10/s     864.000 ops/día →  535.680 $/día en comisiones
+    1/s      86.400 ops/día →   53.568 $/día
+    1/min     1.440 ops/día →      893 $/día
+    1/día         1 op/día  →        1 $/día
+
+4. LA SEÑAL — velas diarias
+   el sistema hace 1 operación cada ~9 días de mercado
+```
+
+**Con $100 a 10 operaciones por segundo, la cuenta se evapora en 18 segundos.**
+No por perder en el mercado: solo en comisiones.
+
+Los tres primeros cuellos se pueden comprar —una cuenta institucional negocia
+comisiones cerca de cero, un servidor en el mismo edificio que el exchange baja
+la latencia a microsegundos, un límite de peticiones se sube pagando—. El
+cuarto no: **el sistema opera velas diarias**. A 10 ops/s son 7.776.000
+operaciones donde el sistema ve una. Las otras no son señales, son ruido caro.
+
+Los de alta frecuencia no ganan por ir rápido. Ganan porque tienen una ventaja
+que dura milisegundos *y además* van rápido. Con comisión de minorista y una
+señal diaria, la velocidad no es una ventaja: **es el mecanismo por el que se
+pierde el dinero.**
+
 ## ¿Y si los agentes fueran agentes de Claude?
 
 Lo primero, que es lo que más se olvida: **este bot no gasta ni un token**. Los
