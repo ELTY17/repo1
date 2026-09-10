@@ -140,6 +140,53 @@ No hay datos de 5 min suficientes para un backtest serio (Kraken da 720 velas: d
 días y medio), así que corren en otra temporalidad. Eso mide su lógica, no la
 estrategia tal y como la corre su autor.
 
+## Barrido sistemático: 495 reglas, 19 activos, 2 años
+
+Hasta aquí probábamos estrategias de una en una. `bot/sweep.py` hace lo contrario:
+recorre un espacio grande de reglas simples y bien conocidas sobre **19 criptos de
+Kraken × 720 velas diarias** (2024-09-20 → 2026-09-09), el mejor muestreo que hemos
+tenido en este repo.
+
+El espacio: momentum a 5/10/20/30/60/90/120 días y reversión a 1/3/5/10, cartera
+equiponderada de 1, 3 o 5 activos, rotación cada 1, 5 o 10 días, con y sin filtro de
+tendencia (`cierre > SMA` de 20/50/100/200). **495 combinaciones.**
+
+El método es lo único que importa: la historia se parte en dos mitades operables, se
+elige la mejor **mirando solo la primera**, y la segunda no se toca hasta que la
+elección ya está hecha. Comisiones de Kraken (0,26% por lado) en cada rotación,
+mínimo de orden del exchange, y comprar-y-esperar todo el universo como listón.
+
+```
+entreno 2025-04-08 → 2025-12-23 | prueba 2025-12-24 → 2026-09-09
+
+ENTRENO — comprar y esperar: +0.39%
+mom120 top1 rot10 >sma100            +51.73%      9 ops
+rev3 top1 rot10                      +47.45%     49
+mom5 top3 rot5                       +45.70%    229
+
+PRUEBA (nunca vista) — elegida a ciegas: mom120 top1 rot10 >sma100
+  regla             -44.94%  (21 ops)
+  comprar y esperar -14.94%
+  diferencia        -29.99%
+
+  las 20 mejores del entreno, promedio en prueba: -32.41%
+  reglas que baten al listón en prueba: 122/495 (25%)
+```
+
+Tres cosas que leer aquí:
+
+1. **La ganadora del entreno hizo +51,73% y luego perdió 30 puntos contra no hacer
+   nada.** Ese salto es exactamente lo que significa sobreajuste: con 495 intentos,
+   alguna sale espectacular por azar.
+2. **No fue mala suerte de una regla.** Las 20 mejores del entreno promedian −32,41%
+   fuera de muestra. El tipo de regla tampoco aguanta.
+3. **Solo el 25% del espacio le gana al listón fuera de muestra.** Al azar sería el
+   50%. Rotar cartera no es neutro: las comisiones y los latigazos se comen valor de
+   forma sistemática frente a comprar y esperar.
+
+Veredicto: **sin ventaja demostrable**, otra vez, ahora con 495 intentos y un
+muestreo cuatro veces mayor. Reproducible con `python3 -m bot.sweep`.
+
 ## Validación out-of-sample: no hay ventaja
 
 `python3 -m bot.oos` parte las 400 barras en dos. En las primeras 240 repite la
