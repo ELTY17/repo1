@@ -172,4 +172,7 @@ class Orchestrator:
             "headlines": (self.news.output or {}).get("headlines", []),
             "halted": self.risk.halted,
             "halt_reason": self.risk.halt_reason,
+            "locks": self.risk.protections.active(time.time()),
+            "readings": (self.technical.output or {}).get("readings", {}),
+            "live": getattr(self.broker, "validate", None) is not None,
         }

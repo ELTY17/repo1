@@ -12,7 +12,7 @@ operan una cartera simulada. Con **dashboard visual en local**.
 Sin dependencias. Solo Python 3.10+.
 
 ```bash
-python3 run.py                  # $100 simulados, dashboard en http://127.0.0.1:8787
+python3 run.py                  # arranca el sistema + el dashboard del pulpo EN VIVO
 python3 run.py --live           # conecta con Kraken en modo VALIDACIÓN (no ejecuta)
 python3 -m tests.test_signature # la firma, contra el vector de Kraken
 python3 -m tests.test_live      # el broker en vivo, contra un Kraken de mentira
@@ -244,9 +244,27 @@ están portadas de [freqtrade](https://github.com/freqtrade/freqtrade) (GPL-3.0,
 está inspirada en [TauricResearch/TradingAgents](https://github.com/TauricResearch/TradingAgents).
 El detalle de qué viene de dónde está en **[`NOTICE.md`](NOTICE.md)**.
 
+## El dashboard en vivo
+
+`python3 run.py` levanta el sistema y sirve **el pulpo conectado a lo que está pasando
+ahora mismo** en http://127.0.0.1:8787 — no una grabación. Cada dos segundos lee
+`/api/state` y dibuja: el capital real, los votos que los agentes acaban de calcular,
+sus contadores de ciclos, la conversación que están teniendo, las velas del activo en
+juego y los 22 instrumentos vigilados. Cuando un agente termina un ciclo, su brazo
+manda un impulso; cuando se cierra una operación, el pulpo cambia la cara.
+
+El servidor expone además:
+
+| Endpoint | Qué da |
+|---|---|
+| `/api/state` | todo el estado vivo: agentes, votos, posiciones, operaciones, eventos |
+| `/api/candles?symbol=` | velas diarias reales del instrumento |
+| `/api/wide` | los 22 instrumentos vigilados |
+| `/api/research` | backtest, ablación y Monte Carlo, calculados al arrancar en segundo plano |
+
 ## Demos estáticas
 
-Ambas se abren con doble clic, sin servidor:
+Reproducen una sesión grabada del backtest. Se abren con doble clic, sin servidor:
 
 - **`demo/taller.html`** — **PULPO DESK** en formato horizontal: una fila de columnas
   a pantalla completa que se recorre de izquierda a derecha con flechas o rueda. Velas diarias reales del

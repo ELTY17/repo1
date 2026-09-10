@@ -15,7 +15,7 @@ import webbrowser
 from bot.alerts import Alerts
 from bot.config import CONFIG
 from bot.orchestrator import Orchestrator
-from bot.server import serve
+from bot.server import serve, start_research
 
 
 def _watch(orch, alerts):
@@ -69,6 +69,7 @@ def main():
     threading.Thread(target=_watch, args=(orch, alerts), daemon=True).start()
     orch.start()
 
+    start_research()
     httpd = serve(orch, args.host, args.port)
     url = f"http://{args.host}:{args.port}"
     print("=" * 62)
