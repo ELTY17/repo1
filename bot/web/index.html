@@ -675,6 +675,9 @@ function headSVG(){
     ${eye("l",452,1)} ${eye("r",548,-1)}
     <path d="M436 262 q18 20 32 11 q16 18 32 7 q16 11 32 -7 q14 9 32 -11"
       fill="var(--oct-dark)" opacity=".8" stroke="#04100E" stroke-width="2"/>
+    <path id="snarl" d="M481 253 L519 253 L514 264 L506 254 L500 265 L494 254 L486 263 Z"
+      fill="#0A1420" stroke="#04100E" stroke-width="1.4" opacity="0"
+      style="transition:opacity .22s"/>
     <path id="mouth" d="M485 252 q15 3 30 0" fill="none" stroke="#08121C"
       stroke-width="4.8" stroke-linecap="round" stroke-linejoin="round"/>
     <text id="chest" x="500" y="308" text-anchor="middle" font-family="IBM Plex Mono,monospace"
@@ -805,13 +808,19 @@ function lamp(k, on){
 /* ---- la cara ----
    Cada humor mueve cuatro cosas: la boca, los dos párpados, la pupila y el tono
    de la piel. Los pulpos cambian de color de verdad, así que el manto acompaña. */
+/* `tilt` inclina el PÁRPADO de arriba, no una ceja pintada: es del color de la
+   piel, así que baja el ángulo interior del ojo y la cara se endurece sin que
+   aparezca nada que parezca unas gafas. Se aplica en espejo en cada ojo.
+   `pup[2]` es el alto de la pupila: cuanto menos, más rasgada — un ojo de
+   depredador es una ranura, no un botón. */
 const FACE = {
-  neutral:{mouth:"M485 252 q15 3 30 0",            lidT:0,  lidB:0,  pup:[0,0,9.5],  skin:null,       hold:0},
-  think:  {mouth:"M492 252 h16",                    lidT:5,  lidB:3,  pup:[-6,-2,9.5],skin:"#1E63B0",  hold:0},
-  happy:  {mouth:"M482 246 q18 15 36 0",            lidT:0,  lidB:9,  pup:[0,1,9],    skin:"#16A06B",  hold:2600},
-  glad:   {mouth:"M483 247 q17 12 34 0",            lidT:0,  lidB:5,  pup:[0,0,9.5],  skin:"#1B8F72",  hold:1400},
-  sad:    {mouth:"M482 258 q18 -15 36 0",           lidT:11, lidB:0,  pup:[0,3,8],    skin:"#B0443A",  hold:2600},
-  wow:    {mouth:"M489 243 q11 21 22 0 q-11 10 -22 0", lidT:0, lidB:0, pup:[0,-1,15], skin:"#3FA0FF",  hold:1800},
+  neutral:{mouth:"M485 253 q15 -1 30 0",            lidT:2,  lidB:0,  tilt:7,  pup:[0,0,8.5],  skin:null,       hold:0},
+  think:  {mouth:"M492 253 h16",                     lidT:7,  lidB:3,  tilt:13, pup:[-6,-2,7.5],skin:"#1E63B0",  hold:0},
+  happy:  {mouth:"M482 246 q18 14 36 0",             lidT:0,  lidB:8,  tilt:0,  pup:[0,1,9],    skin:"#16A06B",  hold:2600},
+  glad:   {mouth:"M483 248 q17 10 34 0",             lidT:0,  lidB:4,  tilt:3,  pup:[0,0,9],    skin:"#1B8F72",  hold:1400},
+  /* la cara de perder ya no es tristeza: es que le han tocado la cuenta */
+  sad:    {mouth:"M480 259 q20 -13 40 0",            lidT:13, lidB:2,  tilt:26, pup:[0,2,5.5],  skin:"#C0392B",  hold:2600, snarl:1},
+  wow:    {mouth:"M489 243 q11 21 22 0 q-11 10 -22 0", lidT:0, lidB:0, tilt:0,  pup:[0,-1,15], skin:"#3FA0FF",  hold:1800},
 };
 
 function setFace(_, m){
@@ -822,9 +831,15 @@ function setFace(_, m){
   mood = m; moodUntil = f.hold ? now + f.hold : 0;
 
   const mo = $("mouth"); if(mo) mo.setAttribute("d", f.mouth);
+  const sn = $("snarl"); if(sn) sn.setAttribute("opacity", f.snarl ? ".95" : "0");
   ["l","r"].forEach(side=>{
     const t = $("lidT-"+side), b = $("lidB-"+side), pu = $("pup-"+side);
-    if(t) t.setAttribute("y", 188 + f.lidT);
+    const cxe = side === "l" ? 452 : 548;
+    if(t){
+      t.setAttribute("y", 188 + f.lidT);
+      const deg = (f.tilt || 0) * (side === "l" ? 1 : -1);
+      t.setAttribute("transform", `rotate(${deg} ${cxe} 226)`);
+    }
     if(b) b.setAttribute("y", 243 - f.lidB);
     if(pu){
       const cx = side === "l" ? 452 : 548;
