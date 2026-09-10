@@ -307,7 +307,8 @@ footer{font-size:12px;color:var(--dim);line-height:1.6;letter-spacing:-.005em}
   letter-spacing:.06em;padding:2px 7px;border-radius:5px;text-transform:uppercase}
 .turwrap{display:flex;flex-direction:column;gap:10px;min-height:0}
 .turcols{display:grid;grid-template-columns:172px 1fr 232px;gap:14px;min-height:0;flex:1}
-.turcifra,.turgraf,.turlado{display:flex;flex-direction:column;min-height:0}
+.turcifra,.turgraf,.turlado{display:flex;flex-direction:column;min-height:0;overflow:hidden}
+#tFin{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .turctl{display:flex;align-items:center;gap:5px;flex-wrap:wrap;flex:none;
   padding-top:9px;border-top:.5px solid var(--hair)}
 .turctl button{padding:5px 11px;font-size:12px}
@@ -418,7 +419,7 @@ footer{font-size:12px;color:var(--dim);line-height:1.6;letter-spacing:-.005em}
 <section class="p" data-a="tur" style="grid-area:tur" id="tur">
       <div class="ph"><i class="sq" style="background:#FFD426"></i><b>Tu cuenta de $10</b>
       <span class="ficc">simulación</span>
-      <span class="r">sin techo · solo se para en cero o cuando la pares tú · cada operación es un resultado real del sistema</span></div>
+      <span class="r">a ritmo de mercado · una operación cada 9 días · sin techo · si toca cero, se acabó</span></div>
       <div class="pb turwrap">
         <div class="turcols">
           <div class="turcifra">
@@ -444,8 +445,8 @@ footer{font-size:12px;color:var(--dim);line-height:1.6;letter-spacing:-.005em}
           <span class="tsep"></span>
           <span class="tlab">velocidad</span>
           <button class="tv" data-v="1" aria-pressed="true">×1</button>
-          <button class="tv" data-v="10" aria-pressed="false">×10</button>
-          <button class="tv" data-v="60" aria-pressed="false">×60</button>
+          <button class="tv" data-v="2" aria-pressed="false">×2</button>
+          <button class="tv" data-v="5" aria-pressed="false">×5</button>
           <span class="tsep"></span>
           <span class="tlab">ingresar</span>
           <button class="td" data-d="10">+$10</button>
@@ -1301,43 +1302,47 @@ setInterval(slow, 15000);
 
 <script>
 /* ── Tu cuenta ──────────────────────────────────────────────────────────────
-   Cada operación se saca de las 44 que el sistema hizo de verdad en el
-   backtest (bootstrap), con su tamaño y su signo tal cual salieron. Por eso no
-   gana siempre: la mitad son perdedoras y la peor se lleva un 2,15%.
+   Lo que corre aquí es un CALENDARIO, no una ristra de operaciones. Cada tic
+   es un día de mercado; ese día puede pasar algo o no. El sistema real hizo 44
+   operaciones en 401 días —una cada nueve— así que aquí igual: hay semanas
+   enteras en las que la cuenta no se mueve, y eso es exactamente lo que se
+   siente operando de verdad.
 
-   No hay techo. Sube hasta donde llegue. Solo se para en dos sitios: si toca
-   $1 —por debajo el exchange no acepta la orden y se acabó— o cuando le des a
-   Parar. Puedes ingresar más dinero en marcha con los botones de abajo. */
+   Cuando toca operación, el resultado se saca de las 44 reales del backtest,
+   con su tamaño y su signo. La mitad pierden. Ni una está inventada.
+
+   No hay techo: sube hasta donde llegue. Suelo sí: en $1 se acabó, y se acabó
+   del todo — por debajo ningún exchange acepta la orden, y ahí no valen
+   ingresos ni segundas oportunidades. Hay que vaciar y empezar de cero. */
 (function(){
   const $ = id => document.getElementById(id);
   if(!$("tEq")) return;
-  let R = [0];
-  const STOP = 1, CLAVE = "pulpo.cuenta.viva.v2";
+  let R = [0], FREQ = 0.11;               // llegan de /api/turbo
+  const STOP = 1, CLAVE = "pulpo.cuenta.viva.v3";
+  /* ×1 = un día de mercado cada dos segundos. Es rápido, pero es un
+     calendario: una hora mirando son unos siete años de mercado. */
+  const MS = {1: 2000, 2: 1000, 5: 400};
 
-  let eq = 10, puesto = 10, ops = 0, ganadas = 0, pico = 10, hundido = 0;
+  let eq = 10, puesto = 10, dias = 0, ops = 0, ganadas = 0, pico = 10, hundido = 0;
   let curva = [10], cinta = [], reloj = null, veloc = 1, fin = null;
 
   try{
     const g = JSON.parse(localStorage.getItem(CLAVE) || "null");
     if(g && typeof g.eq === "number"){
-      ({eq, puesto, ops, ganadas, pico, hundido, fin} = g);
+      ({eq, puesto, dias, ops, ganadas, pico, hundido, fin} = g);
       curva = g.curva || [eq]; cinta = g.cinta || [];
     }
   }catch(e){}
 
+  const muerta = () => !!(fin && fin.cls === "mal");
   const guardar = () => { try{ localStorage.setItem(CLAVE, JSON.stringify(
-    {eq, puesto, ops, ganadas, pico, hundido, fin,
+    {eq, puesto, dias, ops, ganadas, pico, hundido, fin,
      curva: curva.slice(-800), cinta: cinta.slice(0,12)})); }catch(e){} };
 
   /* ── la curva ───────────────────────────────────────────────────────────
-     Escala logarítmica y con el techo abierto: la parte de arriba crece con la
-     cuenta, así que da igual que llegue a $100 o a $10.000, siempre cabe. */
+     Logarítmica y con el techo abierto: la parte de arriba crece con la cuenta,
+     así que cabe igual si acaba en $100 que si acaba en $10.000. */
   const W = 620, H = 150;
-  function marcas(hi){
-    const out = [];
-    for(let v = 1; v <= hi; v *= 10) out.push(v);
-    return out;
-  }
   function dibujar(){
     const alto = Math.max(pico * 1.35, 120);
     const LO = Math.log(0.75), HI = Math.log(alto);
@@ -1348,10 +1353,12 @@ setInterval(slow, 15000);
       : curva;
     const n = p.length, ult = p[n-1];
     const eti = v => v >= 1000 ? "$" + (v/1000) + "k" : "$" + v;
-    let g = marcas(alto).map(v => `<line x1="34" y1="${yOf(v).toFixed(1)}" x2="${W-12}"
-        y2="${yOf(v).toFixed(1)}" stroke="var(--hair)" stroke-width="1"/>
+    let g = "";
+    for(let v = 1; v <= alto; v *= 10)
+      g += `<line x1="34" y1="${yOf(v).toFixed(1)}" x2="${W-12}" y2="${yOf(v).toFixed(1)}"
+        stroke="var(--hair)" stroke-width="1"/>
       <text x="0" y="${(yOf(v)+3.5).toFixed(1)}" fill="var(--faint)" font-size="9"
-        font-family="var(--num)">${eti(v)}</text>`).join("");
+        font-family="var(--num)">${eti(v)}</text>`;
     g += `<line x1="34" y1="${yOf(STOP).toFixed(1)}" x2="${W-12}" y2="${yOf(STOP).toFixed(1)}"
         stroke="var(--neg)" stroke-width="1" stroke-dasharray="3 3" opacity=".75"/>`;
     g += `<line x1="34" y1="${yOf(puesto).toFixed(1)}" x2="${W-12}" y2="${yOf(puesto).toFixed(1)}"
@@ -1365,15 +1372,21 @@ setInterval(slow, 15000);
            r="3" fill="${col}"/>` : "");
   }
 
-  const anos = () => ops / 252;          // el backtest es diario: 1 op ≈ 1 día de mercado
+  /* 252 días de mercado son un año: es el calendario real de una bolsa. */
+  function reloj_txt(){
+    if(dias < 21) return `día ${dias} de mercado`;
+    if(dias < 252){
+      const m = Math.max(1, Math.round(dias/21));
+      return `${m} ${m === 1 ? "mes" : "meses"} de mercado`;
+    }
+    return `${(dias/252).toFixed(1)} años de mercado`;
+  }
   function pintar(){
     $("tEq").textContent = "$" + eq.toFixed(2);
     $("tEq").style.color = eq < puesto ? "var(--neg)" : "#FFD426";
     $("tX").textContent = `×${(eq/puesto).toFixed(2)} sobre $${puesto.toFixed(0)} `
-      + `· ${ops.toLocaleString("es")} operaciones`;
-    $("tT").textContent = ops < 252
-      ? `${ops} días de mercado`
-      : `${anos().toFixed(1)} años de mercado`;
+      + `· ${ops} operaciones`;
+    $("tT").textContent = reloj_txt();
     $("tKv").innerHTML = [
       ["Ingresado", "$" + puesto.toFixed(2)],
       ["Máximo", "$" + pico.toFixed(2)],
@@ -1381,11 +1394,11 @@ setInterval(slow, 15000);
       ["Caída máx.", (hundido*100).toFixed(1) + " %"],
     ].map(([k,v]) => `<div><dt>${k}</dt><dd>${v}</dd></div>`).join("");
     $("tOps").innerHTML = cinta.length ? cinta.map(o =>
-      `<div><span class="dim">${o.dep ? "ingreso" : "#" + o.n}</span>
+      `<div><span class="dim">${o.dep ? "ingreso" : "día " + o.d}</span>
         <span class="${o.r>=0?"pos":"neg"}">${o.dep ? "+$" + o.r.toFixed(0)
           : (o.r>=0?"▲":"▼") + " " + (o.r*100).toFixed(2) + " %"}</span>
         <span>$${o.eq.toFixed(2)}</span></div>`).join("")
-      : '<div class="dim" style="border:0;padding:6px 0">Sin operaciones todavía.</div>';
+      : '<div class="dim" style="border:0;padding:6px 0">Todavía sin operaciones. Días de mercado sin señal.</div>';
     dibujar();
   }
 
@@ -1399,90 +1412,83 @@ setInterval(slow, 15000);
     guardar();
   }
 
-  function operacion(){
+  /* Un día de mercado. La mayoría no pasa nada, y eso también cuenta. */
+  function dia(){
+    dias++;
+    if(Math.random() >= FREQ){
+      curva.push(eq);
+      if(dias % 30 === 0) pintar();
+      return;
+    }
     const r = R[Math.floor(Math.random()*R.length)];
     eq *= 1 + r; ops++; if(r > 0) ganadas++;
     pico = Math.max(pico, eq);
     hundido = Math.max(hundido, (pico - eq)/pico);
     curva.push(eq);
     if(curva.length > 4000) curva = curva.filter((_,i)=> i % 2 === 0);
-    cinta.unshift({n: ops, r, eq}); if(cinta.length > 12) cinta.pop();
-    return r;
-  }
-
-  /* A ×60 no vale con acortar el intervalo: los navegadores no bajan de ~4ms y
-     además lo estrangulan en pestañas de fondo. Se hacen varias por tick. */
-  function tick(){
-    let ultima = 0;
-    const tanda = veloc === 1 ? 1 : Math.max(1, Math.round(veloc / 10));
-    for(let i = 0; i < tanda; i++){
-      ultima = operacion();
-      if(eq <= STOP){
-        pintar();
-        return parar(`Cero. Tocó $1 en la operación ${ops.toLocaleString("es")}. `
-          + `Por debajo ningún exchange acepta la orden: se acabó.`, "mal");
-      }
-    }
+    cinta.unshift({d: dias, r, eq}); if(cinta.length > 12) cinta.pop();
     if(typeof setFace === "function"){
-      if(ultima > 0.02) setFace(null, "happy");
-      else if(ultima < -0.015) setFace(null, "sad");
-      else if(ops % 7 === 0) setFace(null, "think");
+      if(r > 0.02) setFace(null, "happy");
+      else if(r < -0.015) setFace(null, "sad");
     }
-    if(ops % 25 < tanda) guardar();
+    if(ops % 10 === 0) guardar();
     pintar();
+    if(eq <= STOP)
+      parar(`Cero, en el día ${dias} tras ${ops} operaciones. Se acabó.`, "mal");
   }
 
   function arrancar(){
-    if(reloj || eq <= STOP) return;
+    if(reloj || muerta()) return;
     fin = null;
-    $("tFin").textContent = "En marcha… no para hasta que la pares.";
+    $("tFin").textContent = "Mercado abierto.";
     $("tFin").style.color = "var(--dim)";
-    /* ×1 → una operación por segundo; ×10 y ×60 → tandas cada 100 ms */
-    reloj = setInterval(tick, veloc === 1 ? 1000 : 100);
+    reloj = setInterval(dia, MS[veloc] || 2000);
   }
 
   $("tGo").onclick = arrancar;
-  $("tStop").onclick = () => parar("Parada a mano. Dale a Lanzar para seguir.", "");
+  $("tStop").onclick = () => parar("Parada. Dale a Lanzar para seguir.", "");
   $("tReset").onclick = () => {
     clearInterval(reloj); reloj = null;
-    eq = 10; puesto = 10; ops = 0; ganadas = 0; pico = 10; hundido = 0;
+    eq = 10; puesto = 10; dias = 0; ops = 0; ganadas = 0; pico = 10; hundido = 0;
     curva = [10]; cinta = []; fin = null;
     guardar(); pintar();
-    $("tFin").textContent = "Cuenta vaciada, de vuelta a $10.";
+    $("tFin").textContent = "Cuenta nueva: $10, día cero.";
     $("tFin").style.color = "var(--dim)";
   };
   document.querySelectorAll(".tv").forEach(b => b.onclick = () => {
     veloc = parseInt(b.dataset.v, 10);
     document.querySelectorAll(".tv").forEach(o =>
       o.setAttribute("aria-pressed", String(o === b)));
-    if(reloj){ clearInterval(reloj); reloj = null; arrancar(); }
+    if(reloj){ clearInterval(reloj); reloj = setInterval(dia, MS[veloc] || 2000); }
   });
-  /* Ingresar dinero en marcha: entra en la cuenta y sube el listón contra el
-     que se mide, para que el ×N no mienta. */
+  /* Ingresar sube el listón contra el que se mide, para que el ×N no mienta.
+     En una cuenta muerta no vale: cero es cero. */
   document.querySelectorAll(".td").forEach(b => b.onclick = () => {
+    if(muerta()){
+      $("tFin").textContent = "En cero no se ingresa. Vacía y empieza otra.";
+      return;
+    }
     const d = parseFloat(b.dataset.d);
-    if(eq <= STOP){ eq = 0; }                 // reflotar una cuenta muerta
     eq += d; puesto += d; pico = Math.max(pico, eq);
     curva.push(eq);
-    cinta.unshift({n: ops, r: d, eq, dep: true}); if(cinta.length > 12) cinta.pop();
-    if(fin && fin.cls === "mal"){ fin = null; $("tFin").textContent = "Cuenta reflotada."; }
+    cinta.unshift({d: dias, r: d, eq, dep: true}); if(cinta.length > 12) cinta.pop();
     guardar(); pintar();
   });
 
-  /* Aquí los retornos los sirve /api/turbo desde el backtest recién corrido. */
+  /* Los retornos y la cadencia los sirve /api/turbo desde el backtest. */
   pintar();
   const pedir = () => fetch("/api/turbo").then(r => r.json()).then(d => {
-    if(!d.listo){                       // el backtest sigue corriendo en el fondo
-      $("tFin").textContent = "Midiendo el sistema para poder operar…";
+    if(!d.listo){
+      $("tFin").textContent = "Midiendo el sistema…";
       return setTimeout(pedir, 3000);
     }
     R = (d.retornos && d.retornos.length) ? d.retornos : [0];
-    $("tNota").innerHTML = `Cada operación es una de las <b>${d.operaciones} reales</b>
-      del sistema, elegida al azar: la mitad pierden. Sin techo, pero el suelo existe —
-      desde $10 la cuenta muere el <b>${(d.ruina*100).toFixed(1).replace(".", ",")}%</b>
-      de las veces antes de multiplicarse por diez, y cuando no muere tarda una
-      <b>mediana de ${(d.mediana_ops||0).toLocaleString("es")} operaciones</b>: a una al
-      día, ${((d.mediana_ops||0)/252).toFixed(0)} años.`;
+    FREQ = d.frecuencia || 0.11;
+    $("tNota").innerHTML = `Cada tic es un <b>día de mercado</b> y solo el
+      <b>${(FREQ*100).toFixed(0)}%</b> de los días hay operación — la cadencia real
+      del sistema: ${d.operaciones} en ${d.barras} días, una cada
+      ${(1/FREQ).toFixed(0)}. El resultado sale de esas ${d.operaciones}, y la mitad
+      pierden. A ×1 una hora mirando son unos <b>siete años</b> de mercado.`;
     if(fin){ parar(); } else { arrancar(); }
   }).catch(() => setTimeout(pedir, 5000));
   pedir();

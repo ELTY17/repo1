@@ -413,10 +413,19 @@ sistema**, y el de $10 es ruido con suerte.
 
 El panel está justo encima del pulpo, y el pulpo reacciona a lo que le pasa:
 pone cara al ganar y al perder. Empieza en **$10** y **no tiene techo** — sube
-hasta donde llegue, la escala del gráfico crece con ella. Solo se para en dos
-sitios: si toca **$1**, porque por debajo ningún exchange acepta la orden y ahí
-se acabó, o cuando le des a **Parar**. Se puede **ingresar más dinero en marcha**
-(+$10, +$20, +$50, +$100), y a **×60** hace sesenta operaciones por segundo. Se
+hasta donde llegue, la escala del gráfico crece con ella.
+
+Lo que corre no es una ristra de operaciones: es un **calendario**. Cada tic es
+un día de mercado, y solo el **11% de los días hay operación**, que es la
+cadencia real del sistema — 44 en 401 días, una cada nueve. Por eso hay semanas
+enteras en las que la cuenta no se mueve, que es exactamente lo que se siente
+operando de verdad. Velocidades **×1 · ×2 · ×5**, donde ×1 es un día de mercado
+cada dos segundos: una hora mirando son unos siete años.
+
+Se puede **ingresar en marcha** (+$10, +$20, +$50, +$100), y eso sube el listón
+contra el que se mide el multiplicador, para que no mienta. Si la cuenta toca
+**$1**, se acabó del todo: por debajo ningún exchange acepta la orden, y ahí no
+valen ingresos ni segundas oportunidades — hay que vaciar y empezar otra. Se
 guarda sola: si cierras la pestaña, sigue donde estaba.
 
 Lo que la hace realista es de dónde salen las operaciones: **cada una es un

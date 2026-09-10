@@ -126,7 +126,13 @@ def _llenar_turbo(broker):
     from .montecarlo import trade_returns
     from .turbo import camino
     rets = [round(x, 6) for x in trade_returns(broker, broker.equity_curve)]
-    _turbo_cache.update({"retornos": rets, "listo": True, **camino(rets, runs=5000)})
+    # La cadencia también es un dato medido: 44 operaciones en 401 días de
+    # mercado. Sin ella la simulación opera todos los días, que no es lo que
+    # hace el sistema ni de lejos.
+    barras = max(len(broker.equity_curve) - 1, 1)
+    _turbo_cache.update({"retornos": rets, "listo": True, "barras": barras,
+                         "frecuencia": round(len(rets) / barras, 4),
+                         **camino(rets, runs=5000)})
 
 
 def _turbo_datos():
