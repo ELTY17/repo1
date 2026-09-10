@@ -20,6 +20,8 @@ python3 -m bot.backtest --compare    # antes vs ahora
 python3 -m bot.backtest --ablation   # qué aporta cada mejora por separado
 python3 -m bot.montecarlo            # cono de ruina: 10.000 futuros posibles
 python3 -m bot.backtest --fees       # cuánto aguanta según lo que cobre el exchange
+python3 -m bot.oos                   # validación out-of-sample (el número honesto)
+python3 -m bot.oos --real            # ...con comisión y mínimos reales
 ```
 
 ## Los cinco agentes
@@ -91,6 +93,37 @@ Se **opera** en cinco: `BTC-USD`, `ETH-USD`, `SOL-USD` (Kraken) · `SPY` = S&P 5
 Se **vigilan** 22: `feeds.wide_universe()` trae en una sola llamada 18 pares de Kraken
 más SPY, QQQ, DIA e IWM. Mirar más mercado del que se opera sale casi gratis y dice en
 qué estado está el conjunto.
+
+## Validación out-of-sample: no hay ventaja
+
+`python3 -m bot.oos` parte las 400 barras en dos. En las primeras 240 repite la
+elección de mejoras desde cero; en las últimas 160 —que no se miran al elegir— mide
+lo elegido. Es la única forma de saber cuánto de lo medido era sobreajuste.
+
+| Variante | Entrenamiento (0–240) | Prueba (240–400) |
+|---|---|---|
+| nada | −5,23 % | **+8,45 %** |
+| adx | −5,30 % | +12,86 % |
+| prot+trail | −2,27 % | +4,21 % |
+| adx+prot+trail *(la del repo)* | −3,33 % | +9,93 % |
+
+Tres cosas, y las tres son malas:
+
+1. **Todas las variantes pierden en el primer tramo y ganan en el segundo.** El signo
+   del resultado lo decide el tramo de mercado, no la estrategia. Eso no es una
+   ventaja: es seguir al mercado con pasos extra.
+2. **Elegir a ciegas no habría dado la combinación que lleva el repositorio.** Con solo
+   el entrenamiento a la vista salía `prot+trail`, no `adx+prot+trail`. La elección
+   anterior usó datos de prueba: era sobreajuste, y ahora está medido.
+3. **Fuera de muestra las mejoras no baten a no hacer nada:** `prot+trail` da +4,21 %
+   contra +8,45 % de la versión sin nada. Lo que parecía mejorar, empeora.
+
+Con comisión real y mínimos de exchange (`--real`), el entrenamiento pierde entre
+7,7 % y 9,5 % **en todas las variantes**, y la prueba da +3,39 % en 11 operaciones.
+
+**Conclusión: este sistema no tiene ventaja demostrable sobre el mercado.** Funciona
+como pieza de ingeniería —los agentes, el riesgo, las protecciones y las medidas hacen
+lo que dicen— pero no como forma de ganar dinero.
 
 ## El mínimo del exchange decide todavía más
 
@@ -178,12 +211,19 @@ bot/web/index.html     dashboard
 
 ## Qué NO es esto
 
-No es una máquina de ganar dinero. Un backtest de 13 días con 7 operaciones no
-demuestra nada, y esta lógica es de reglas simples sobre indicadores públicos:
-no tiene ninguna ventaja estructural frente al mercado. Lo que sí hace bien es
-**no arruinarse rápido**: riesgo fijo, stops obligatorios y un interruptor de apagado.
+**No gana dinero.** No es una opinión prudente, está medido de tres formas
+independientes y las tres coinciden:
 
-Si algún día alguien conecta esto a dinero real, es su decisión y su riesgo.
+- Con comisión real y mínimos de exchange, $100 dan **−4,11 %**.
+- Fuera de muestra, las mejoras **no baten a no hacer nada**.
+- El signo del resultado depende del tramo de mercado que mires, no de la estrategia.
+
+Lo que sí hace bien es **no arruinarse rápido**: riesgo fijo, stops obligatorios,
+protecciones de cartera y un interruptor de apagado. Y lo que hace mejor que nada es
+**medirse a sí mismo con honestidad**, que es lo que permitió descubrir todo lo anterior.
+
+Si algún día alguien conecta esto a dinero real, es su decisión y su riesgo. Con lo
+que hay medido aquí, la recomendación es que no lo haga.
 
 ## Referencias y licencia
 

@@ -49,7 +49,14 @@ BAR_SECONDS = {"1h": 3600, "1d": 86400}
 
 
 def run(cfg: Config = CONFIG, warmup: int = 100, features=None,
-        verbose: bool = True, timeframe: str = "1d", enforce_minimums: bool = False):
+        verbose: bool = True, timeframe: str = "1d", enforce_minimums: bool = False,
+        trade_from: int = 0, trade_to: int | None = None):
+    """`trade_from`/`trade_to` limitan las barras en las que se OPERA.
+
+    Los indicadores siguen usando todo el histórico anterior a cada barra —eso no
+    es mirar al futuro—, pero no se abre ni se mantiene nada fuera de la ventana.
+    Es lo que permite entrenar en un tramo y medir en otro sin contaminarlos.
+    """
     feats = signals._feat(features)
     smart = bool(feats)
     series = _series(warmup, timeframe)
@@ -70,7 +77,9 @@ def run(cfg: Config = CONFIG, warmup: int = 100, features=None,
         if broker.trades:
             broker.trades[-1].setdefault("bar", bar - warmup)
 
+    trade_to = n - warmup if trade_to is None else trade_to
     for k in range(warmup, n):
+        bar_i = k - warmup
         window = {s: c[len(c) - n:][: k + 1] for s, c in series.items()}
         prices = {s: w[-1]["c"] for s, w in window.items()}
         now = window[next(iter(window))][-1]["t"]
@@ -104,6 +113,12 @@ def run(cfg: Config = CONFIG, warmup: int = 100, features=None,
                 prot.register_close(sym, t["pnl"], t.get("pnl_pct", 0.0),
                                     t["reason"], now, broker.equity(prices))
 
+        if bar_i >= trade_to:
+            for sym in list(broker.positions):
+                broker.sell(sym, prices[sym], "fin de la ventana", ts=now); tag(k)
+            broker.mark(prices)
+            continue
+
         eq = broker.mark(prices)
         if not halted and broker.drawdown(prices) <= -cfg.max_drawdown_stop:
             halted = True
@@ -125,6 +140,9 @@ def run(cfg: Config = CONFIG, warmup: int = 100, features=None,
                 if prot and t:
                     prot.register_close(sym, t["pnl"], t.get("pnl_pct", 0.0),
                                         t["reason"], now, broker.equity(prices))
+
+        if bar_i < trade_from:
+            continue
 
         for sym, sc in sorted(scores.items(), key=lambda x: -x[1]):
             if sc < cfg.buy_threshold or sym in broker.positions:
