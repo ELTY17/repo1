@@ -409,37 +409,45 @@ distinguen una ventaja del azar. La cifra de $1.000 es idéntica a la de $100
 porque ahí ya no hay mínimo que estorbe: **ese −3,37% es el resultado real del
 sistema**, y el de $10 es ruido con suerte.
 
-## De $10 a $100 en 5 horas
+## Tu cuenta de $10
 
-Se puede preguntar y tiene respuesta exacta. `bot/turbo.py` la calcula.
+El panel está justo encima del pulpo, y el pulpo reacciona a lo que le pasa:
+pone cara al ganar y al perder. Empieza en **$10**, tiene **objetivo en $100** y
+**stop en $1** (por debajo ningún exchange acepta la orden), y corre
+indefinidamente hasta tocar uno de los dos o hasta que le des a Parar. Se guarda
+sola: si cierras la pestaña, sigue donde estaba.
 
-Multiplicar por diez en cinco horas no se consigue acertando más: se consigue
-apostando más fuerte. Con una operación cada 5 minutos (60 en total) y
-arriesgando **la mitad de la cuenta** en cada una, el acierto necesario sale de
-despejar `p·ln(1,5) + (1−p)·ln(0,5) = ln(10)/60`:
+Lo que la hace realista es de dónde salen las operaciones: **cada una es un
+resultado real** de las 44 que el sistema hizo en el backtest, resampleadas
+(bootstrap). Media +0,0446% por operación, 50% ganadoras, la mejor +3,98%, la
+peor −2,15%. Por eso sube y baja como sube y baja el sistema de verdad.
+
+Y por eso la respuesta a *"¿cuánto tarda en llegar a $100?"* deja de ser una
+opinión:
 
 ```
-ACIERTO NECESARIO: 66,6%   (ganar 40 de 60)
-
-acierto     llega a 100   acaba en 0    mediana
-66,6% ←          63,0%        32,8%    $102,20
-60,0%            33,4%        62,8%      $0,91
-55,0%            16,7%        81,4%      $0,83
-50,0%             7,3%        92,2%      $0,75
+llega a $100  95,9%      toca el stop de $1  4,1%
+mediana: 6.647 operaciones  →  a una al día, 26 años
 ```
 
-Con el acierto exacto que hace falta, sí: dos de cada tres sesiones llegan. Pero
-**una de cada tres acaba en cero**, y esa no tiene vuelta atrás. Y ese 66,6% no
-existe — un sistema bueno de verdad ronda el 55%, y ahí **cuatro de cada cinco
-sesiones mueren**. La palanca que multiplica es exactamente la misma que divide,
-y llega antes abajo.
+Casi siempre llega. **Tardando veintiséis años.** Esa es la ventaja real medida
+de este sistema: existe, y es así de lenta. Multiplicar por diez en una tarde
+solo se consigue apostando fuerte, y eso es la otra tabla:
 
-En el dashboard hay un panel para verlo moverse (`Lanzar`), en ámbar y con la
-palabra **SIMULACIÓN** encima: las operaciones salen de un generador aleatorio
-con el acierto que elijas, no de un mercado. Sirve para ver la forma de una
-curva apalancada —sube en escalera y se cae de golpe— no para creerse el número
-final. Es la única parte de esta pantalla que no sale de datos reales, y por eso
-es la única que no es azul.
+```
+ACIERTO NECESARIO para $10→$100 en 5 horas: 66,6%   (ganar 40 de 60)
+
+acierto     llega a 100   acaba en 0
+66,6% ←          63,0%        32,8%
+55,0%            16,7%        81,4%
+```
+
+Con el acierto exacto que hace falta, una de cada tres sesiones acaba en cero.
+Con un 55% —que ya sería un sistema bueno— mueren cuatro de cada cinco. La
+palanca que multiplica es exactamente la misma que divide, y llega antes abajo.
+
+`bot/turbo.py` tiene las dos cuentas (`camino()` y `required_winrate()`), y el
+motor de la cuenta vive en el navegador para que la demo funcione sin servidor.
 
 ## En el móvil
 

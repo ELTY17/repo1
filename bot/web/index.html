@@ -40,12 +40,12 @@ a{color:var(--brass)}
 .deck{height:100dvh;display:flex;flex-direction:column;overflow:hidden;padding:0}
 .mosaic{flex:1;min-height:0;display:grid;gap:12px;padding:12px 16px 16px;
   grid-template-columns:repeat(12,minmax(0,1fr));
-  grid-template-rows:minmax(0,1fr) minmax(0,.82fr) minmax(0,1.34fr) minmax(0,.8fr);
+  grid-template-rows:minmax(0,.94fr) minmax(0,.78fr) minmax(0,1.05fr) minmax(0,1.23fr);
   grid-template-areas:
     "cap cap prc prc prc prc dec dec dec con con con"
     "agt agt ops ops ops mkt mkt mkt ord ord cnv cnv"
-    "oct oct oct oct oct oct oct oct oct evi evi evi"
-    "tur tur tur tur tur tur tur tur tur evi evi evi";}
+    "tur tur tur tur tur tur tur tur tur evi evi evi"
+    "oct oct oct oct oct oct oct oct oct evi evi evi";}
 .mosaic > .p{min-height:0;min-width:0}
 .mosaic .pb{overflow:auto;min-height:0}
 .mosaic #mckv{margin-top:9px}
@@ -305,10 +305,11 @@ footer{font-size:12px;color:var(--dim);line-height:1.6;letter-spacing:-.005em}
 #tur{outline:1px solid #7A5A12}
 .ficc{background:#3A2A05;color:#FFD426;font-size:9.5px;font-weight:700;
   letter-spacing:.06em;padding:2px 7px;border-radius:5px;text-transform:uppercase}
-.turwrap{display:grid;grid-template-columns:190px 1fr 232px;gap:14px;min-height:0}
+.turwrap{display:grid;grid-template-columns:190px 1fr 250px;gap:14px;min-height:0}
+.turwrap > div:last-child{display:flex;flex-direction:column;min-height:0}
 .turbig{font-family:var(--disp);font-size:38px;font-weight:600;letter-spacing:-.035em;
   line-height:1;font-variant-numeric:tabular-nums;color:#FFD426}
-.turx{font-family:var(--num);font-size:12px;color:var(--dim);margin-top:3px}
+.turx{font-family:var(--num);font-size:11.5px;color:var(--dim);margin-top:3px;line-height:1.4}
 .turbar{height:5px;background:var(--panel2);border-radius:3px;margin-top:11px;overflow:hidden}
 .turbar i{display:block;height:100%;background:#FFD426;border-radius:3px;
   transition:width .4s;width:0}
@@ -321,7 +322,8 @@ footer{font-size:12px;color:var(--dim);line-height:1.6;letter-spacing:-.005em}
 .turmc td{font-family:var(--num);text-align:right;padding:3px 0;
   border-top:.5px solid var(--hair)}
 .turmc td:first-child{text-align:left;font-family:var(--ui)}
-.turnote{font-size:11px;color:var(--dim);margin-top:8px;line-height:1.4}
+.turnote{font-size:11px;color:var(--dim);margin-top:8px;line-height:1.4;
+  overflow:auto;min-height:0}
 @media (max-width:760px){
   .turwrap{grid-template-columns:1fr;gap:12px}
   .turops{max-height:150px}
@@ -405,32 +407,35 @@ footer{font-size:12px;color:var(--dim);line-height:1.6;letter-spacing:-.005em}
     </div>
   </section>
 <section class="p" data-a="tur" style="grid-area:tur" id="tur">
-      <div class="ph"><i class="sq" style="background:#FFD426"></i><b>De $10 a $100 en 5 horas</b>
+      <div class="ph"><i class="sq" style="background:#FFD426"></i><b>Tu cuenta de $10</b>
       <span class="ficc">simulación</span>
-      <span class="r">números inventados a propósito · aquí no hay mercado</span></div>
+      <span class="r">objetivo $100 · stop $1 · cada operación es un resultado real del sistema</span></div>
       <div class="pb turwrap">
         <div>
           <div class="turbig" id="tEq">$10.00</div>
-          <div class="turx" id="tX">×1.00 · 0 de 60 operaciones</div>
+          <div class="turx" id="tX">×1.00 · 0 operaciones</div>
+          <div class="turx" id="tT" style="color:var(--faint)">0 días de mercado</div>
           <div class="turbar"><i id="tBar"></i></div>
-          <div class="ctrls" style="margin-top:12px;flex-wrap:wrap">
+          <div class="ctrls" style="margin-top:12px;flex-wrap:wrap;gap:5px">
             <button id="tGo">Lanzar</button>
-            <button data-p="" aria-pressed="true" class="tp">66,6%</button>
-            <button data-p="0.55" aria-pressed="false" class="tp">55%</button>
+            <button id="tStop">Parar</button>
+            <button id="tReset">Reiniciar</button>
           </div>
-          <div class="turx" id="tFin" style="margin-top:9px">—</div>
+          <div class="ctrls" style="margin-top:6px;gap:5px">
+            <button class="tv" data-v="1000" aria-pressed="true">×1</button>
+            <button class="tv" data-v="100" aria-pressed="false">×10</button>
+            <button class="tv" data-v="16" aria-pressed="false">×60</button>
+          </div>
+          <div class="turx" id="tFin" style="margin-top:10px">Parada. Dale a Lanzar.</div>
         </div>
         <div style="display:flex;flex-direction:column;min-height:0">
-          <svg id="tCurve" viewBox="0 0 620 150" preserveAspectRatio="none"
-            style="width:100%;height:104px" role="img"
-            aria-label="Curva de capital de la sesión simulada"></svg>
+          <svg id="tCurve" viewBox="0 0 620 150" style="width:100%;height:118px"
+            role="img" aria-label="Capital de la cuenta simulada, escala logarítmica entre 1 y 100 dólares"></svg>
           <div class="turops" id="tOps"></div>
         </div>
         <div>
-          <table class="turmc" id="tMc"></table>
-          <div class="turnote">Arriesgando la mitad de la cuenta cada 5&nbsp;min hacen
-            falta <b id="tNeed">—</b> de acierto. Un sistema bueno de verdad anda por
-            el 55%: ahí, 4 de cada 5 sesiones acaban en cero.</div>
+          <dl class="kv" id="tKv" style="margin-top:0"></dl>
+          <div class="turnote" id="tNota"></div>
         </div>
       </div></section>
 <section class="p" data-a="evi" style="grid-area:evi"><div class="ph"><i class="sq"></i>
@@ -1219,10 +1224,10 @@ setInterval(slow, 15000);
    todas las marcas y vuelve el mosaico entero, sin recargar. */
 (function(){
   const GRUPOS = {
-    pulpo:   ["oct","agt","cnv"],
+    pulpo:   ["tur","oct","agt","cnv"],
     capital: ["cap","dec","ops"],
     mercado: ["prc","mkt","ord"],
-    pruebas: ["tur","con","evi"],
+    pruebas: ["con","evi"],
   };
   const nav = document.querySelector(".tabs");
   if(!nav) return;
@@ -1279,70 +1284,155 @@ setInterval(slow, 15000);
 </script>
 
 <script>
-/* ── Sesión de $10 ──────────────────────────────────────────────────────────
-   Pinta lo que devuelve /api/turbo. La curva va en escala logarítmica porque
-   una cuenta que se multiplica por diez es lineal solo en logaritmo; en escala
-   normal los primeros veinte pasos serían una raya plana. */
+/* ── La cuenta de $10 ───────────────────────────────────────────────────────
+   Esto ya no inventa nada: cada operación se saca de las 44 que el sistema hizo
+   de verdad en el backtest (bootstrap). Por eso sube y baja como sube y baja el
+   sistema real, y por eso llegar a $100 tarda lo que tarda.
+
+   Objetivo en $100 y stop en $1, que es donde el exchange deja de aceptar
+   ordenes. Corre indefinidamente hasta tocar uno de los dos o hasta que la
+   pares tú, y se guarda sola: si cierras la pestaña, sigue donde estaba. */
 (function(){
   const $ = id => document.getElementById(id);
   if(!$("tEq")) return;
-  let acierto = "", vivo = false, arrancada = false;
+  let R = [0];
+  const INI = 10, META = 100, STOP = 1, CLAVE = "pulpo.cuenta.viva.v1";
 
-  function curva(pts, obj){
-    const svg = $("tCurve"); if(!svg) return;
-    const W = 620, H = 150, lo = Math.log(0.5), hi = Math.log(obj * 1.15);
-    const y = v => H - 6 - (Math.log(Math.max(v, 0.5)) - lo) / (hi - lo) * (H - 12);
-    const x = i => pts.length < 2 ? 0 : i / (pts.length - 1) * W;
-    const d = pts.map((v, i) => `${i ? "L" : "M"}${x(i).toFixed(1)} ${y(v).toFixed(1)}`).join("");
-    const fin = pts[pts.length - 1];
-    svg.innerHTML =
-      `<line x1="0" y1="${y(obj)}" x2="${W}" y2="${y(obj)}" stroke="#FFD426"
-         stroke-width="1" stroke-dasharray="3 3" opacity=".5"/>
-       <line x1="0" y1="${y(10)}" x2="${W}" y2="${y(10)}" stroke="#38383A" stroke-width="1"/>
-       <path d="${d}" fill="none" stroke="${fin >= 10 ? "#FFD426" : "#FF453A"}"
-         stroke-width="2" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>`;
-  }
+  let eq = INI, ops = 0, ganadas = 0, pico = INI, hundido = 0;
+  let curva = [INI], cinta = [], reloj = null, ritmo = 1000, fin = null;
 
-  function pintar(s){
-    $("tEq").textContent = "$" + s.eq.toFixed(2);
-    $("tEq").style.color = s.fin === "ruina" ? "var(--neg)" : "#FFD426";
-    $("tX").textContent = `×${s.x.toFixed(2)} · ${s.hechas} de ${s.total} operaciones`
-      + (s.hechas ? ` · ${s.aciertos} acierto${s.aciertos === 1 ? "" : "s"}` : "");
-    $("tBar").style.width = Math.min(100, s.eq / s.objetivo * 100).toFixed(1) + "%";
-    $("tFin").textContent = {objetivo: "Llegó a $100. Una de cada tres no llega ni de lejos.",
-      ruina: "Cero. No hay vuelta atrás: por debajo de $1 no se puede ni operar.",
-      agotada: "Se acabaron las 5 horas sin llegar."}[s.fin] || (s.hechas ? "En marcha…" : "—");
-    $("tFin").style.color = s.fin === "ruina" ? "var(--neg)"
-      : (s.fin === "objetivo" ? "var(--pos)" : "var(--dim)");
-    curva(s.curva, s.objetivo);
-    $("tOps").innerHTML = s.ops.map(o =>
-      `<div><span class="dim">#${o.n}</span>
-        <span class="${o.gana ? "pos" : "neg"}">${o.gana ? "▲" : "▼"} ${o.delta > 0 ? "+" : ""}${o.delta.toFixed(2)}</span>
-        <span>$${o.despues.toFixed(2)}</span></div>`).join("")
-      || '<div class="dim" style="border:0">Sin operaciones todavía.</div>';
-    if(s.mc){
-      $("tNeed").textContent = (s.mc.need * 100).toFixed(1).replace(".", ",") + "%";
-      $("tMc").innerHTML = "<tr><th>Acierto</th><th>Llega a 100</th><th>Acaba en 0</th></tr>"
-        + s.mc.filas.map(f => `<tr><td>${(f.p * 100).toFixed(1).replace(".", ",")}%</td>
-            <td class="pos">${(f.objetivo * 100).toFixed(0)}%</td>
-            <td class="neg">${(f.ruina * 100).toFixed(0)}%</td></tr>`).join("");
+  try{
+    const g = JSON.parse(localStorage.getItem(CLAVE) || "null");
+    if(g && typeof g.eq === "number"){
+      ({eq, ops, ganadas, pico, hundido, fin} = g);
+      curva = g.curva || [INI]; cinta = g.cinta || [];
     }
-    // Al lanzar, la sesión aún tiene 0 operaciones: mirar `hechas` aquí apagaba
-    // el sondeo justo en el primer tick y la curva se quedaba congelada.
-    vivo = arrancada && !s.fin;
+  }catch(e){}
+
+  const guardar = () => { try{ localStorage.setItem(CLAVE, JSON.stringify(
+    {eq, ops, ganadas, pico, hundido, fin, curva: curva.slice(-600), cinta: cinta.slice(0,12)})); }catch(e){} };
+
+  /* ── la curva, en log: entre $1 y $100 hay dos órdenes de magnitud y en
+     escala normal el tramo de abajo sería una raya pegada al suelo ── */
+  const W = 620, H = 150, LO = Math.log(0.75), HI = Math.log(135);
+  const yOf = v => H - 12 - (Math.log(Math.min(Math.max(v, .75), 135)) - LO)/(HI-LO)*(H-24);
+  const xOf = (i,n) => 28 + (n<2 ? 0 : i/(n-1))*(W-40);
+  function dibujar(){
+    /* miles de puntos no caben en 600px: se enseña una muestra regular */
+    const p = curva.length > 600
+      ? curva.filter((_,i)=> i % Math.ceil(curva.length/600) === 0).concat(curva[curva.length-1])
+      : curva;
+    const n = p.length, ult = p[n-1];
+    const guia = (v,c,extra,txt) => `<line x1="28" y1="${yOf(v).toFixed(1)}" x2="${W-12}"
+        y2="${yOf(v).toFixed(1)}" stroke="${c}" stroke-width="1" ${extra}/>
+      <text x="0" y="${(yOf(v)+3.5).toFixed(1)}" fill="var(--faint)" font-size="9"
+        font-family="var(--num)">${txt}</text>`;
+    const d = p.map((v,i)=>`${i?"L":"M"}${xOf(i,n).toFixed(1)} ${yOf(v).toFixed(1)}`).join(" ");
+    const col = eq >= INI ? "#FFD426" : "var(--neg)";
+    $("tCurve").innerHTML =
+        guia(META, "var(--pos)", 'stroke-dasharray="3 3" opacity=".7"', "$100")
+      + guia(INI,  "var(--hair)", "", "$10")
+      + guia(STOP, "var(--neg)", 'stroke-dasharray="3 3" opacity=".7"', "$1")
+      + `<path d="${d}" fill="none" stroke="${col}" stroke-width="1.6"
+           stroke-linejoin="round"/>`
+      + (n>1 ? `<circle cx="${xOf(n-1,n).toFixed(1)}" cy="${yOf(ult).toFixed(1)}"
+           r="3" fill="${col}"/>` : "");
   }
 
-  const leer = q => fetch("/api/turbo" + (q || "")).then(r => r.json()).then(pintar).catch(()=>{});
-  $("tGo").onclick = () => {
-    arrancada = true;
-    leer("?lanzar=1" + (acierto ? "&acierto=" + acierto : ""));
+  const anos = () => ops / 252;          // el backtest es diario: 1 op ≈ 1 día de mercado
+  function pintar(){
+    $("tEq").textContent = "$" + eq.toFixed(2);
+    $("tEq").style.color = eq < INI ? "var(--neg)" : "#FFD426";
+    $("tX").textContent = `×${(eq/INI).toFixed(2)} · ${ops.toLocaleString("es")} operaciones`;
+    $("tT").textContent = ops < 252
+      ? `${ops} días de mercado`
+      : `${anos().toFixed(1)} años de mercado`;
+    /* la barra mide el camino en logaritmo, que es el que de verdad se recorre */
+    const av = (Math.log(Math.max(eq,STOP)) - Math.log(INI)) / (Math.log(META) - Math.log(INI));
+    $("tBar").style.width = Math.max(0, Math.min(100, av*100)).toFixed(1) + "%";
+    $("tKv").innerHTML = [
+      ["Ganadoras", ops ? (ganadas/ops*100).toFixed(0) + " %" : "—"],
+      ["Máximo", "$" + pico.toFixed(2)],
+      ["Caída máx.", (hundido*100).toFixed(1) + " %"],
+      ["Por operación", ops ? ((Math.pow(eq/INI, 1/ops)-1)*100).toFixed(3) + " %" : "—"],
+    ].map(([k,v]) => `<div><dt>${k}</dt><dd>${v}</dd></div>`).join("");
+    $("tOps").innerHTML = cinta.length ? cinta.map(o =>
+      `<div><span class="dim">#${o.n}</span>
+        <span class="${o.r>=0?"pos":"neg"}">${o.r>=0?"▲":"▼"} ${(o.r*100).toFixed(2)} %</span>
+        <span>$${o.eq.toFixed(2)}</span></div>`).join("")
+      : '<div class="dim" style="border:0;padding:6px 0">Sin operaciones todavía.</div>';
+    dibujar();
+  }
+
+  function parar(txt, cls){
+    clearInterval(reloj); reloj = null;
+    if(txt){ fin = {txt, cls}; }
+    const f = fin || {txt: txt || "Parada.", cls: ""};
+    $("tFin").textContent = f.txt;
+    $("tFin").style.color = f.cls === "mal" ? "var(--neg)"
+      : (f.cls === "bien" ? "var(--pos)" : "var(--dim)");
+    guardar();
+  }
+
+  function paso(){
+    const r = R[Math.floor(Math.random()*R.length)];
+    eq *= 1 + r; ops++; if(r > 0) ganadas++;
+    pico = Math.max(pico, eq);
+    hundido = Math.max(hundido, (pico - eq)/pico);
+    curva.push(eq);
+    if(curva.length > 4000) curva = curva.filter((_,i)=> i % 2 === 0);
+    cinta.unshift({n: ops, r, eq}); if(cinta.length > 12) cinta.pop();
+    /* el pulpo reacciona a lo que le pasa a la cuenta */
+    if(typeof setFace === "function"){
+      if(r > 0.02) setFace(null, "happy");
+      else if(r < -0.015) setFace(null, "sad");
+      else if(ops % 7 === 0) setFace(null, "think");
+    }
+    if(ops % 25 === 0) guardar();
+    pintar();
+    if(eq >= META)      parar(`Objetivo. $${eq.toFixed(2)} en ${ops.toLocaleString("es")} operaciones — ${anos().toFixed(1)} años de mercado.`, "bien");
+    else if(eq <= STOP) parar(`Stop de $1. Por debajo, ningún exchange acepta la orden.`, "mal");
+  }
+
+  function arrancar(){
+    if(reloj) return;
+    if(eq >= META || eq <= STOP) return;
+    fin = null;
+    $("tFin").textContent = "En marcha…"; $("tFin").style.color = "var(--dim)";
+    reloj = setInterval(paso, ritmo);
+  }
+
+  $("tGo").onclick = arrancar;
+  $("tStop").onclick = () => parar("Parada a mano. Dale a Lanzar para seguir.", "");
+  $("tReset").onclick = () => {
+    clearInterval(reloj); reloj = null;
+    eq = INI; ops = 0; ganadas = 0; pico = INI; hundido = 0;
+    curva = [INI]; cinta = []; fin = null;
+    guardar(); pintar();
+    $("tFin").textContent = "De vuelta a $10."; $("tFin").style.color = "var(--dim)";
   };
-  document.querySelectorAll(".tp").forEach(b => b.onclick = () => {
-    acierto = b.dataset.p;
-    document.querySelectorAll(".tp").forEach(o =>
+  document.querySelectorAll(".tv").forEach(b => b.onclick = () => {
+    ritmo = parseInt(b.dataset.v, 10);
+    document.querySelectorAll(".tv").forEach(o =>
       o.setAttribute("aria-pressed", String(o === b)));
+    if(reloj){ clearInterval(reloj); reloj = setInterval(paso, ritmo); }
   });
-  leer();
-  setInterval(() => { if(vivo) leer(); }, 1500);
+
+  /* Lo que dice el banco de pruebas sobre este mismo camino, medido con las
+     mismas 44 operaciones y 20.000 simulaciones. */
+  /* Aquí los retornos no vienen incrustados: los sirve /api/turbo desde el
+     backtest que acaba de correr. Hasta que llegan, no se opera. */
+  pintar();
+  fetch("/api/turbo").then(r => r.json()).then(d => {
+    R = (d.retornos && d.retornos.length) ? d.retornos : [0];
+    const anos = ((d.mediana_ops || 0) / 252).toFixed(0);
+    $("tNota").innerHTML = `Resampleando las <b>${d.operaciones} operaciones reales</b>
+      del sistema: llega a $100 el <b>${(d.llega * 100).toFixed(1).replace(".", ",")}%</b>
+      de las veces y toca el stop de $1 el ${(d.ruina * 100).toFixed(1).replace(".", ",")}%.
+      Pero la mediana son <b>${(d.mediana_ops || 0).toLocaleString("es")} operaciones</b>
+      — a una al día, <b>${anos} años</b>. Esa es la ventaja real que hay medida:
+      existe, y es así de lenta.`;
+    if(fin){ parar(); } else { arrancar(); }
+  }).catch(() => { $("tFin").textContent = "Sin datos del sistema todavía."; });
 })();
 </script>

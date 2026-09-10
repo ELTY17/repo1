@@ -124,6 +124,33 @@ class Sesion:
         }
 
 
+def camino(returns, inicio=10.0, meta=100.0, stop=1.0, runs=20000, seed=11):
+    """Desde $10 y resampleando operaciones reales, ¿se llega a $100 o a $1?
+
+    Es la misma pregunta del titular, pero hecha con los resultados que el
+    sistema saca de verdad en vez de con una palanca inventada. La respuesta
+    cambia por completo: se llega casi siempre, y se tarda una eternidad.
+    """
+    if not returns:
+        return {"llega": 0.0, "ruina": 0.0, "mediana_ops": None}
+    rng = random.Random(seed)
+    llega = 0
+    pasos = []
+    for _ in range(runs):
+        eq, n = inicio, 0
+        while stop <= eq < meta and n < 200000:
+            eq *= 1 + returns[rng.randrange(len(returns))]
+            n += 1
+        if eq >= meta:
+            llega += 1
+            pasos.append(n)
+    pasos.sort()
+    return {"llega": round(llega / runs, 4),
+            "ruina": round(1 - llega / runs, 4),
+            "mediana_ops": pasos[len(pasos) // 2] if pasos else None,
+            "operaciones": len(returns)}
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--inicio", type=float, default=10.0)
