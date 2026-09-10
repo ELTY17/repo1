@@ -159,16 +159,16 @@ footer{margin-top:14px;font-family:var(--num);font-size:9.5px;color:var(--faint)
 @keyframes flow{to{stroke-dashoffset:-64}}
 @keyframes corepulse{0%,100%{opacity:.30}50%{opacity:.60}}
 @keyframes lampglow{0%,100%{opacity:1}50%{opacity:.45}}
-@keyframes blinkeye{0%,94%,100%{transform:scaleY(1)}97%{transform:scaleY(.08)}}
-.link{stroke-dasharray:5 11;animation:flow 2.6s linear infinite}
-.link.hot{stroke-dasharray:5 7;animation-duration:.75s}
+.blob{transition:transform .35s cubic-bezier(.3,1.6,.5,1);transform-box:fill-box;transform-origin:center}
+.lid{transform-box:fill-box;transform-origin:top;transform:scaleY(0);
+  animation:blinkeye 7s ease-in-out infinite}
+@keyframes blinkeye{0%,94%,100%{transform:scaleY(0)}97%{transform:scaleY(1)}}
 .halo{animation:corepulse 4s ease-in-out infinite}
 .lamp{transition:fill .3s} .lamp.lit{animation:lampglow 1.4s ease-in-out infinite}
-.eyes{transform-box:fill-box;transform-origin:center;animation:blinkeye 7s ease-in-out infinite}
 .blob{transition:transform .35s cubic-bezier(.3,1.6,.5,1)}
 .mantle{transition:fill 1s ease}
 @media (prefers-reduced-motion:reduce){
-  .link,.halo,.lamp.lit,.eyes{animation:none}
+  .halo,.lamp.lit,.lid{animation:none}
 }
 </style>
 
@@ -225,12 +225,12 @@ footer{margin-top:14px;font-family:var(--num);font-size:9.5px;color:var(--faint)
   </div>
 
   <section class="p" style="margin-top:8px">
-    <div class="ph"><i class="sq"></i><b>EL ANILLO</b>
-      <span class="r">CINCO BRAZOS · UN CEREBRO · CADA HILO ES UN IMPULSO QUE DE VERDAD SE MANDÓ</span></div>
+    <div class="ph"><i class="sq"></i><b>EL PULPO</b>
+      <span class="r">OCHO BRAZOS · CINCO CON INSTRUMENTO · CADA IMPULSO ES UN VOTO QUE DE VERDAD SE MANDÓ</span></div>
     <div class="ringwrap">
       <div class="rail" id="railL"></div>
-      <svg id="ring" viewBox="0 0 1000 400" role="img"
-        aria-label="Cinco agentes conectados al cerebro que decide"></svg>
+      <svg id="ring" viewBox="0 0 1000 480" role="img"
+        aria-label="Un pulpo cuyos ocho brazos son los agentes del sistema"></svg>
       <div class="rail rr" id="railR"></div>
     </div>
   </section>
@@ -333,103 +333,213 @@ const cl = v => v>0?"pos":(v<0?"neg":"dim");
 const pctS = v => (v>=0?"+":"−") + Math.abs(v*100).toFixed(2) + " %";
 
 const R = D.rounds, CURVE = D.curve, NB = CURVE.length, BASE = 100;
+
+/* ================= EL PULPO ================= */
+/* Anatomía: manto (el saco), cabeza con los ojos a los lados y la pupila
+   horizontal, membrana interbraquial entre las bases, y ocho brazos que se
+   afilan con dos hileras de ventosas alternas en la cara oral. Cinco brazos
+   sujetan un instrumento; los otros tres solo se mueven. */
+
 const AG = {
-  news:{n:"NOTICIAS", c:"var(--c-news)", x:190, y:86,  job:"TITULARES"},
-  scan:{n:"ESCÁNER",  c:"var(--c-scan)", x:146, y:246, job:"FUERZA RELATIVA"},
-  tech:{n:"TÉCNICO",  c:"var(--c-tech)", x:360, y:344, job:"INDICADORES"},
-  risk:{n:"RIESGO",   c:"var(--c-risk)", x:676, y:344, job:"VETO Y TAMAÑO"},
-  exec:{n:"EJECUCIÓN",c:"var(--c-exec)", x:856, y:118, job:"ÓRDENES"},
+  news:{n:"NOTICIAS", c:"var(--c-news)", job:"TITULARES",      tip:[142, 92]},
+  scan:{n:"ESCÁNER",  c:"var(--c-scan)", job:"FUERZA RELATIVA",tip:[ 96,258]},
+  tech:{n:"TÉCNICO",  c:"var(--c-tech)", job:"INDICADORES",    tip:[266,424]},
+  risk:{n:"RIESGO",   c:"var(--c-risk)", job:"VETO Y TAMAÑO",  tip:[744,422]},
+  exec:{n:"EJECUCIÓN",c:"var(--c-exec)", job:"ÓRDENES",        tip:[908,162]},
 };
 const KEYS = Object.keys(AG);
-const CORE = {x:500, y:196, r:74};
 $("gthr").style.left = ((0.35+1)/2*100) + "%";
 
-/* ================= EL ANILLO ================= */
-function blobShape(k, c){
-  const P = `fill="${c}" stroke="#060F0E" stroke-width="3" stroke-linejoin="round"`;
-  if(k==="news") return `<rect x="-24" y="-24" width="48" height="48" rx="15" ${P}/>`;
-  if(k==="scan") return `<circle r="26" ${P}/>`;
-  if(k==="tech") return `<path d="M0 -30 L28 0 L0 30 L-28 0 Z" ${P}/>`;
-  if(k==="risk") return `<path d="M0 -28 L27 20 Q29 27 22 27 L-22 27 Q-29 27 -27 20 Z" ${P}/>`;
-  return `<path d="M-14 -24 H14 L27 0 L14 24 H-14 L-27 0 Z" ${P}/>`;
+const CROWN = {x:500, y:262};
+/* ocho brazos: base en la corona, punta donde toca, y dos combas que le dan
+   la curva en S que hace que un tentáculo parezca vivo y no un cable */
+const ARMS = [
+  {k:"news",  base:[434,234], bow:[ 62,-38], w:21},
+  {k:"scan",  base:[446,252], bow:[ 44, 34], w:21},
+  {k:"tech",  base:[470,266], bow:[ 52,-30], w:20},
+  {k:"f1",    base:[492,272], bow:[-34, 28], w:18, tip:[418,458]},
+  {k:"f2",    base:[514,272], bow:[ 30,-26], w:18, tip:[612,456]},
+  {k:"risk",  base:[536,264], bow:[-50,-30], w:20},
+  {k:"exec",  base:[558,250], bow:[-58,-40], w:21},
+  {k:"f3",    base:[570,232], bow:[-30, 34], w:17, tip:[956,306]},
+];
+ARMS.forEach(a=>{ if(AG[a.k]) a.tip = AG[a.k].tip; });
+
+const NS = 30;                                     // muestras por brazo
+function cubic(p0,c1,c2,p3,t){
+  const u=1-t, a=u*u*u, b=3*u*u*t, c=3*u*t*t, d=t*t*t;
+  return [a*p0[0]+b*c1[0]+c*c2[0]+d*p3[0], a*p0[1]+b*c1[1]+c*c2[1]+d*p3[1]];
 }
-function eyes(k){
-  const w = k==="tech" ? 5 : 6;
-  return `<g class="eyes" style="animation-delay:${KEYS.indexOf(k)*1.3}s">
-    <rect x="${-w-4}" y="-5" width="${w}" height="13" rx="${w/2}" fill="#fff"/>
-    <rect x="4" y="-5" width="${w}" height="13" rx="${w/2}" fill="#fff"/></g>`;
+function normals(pts){
+  return pts.map((p,i)=>{
+    const q=pts[Math.min(i+1,pts.length-1)], o=pts[Math.max(i-1,0)];
+    let dx=q[0]-o[0], dy=q[1]-o[1];
+    const m=Math.hypot(dx,dy)||1;
+    return [-dy/m, dx/m];
+  });
 }
-(function buildRing(){
-  const links = KEYS.map(k=>{
-    const a = AG[k];
-    const dx = CORE.x-a.x, dy = CORE.y-a.y, m = Math.hypot(dx,dy);
-    const ex = CORE.x - dx/m*(CORE.r+4), ey = CORE.y - dy/m*(CORE.r+4);
-    const mx = (a.x+ex)/2 - dy/m*46, my = (a.y+ey)/2 + dx/m*46;
-    return `<path id="lk-${k}" class="link" d="M${a.x} ${a.y} Q${mx.toFixed(0)} ${my.toFixed(0)} ${ex.toFixed(0)} ${ey.toFixed(0)}"
-      fill="none" stroke="${a.c}" stroke-width="2.4" opacity=".5" stroke-linecap="round"/>`;
-  }).join("");
-  const ghosts = KEYS.map(k=>{
-    const a = AG[k];
-    const dx = CORE.x-a.x, dy = CORE.y-a.y, m = Math.hypot(dx,dy);
-    const ex = CORE.x - dx/m*(CORE.r+4), ey = CORE.y - dy/m*(CORE.r+4);
-    const mx = (a.x+ex)/2 + dy/m*30, my = (a.y+ey)/2 - dx/m*30;
-    return `<path d="M${a.x} ${a.y} Q${mx.toFixed(0)} ${my.toFixed(0)} ${ex.toFixed(0)} ${ey.toFixed(0)}"
-      fill="none" stroke="${a.c}" stroke-width="1" opacity=".16"/>`;
-  }).join("");
-  const blobs = KEYS.map(k=>{
-    const a = AG[k];
-    return `<g transform="translate(${a.x},${a.y})"><g class="blob" id="bl-${k}">
-      ${blobShape(k,a.c)}${eyes(k)}</g>
-      <circle class="lamp" id="lamp-${k}" cx="0" cy="-40" r="4.5" fill="var(--sunk)"
-        stroke="#060F0E" stroke-width="2"/></g>`;
-  }).join("");
-  $("ring").innerHTML = `
-    <g>${ghosts}</g><g>${links}</g>
-    <circle class="halo" cx="${CORE.x}" cy="${CORE.y}" r="${CORE.r+30}" fill="var(--oct)" opacity=".3"/>
-    <circle cx="${CORE.x}" cy="${CORE.y}" r="${CORE.r}" fill="#04100E" stroke="var(--oct)" stroke-width="3"/>
-    <circle class="mantle" id="mantle" cx="${CORE.x}" cy="${CORE.y}" r="${CORE.r-8}"
-      fill="#071614" stroke="var(--oct-dark)" stroke-width="2"/>
-    <g class="eyes"><rect x="${CORE.x-30}" y="${CORE.y-22}" width="15" height="38" rx="7.5" fill="#fff"/>
-      <rect x="${CORE.x+15}" y="${CORE.y-22}" width="15" height="38" rx="7.5" fill="#fff"/></g>
-    <text id="chest" x="${CORE.x}" y="${CORE.y+52}" text-anchor="middle"
-      font-family="IBM Plex Mono,monospace" font-size="17" font-weight="600"
-      fill="var(--oct-lite)">· · ·</text>
-    <text x="${CORE.x}" y="${CORE.y-46}" text-anchor="middle" font-family="IBM Plex Mono,monospace"
-      font-size="9" letter-spacing="2.5" fill="var(--faint)">CEREBRO</text>
-    <g id="blobs">${blobs}</g>
-    <g id="pulses"></g>`;
-  KEYS.forEach(k=>{
-    const a = AG[k];
-    const t = document.createElementNS("http://www.w3.org/2000/svg","text");
-    t.setAttribute("x", a.x); t.setAttribute("y", a.y + 52);
-    t.setAttribute("text-anchor","middle");
-    t.setAttribute("font-family","IBM Plex Mono,monospace");
-    t.setAttribute("font-size","9.5"); t.setAttribute("letter-spacing","1.6");
-    t.setAttribute("fill","var(--dim)"); t.textContent = a.n;
-    $("ring").appendChild(t);
+function widthAt(t, w0){ return Math.max(w0*Math.pow(1-t,1.35)+2.2, 2.2); }
+function outline(pts, ns, w0){
+  const L=[], R=[];
+  pts.forEach((p,i)=>{
+    const t=i/(pts.length-1), w=widthAt(t,w0), n=ns[i];
+    L.push([p[0]+n[0]*w, p[1]+n[1]*w]);
+    R.push([p[0]-n[0]*w, p[1]-n[1]*w]);
+  });
+  const f=p=>`${p[0].toFixed(1)},${p[1].toFixed(1)}`;
+  return "M"+L.map(f).join("L")+"L"+R.reverse().map(f).join("L")+"Z";
+}
+
+/* ---- instrumentos que sujeta cada punta ---- */
+function pod(k){
+  const a=AG[k], P='stroke="#04100E" stroke-width="2.2" stroke-linejoin="round"';
+  let g="";
+  if(k==="news") g=`<rect x="-21" y="-16" width="42" height="30" rx="3" fill="var(--sunk)" ${P}/>
+    <rect x="-15" y="-11" width="30" height="5" rx="2" fill="${a.c}"/>
+    <line x1="-15" y1="0" x2="15" y2="0" stroke="var(--dim)" stroke-width="1.8"/>
+    <line x1="-15" y1="6" x2="6" y2="6" stroke="var(--dim)" stroke-width="1.8"/>`;
+  if(k==="scan") g=`<circle r="20" fill="var(--sunk)" ${P}/>
+    <circle r="12" fill="none" stroke="var(--dim)" stroke-width="1.3"/>
+    <path d="M0 0 L-3 -20 A20 20 0 0 1 3 -20 Z" fill="${a.c}" opacity=".8"/>
+    <circle r="2.6" fill="${a.c}"/>`;
+  if(k==="tech") g=`<rect x="-23" y="-17" width="46" height="34" rx="3" fill="var(--sunk)" ${P}/>
+    <polyline points="-17,4 -12,-3 -7,7 -2,-8 3,2 8,-5 13,3 17,-2" fill="none"
+      stroke="${a.c}" stroke-width="2"/>`;
+  if(k==="risk") g=`<line x1="-19" y1="-12" x2="19" y2="-12" stroke="${a.c}" stroke-width="3.4"
+      stroke-linecap="round"/><line x1="0" y1="-12" x2="0" y2="6" stroke="${a.c}" stroke-width="2.6"/>
+    <path d="M-19 -12 l-6 10 h12 z" fill="var(--neg)" ${P}/>
+    <path d="M19 -12 l-6 10 h12 z" fill="var(--pos)" ${P}/>
+    <rect x="-17" y="6" width="34" height="16" rx="3" fill="var(--sunk)" ${P}/>`;
+  if(k==="exec") g=`<path d="M-22 16 l5 -14 h34 l5 14 z" fill="var(--sunk)" ${P}/>
+    <circle cy="-6" r="12" fill="var(--neg)" ${P}/>
+    <circle cy="-9" r="7" fill="none" stroke="#fff" stroke-opacity=".28" stroke-width="2.4"/>`;
+  return `<g transform="translate(${a.tip[0]},${a.tip[1]})"><g class="blob" id="bl-${k}">${g}</g>
+    <circle class="lamp" id="lamp-${k}" cx="0" cy="-30" r="4.6" fill="var(--sunk)"
+      stroke="#04100E" stroke-width="2"/>
+    <text y="42" text-anchor="middle" font-family="IBM Plex Mono,monospace" font-size="9.5"
+      letter-spacing="1.5" fill="var(--dim)">${a.n}</text></g>`;
+}
+
+/* ---- cabeza: manto, moteado, ojos ---- */
+function headSVG(){
+  /* manto en forma de saco, más ancho arriba y estrechando hacia la cabeza */
+  const mantle = "M500 44 C 566 44, 606 96, 606 152 C 606 200, 578 232, 556 250 "
+               + "C 534 268, 466 268, 444 250 C 422 232, 394 200, 394 152 "
+               + "C 394 96, 434 44, 500 44 Z";
+  /* manchas de piel: fijas, no aleatorias en cada fotograma */
+  const spots = [[462,92,17,11,-18],[540,86,13,9,22],[500,66,10,7,4],[430,140,15,10,-8],
+                 [572,136,14,9,12],[478,178,19,12,-14],[534,190,15,10,10],[500,128,12,8,0],
+                 [446,196,11,7,26],[556,206,10,7,-20]]
+    .map(([x,y,rx,ry,r])=>`<ellipse cx="${x}" cy="${y}" rx="${rx}" ry="${ry}"
+      transform="rotate(${r} ${x} ${y})" fill="var(--oct-dark)" opacity=".38"/>`).join("");
+  /* papilas: los bultitos de la piel */
+  const bumps = [[452,118],[486,104],[520,112],[554,150],[418,164],[500,158],[468,144],
+                 [536,132],[582,168],[440,86]]
+    .map(([x,y])=>`<circle cx="${x}" cy="${y}" r="3.1" fill="var(--oct-lite)" opacity=".28"/>`).join("");
+  const eye = (cx, flip)=>`<g>
+    <ellipse cx="${cx}" cy="228" rx="30" ry="24" fill="var(--oct-dark)"/>
+    <ellipse cx="${cx}" cy="226" rx="25" ry="19" fill="#EDE3D2"/>
+    <rect x="${cx-18}" y="220" width="36" height="11" rx="5.5" fill="#120D0A"/>
+    <ellipse cx="${cx-8*flip}" cy="221" rx="5" ry="3.4" fill="#fff" opacity=".92"/>
+    <path d="M${cx-28} 220 q28 -19 56 0" fill="none" stroke="var(--oct-dark)"
+      stroke-width="4.5" stroke-linecap="round"/>
+    <ellipse class="lid" cx="${cx}" cy="226" rx="26" ry="20" fill="var(--oct)"/></g>`;
+  return `<g id="octo">
+    <ellipse class="halo" cx="500" cy="158" rx="122" ry="128" fill="var(--oct)" opacity=".07"/>
+    <path d="${mantle}" fill="var(--oct)" stroke="#04100E" stroke-width="3"/>
+    <clipPath id="mclip"><path d="${mantle}"/></clipPath>
+    <g clip-path="url(#mclip)">
+      <ellipse cx="470" cy="96" rx="46" ry="58" fill="#fff" opacity=".09"/>
+      ${spots}${bumps}
+      <path class="mantle" id="mantle" d="${mantle}" fill="var(--oct)" opacity="0"/>
+    </g>
+    <path d="M424 214 q76 34 152 0" fill="none" stroke="var(--oct-dark)" stroke-width="3" opacity=".55"/>
+    <path d="M578 196 q22 6 20 26 q-14 6 -24 -8 z" fill="var(--oct-dark)"
+      stroke="#04100E" stroke-width="2.4"/>
+    ${eye(452,1)} ${eye(548,-1)}
+    <path d="M436 254 q18 22 32 12 q16 20 32 8 q16 12 32 -8 q14 10 32 -12"
+      fill="var(--oct-dark)" opacity=".85" stroke="#04100E" stroke-width="2"/>
+    <text id="chest" x="500" y="308" text-anchor="middle" font-family="IBM Plex Mono,monospace"
+      font-size="17" font-weight="600" fill="var(--faint)">· · ·</text>
+    <text x="500" y="30" text-anchor="middle" font-family="IBM Plex Mono,monospace"
+      font-size="9" letter-spacing="2.6" fill="var(--faint)">CEREBRO</text>
+  </g>`;
+}
+
+(function buildOcto(){
+  const arms = ARMS.map(a=>`<g id="arm-${a.k}">
+      <path id="body-${a.k}" fill="var(--oct)" stroke="#04100E" stroke-width="2.4"
+        stroke-linejoin="round"/>
+      <g id="suck-${a.k}"></g>
+      <path id="lk-${a.k}" fill="none" stroke="none"/>
+    </g>`).join("");
+  $("ring").innerHTML = `<g id="arms">${arms}</g>${headSVG()}
+    ${KEYS.map(pod).join("")}<g id="pulses"></g>`;
+  ARMS.forEach(a=>{
+    const g = $("suck-"+a.k);
+    g.innerHTML = Array.from({length:2*14},(_,i)=>
+      `<circle id="sk-${a.k}-${i}" r="2.6" fill="var(--oct-lite)" stroke="var(--oct-dark)"
+        stroke-width=".8" opacity=".9"/>`).join("");
   });
 })();
 
-/* impulsos que recorren el hilo */
+/* ---- movimiento: cada brazo ondula a su aire; el que trabaja, más ---- */
+const REDUCED = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+const armState = {};
+ARMS.forEach((a,i)=>armState[a.k]={ph:i*2.1, amp:1});
+
+(function swim(t){
+  ARMS.forEach(a=>{
+    const st = armState[a.k];
+    const on = KEYS.includes(a.k) && $("bl-"+a.k) &&
+               $("bl-"+a.k).dataset.busy === "1";
+    st.amp += ((on?2.6:1) - st.amp) * 0.06;
+    const w = REDUCED ? 0 : st.amp;
+    const s1 = Math.sin(t*0.0012 + st.ph), s2 = Math.sin(t*0.0017 + st.ph*1.6);
+    const bx = a.tip[0]-a.base[0], by = a.tip[1]-a.base[1];
+    const m = Math.hypot(bx,by)||1, nx = -by/m, ny = bx/m;
+    /* dos combas opuestas = curva en S */
+    const c1 = [a.base[0]+bx*0.34 + nx*(a.bow[0]+s1*13*w), a.base[1]+by*0.34 + ny*(a.bow[0]+s1*13*w)];
+    const c2 = [a.base[0]+bx*0.70 + nx*(a.bow[1]+s2*15*w), a.base[1]+by*0.70 + ny*(a.bow[1]+s2*15*w)];
+    const pts = Array.from({length:NS},(_,i)=>cubic(a.base,c1,c2,a.tip,i/(NS-1)));
+    const ns = normals(pts);
+    $("body-"+a.k).setAttribute("d", outline(pts, ns, a.w));
+    $("lk-"+a.k).setAttribute("d",
+      "M"+pts.map(p=>`${p[0].toFixed(1)},${p[1].toFixed(1)}`).join("L"));
+    /* dos hileras de ventosas, alternas, en la cara oral */
+    for(let i=0;i<14;i++){
+      const idx = 2 + i*2, tt = idx/(NS-1);
+      const p = pts[Math.min(idx,NS-1)], n = ns[Math.min(idx,NS-1)];
+      const wA = widthAt(tt, a.w)*0.42, r = Math.max(3.4 - i*0.19, 1.1);
+      [[0, wA],[1,-wA]].forEach(([row,off],q)=>{
+        const e = $(`sk-${a.k}-${i*2+q}`);
+        const k2 = off + (row ? 0 : 0);
+        e.setAttribute("cx",(p[0]+n[0]*k2).toFixed(1));
+        e.setAttribute("cy",(p[1]+n[1]*k2).toFixed(1));
+        e.setAttribute("r", r.toFixed(1));
+      });
+    }
+  });
+  requestAnimationFrame(swim);
+})(performance.now());
+
+/* ---- impulsos por el brazo ---- */
 const live = [];
 function sendPulse(k, outward, color){
   const path = $("lk-"+k); if(!path) return;
-  const ns = "http://www.w3.org/2000/svg";
-  const c = document.createElementNS(ns,"circle");
-  c.setAttribute("r","5.5"); c.setAttribute("fill", color || AG[k].c);
+  const c = document.createElementNS("http://www.w3.org/2000/svg","circle");
+  c.setAttribute("r","5.5"); c.setAttribute("fill", color || (AG[k]?AG[k].c:"var(--brass)"));
   $("pulses").appendChild(c);
-  live.push({el:c, path, L:path.getTotalLength(), t0:performance.now(),
-             dur:850/speed, out:!!outward});
-  $("lk-"+k).classList.add("hot");
-  setTimeout(()=>$("lk-"+k) && $("lk-"+k).classList.remove("hot"), 900/speed);
+  live.push({el:c, path, t0:performance.now(), dur:850/speed, out:!!outward});
 }
 (function anim(now){
   for(let i=live.length-1;i>=0;i--){
-    const p = live[i], k = Math.min((now-p.t0)/p.dur, 1);
+    const p=live[i], k=Math.min((now-p.t0)/p.dur,1);
     const e = k<.5 ? 2*k*k : 1-Math.pow(-2*k+2,2)/2;
-    const pt = p.path.getPointAtLength((p.out ? 1-e : e) * p.L);
-    p.el.setAttribute("cx", pt.x); p.el.setAttribute("cy", pt.y);
-    p.el.setAttribute("opacity", (1 - Math.pow(k,4)).toFixed(2));
+    const L = p.path.getTotalLength();
+    const pt = p.path.getPointAtLength((p.out ? e : 1-e) * L);
+    p.el.setAttribute("cx",pt.x); p.el.setAttribute("cy",pt.y);
+    p.el.setAttribute("opacity",(1-Math.pow(k,4)).toFixed(2));
     if(k>=1){ p.el.remove(); live.splice(i,1); }
   }
   requestAnimationFrame(anim);
@@ -437,7 +547,8 @@ function sendPulse(k, outward, color){
 
 function busy(k, on){
   const b = $("bl-"+k); if(!b) return;
-  b.style.transform = on ? "scale(1.16)" : "scale(1)";
+  b.dataset.busy = on ? "1" : "0";
+  b.style.transform = on ? "scale(1.18)" : "scale(1)";
   const rc = $("rc-"+k); if(rc) rc.classList.toggle("on", on);
 }
 function calm(){ KEYS.forEach(k=>busy(k,false)); }
@@ -446,9 +557,16 @@ function lamp(k, on){
   e.classList.toggle("lit", on);
   e.setAttribute("fill", on ? AG[k].c : "var(--sunk)");
 }
-const MOOD = {neutral:"#071614", happy:"#0B2A20", sad:"#2A100C", think:"#0E1F1C", wow:"#0B2A20"};
-function setFace(_, mood){ const m=$("mantle"); if(m) m.setAttribute("fill", MOOD[mood]||MOOD.neutral); }
+/* los pulpos cambian de color de verdad: el manto vira según cómo vaya */
+const MOOD = {neutral:"var(--oct)", happy:"#2F8F63", sad:"#8E2F22",
+              think:"#A05A3E", wow:"#2F8F63"};
+function setFace(_, mood){
+  const m = $("mantle"); if(!m) return;
+  m.setAttribute("fill", MOOD[mood] || MOOD.neutral);
+  m.setAttribute("opacity", mood && mood!=="neutral" ? ".72" : "0");
+}
 function allFaces(m){ setFace(0,m); }
+function pressButton(){}
 
 /* raíl derecho: lecturas del activo en juego */
 const RAILR = [
