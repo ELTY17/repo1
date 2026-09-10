@@ -25,6 +25,7 @@ python3 -m bot.montecarlo            # cono de ruina: 10.000 futuros posibles
 python3 -m bot.backtest --fees       # cuánto aguanta según lo que cobre el exchange
 python3 -m bot.oos                   # validación out-of-sample (el número honesto)
 python3 -m bot.oos --real            # ...con comisión y mínimos reales
+python3 -m bot.external              # contra estrategias reales y comprar y esperar
 ```
 
 ## Los cinco agentes
@@ -96,6 +97,48 @@ Se **opera** en cinco: `BTC-USD`, `ETH-USD`, `SOL-USD` (Kraken) · `SPY` = S&P 5
 Se **vigilan** 22: `feeds.wide_universe()` trae en una sola llamada 18 pares de Kraken
 más SPY, QQQ, DIA e IWM. Mirar más mercado del que se opera sale casi gratis y dice en
 qué estado está el conjunto.
+
+## Contra estrategias que la gente corre hoy
+
+`python3 -m bot.external` porta la lógica de tres estrategias de
+[freqtrade-strategies](https://github.com/freqtrade/freqtrade-strategies) —repositorio
+con commits del mismo día— y las mide con las mismas reglas que todo lo demás:
+comisión real del 0,26 %, mínimos de exchange y **comprar y esperar como vara de medir**,
+que es la comparación que casi nadie se pone.
+
+381 barras diarias, 5 activos, $100:
+
+| Estrategia | Origen | Retorno | Máx. DD | Ops. | Acierto | PF |
+|---|---|---|---|---|---|---|
+| **Comprar y esperar** | la vara de medir | **−8,97 %** | — | 5 | 40 % | — |
+| **Strategy001** | freqtrade-strategies | **−2,45 %** | −6,26 % | 10 | 90 % | 0,54 |
+| Strategy002 | freqtrade-strategies | 0,00 % | 0,00 % | **0** | — | — |
+| Supertrend | freqtrade-strategies | **−43,54 %** | −49,16 % | 90 | 21 % | 0,23 |
+| La nuestra | este repo | −10,83 % | −32,28 % | 13 | 31 % | 0,62 |
+
+Lo que sale de ahí:
+
+- **Ninguna gana dinero.** El mercado cayó un 9 % en ese tramo y ninguna lo convirtió
+  en beneficio.
+- **Solo Strategy001 bate a comprar y esperar** (−2,45 % contra −8,97 %). Acierta el
+  90 % de las veces pero su profit factor es 0,54: gana muchas veces poco y pierde
+  pocas veces mucho. Su mérito aquí es perder menos, no ganar.
+- **Supertrend se desploma** con sus valores por defecto: −43,5 % en 90 operaciones.
+  Y hay un motivo concreto — sus tres supertrends vienen con los mismos parámetros
+  (m=4, p=14), así que la triple confirmación que promete es en realidad una sola.
+  Está escrita para hiperoptimizarla, y sin optimizar no vale.
+- **Strategy002 no abrió ni una operación**: sus cuatro condiciones a la vez
+  (RSI<30, estocástico<20, bajo la banda de Bollinger y martillo) no coinciden nunca
+  en velas diarias.
+- **La nuestra queda por debajo de comprar y esperar.**
+
+Y un dato que lo tiñe todo: **494 órdenes rechazadas** por no llegar al mínimo del
+exchange con $100 de capital.
+
+Aviso honesto: Strategy001 y Strategy002 están escritas para velas de **5 minutos**.
+No hay datos de 5 min suficientes para un backtest serio (Kraken da 720 velas: dos
+días y medio), así que corren en otra temporalidad. Eso mide su lógica, no la
+estrategia tal y como la corre su autor.
 
 ## Validación out-of-sample: no hay ventaja
 

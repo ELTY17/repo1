@@ -32,6 +32,26 @@ Dos adaptaciones deliberadas:
 - El reloj sale de la marca temporal de la vela, no del reloj de pared, para que
   las protecciones funcionen igual en vivo que en backtest.
 
+## freqtrade-strategies
+
+`bot/external.py` reimplementa la **lógica** de tres estrategias de
+[freqtrade/freqtrade-strategies](https://github.com/freqtrade/freqtrade-strategies)
+(GPL-3.0, 5.464 ★, con commits del mismo día en que se portaron):
+
+| Aquí | Allí |
+|---|---|
+| `Strategy001` | `user_data/strategies/Strategy001.py` |
+| `Strategy002` | `user_data/strategies/Strategy002.py` |
+| `SupertrendStrategy` | `user_data/strategies/Supertrend.py` |
+
+No se ha copiado su código: dependen de pandas, numpy, TA-Lib y del framework de
+freqtrade, nada de lo cual existe aquí. Se han portado sus condiciones de entrada
+y salida, su tabla ROI y su stop, con indicadores propios en Python puro
+(Heikin-Ashi, estocástico, SAR parabólico, Fisher RSI, Supertrend, martillo).
+
+Están para **medirlas**, no para venderlas: el resultado sale en
+`python3 -m bot.external`.
+
 ## Otras referencias
 
 La arquitectura multi-agente (analistas → agregación → riesgo → ejecución) está
