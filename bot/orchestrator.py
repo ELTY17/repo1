@@ -24,6 +24,11 @@ class Orchestrator:
         self.broker = PaperBroker(cfg.starting_cash, cfg.fee_rate, cfg.slippage_rate)
         self.started_at = time.time()
         self.cycles = 0
+        # El bot arranca ENCENDIDO pero se puede parar a mano; el bloqueo es
+        # otra cosa y solo lo levanta una persona.
+        self.activo = True
+        self.bloqueado = False
+        self.bloqueo_motivo = ""
         self.events = deque(maxlen=300)
         self.debug_log = deque(maxlen=50)
         self.decisions: list[dict] = []
@@ -133,13 +138,61 @@ class Orchestrator:
             a.start()
         threading.Thread(target=self._loop, name="orchestrator", daemon=True).start()
 
+    # --- interruptor y bloqueo -------------------------------------------
+    def activar(self, on: bool):
+        """Encender o parar el bot a mano. Parar no cierra nada: solo deja de
+        abrir. Cerrar posiciones a destiempo es una decision, no una pausa.
+
+        Con el candado echado, encender no hace nada: hay que soltarlo antes.
+        """
+        if on and self.bloqueado:
+            self.log("no se puede activar: hay un bloqueo sin revisar")
+            return False
+        self.activo = bool(on)
+        self.log("bot ACTIVADO" if self.activo else "bot EN PAUSA (a mano)")
+        return self.activo
+
+    def bloquear(self, motivo: str):
+        """Candado duro. Cuando pasa algo que el sistema no sabe interpretar, no
+        improvisa: se para del todo y hace falta una mano humana para soltarlo.
+
+        Un bot que sigue operando con un fallo que no entiende es peor que un
+        bot parado. Esto no se levanta solo ni con el boton de activar.
+        """
+        if self.bloqueado:
+            return
+        self.bloqueado = True
+        self.bloqueo_motivo = motivo
+        self.activo = False
+        self.log(f"BLOQUEO TOTAL: {motivo}. No se abre nada mas hasta revisarlo.")
+
+    def desbloquear(self):
+        """Levantar el candado NO reanuda: deja el bot en pausa a proposito.
+
+        Quien lo suelta tiene que decidir aparte que vuelva a operar. Si una
+        sola accion hiciera las dos cosas, se reanudaria sin querer.
+        """
+        self.bloqueado = False
+        self.bloqueo_motivo = ""
+        self.activo = False
+        self.log("bloqueo levantado a mano; el bot queda EN PAUSA")
+
     def _loop(self):
         time.sleep(3)                     # deja que los agentes hagan su primera pasada
+        fallos = 0
         while not self._stop.is_set():
             try:
-                self.decide()
+                self.salud()
+                if self.activo and not self.bloqueado:
+                    self.decide()
+                    fallos = 0
             except Exception as e:                       # noqa: BLE001
+                fallos += 1
                 self.log(f"ERROR en ciclo de decision: {type(e).__name__}: {e}")
+                # Un fallo puede ser la red. Tres seguidos es que algo va mal de
+                # verdad y nadie sabe el que: se echa el candado.
+                if fallos >= 3:
+                    self.bloquear(f"3 ciclos seguidos fallando ({type(e).__name__})")
             self._stop.wait(self.cfg.tick_seconds)
 
     def stop(self):
@@ -148,6 +201,17 @@ class Orchestrator:
             a.stop()
 
     # --- vista para el dashboard ---
+    def salud(self):
+        """Vigila a los agentes. Si uno se atasca o revienta, candado."""
+        for a in self.agents:
+            if a.errors >= 5:
+                self.bloquear(f"el agente '{a.name}' lleva {a.errors} errores")
+                return
+            # Un agente que lleva diez cadencias sin correr esta colgado.
+            if a.runs and a.last_run and time.time() - a.last_run > a.interval * 10:
+                self.bloquear(f"el agente '{a.name}' no responde")
+                return
+
     def state(self) -> dict:
         prices = self.prices()
         return {
@@ -176,6 +240,9 @@ class Orchestrator:
             "headlines": (self.news.output or {}).get("headlines", []),
             "halted": self.risk.halted,
             "halt_reason": self.risk.halt_reason,
+            "activo": self.activo,
+            "bloqueado": self.bloqueado,
+            "bloqueo_motivo": self.bloqueo_motivo,
             "locks": self.risk.protections.active(time.time()),
             "readings": (self.technical.output or {}).get("readings", {}),
             "live": getattr(self.broker, "validate", None) is not None,

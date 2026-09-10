@@ -35,13 +35,17 @@ a{color:var(--brass)}
 /* Mosaico: todo el sistema de una sola mirada, sin scroll. Cuatro filas sobre
    doce columnas; el pulpo se queda con la de abajo, que es donde su forma ancha
    luce. Cada panel se desplaza por dentro si su contenido no cabe. */
-.deck{height:100dvh;display:flex;flex-direction:column;overflow:hidden;padding:0}
+/* Con catorce paneles ya no cabe todo en una pantalla sin aplastarlo. Cada
+   fila tiene un mínimo en píxeles y la baraja rueda si la ventana es corta:
+   mejor un scroll corto que seis filas ilegibles. */
+.deck{min-height:100dvh;display:flex;flex-direction:column;padding:0}
 .mosaic{flex:1;min-height:0;display:grid;gap:12px;padding:12px 16px 16px;
   grid-template-columns:repeat(12,minmax(0,1fr));
-  grid-template-rows:minmax(0,.84fr) minmax(0,.68fr) minmax(0,.88fr) minmax(0,1.04fr) minmax(0,1.1fr);
+  grid-template-rows:172px 138px 166px 168px 196px 300px;
   grid-template-areas:
     "cap cap prc prc prc prc dec dec dec con con con"
     "agt agt ops ops ops mkt mkt mkt ord ord cnv cnv"
+    "flw flw flw flw flw flw flw flw flw evi evi evi"
     "apr apr apr apr apr apr apr apr apr evi evi evi"
     "tur tur tur tur tur tur tur tur tur evi evi evi"
     "oct oct oct oct oct oct oct oct oct evi evi evi";}
@@ -356,6 +360,20 @@ footer{font-size:12px;color:var(--dim);line-height:1.6;letter-spacing:-.005em}
   .aprwrap{grid-template-columns:1fr;gap:12px}
   .aprlista{max-height:170px}
 }
+
+/* ── El flujo ───────────────────────────────────────────────────────────────
+   Un diagrama de nodos, como los de las herramientas de automatización: se ve
+   por dónde va el trabajo. Los pulsos que viajan por los cables son reales —
+   salen del contador de ciclos de cada agente, no de un temporizador. */
+.flwwrap{display:flex;flex-direction:column;min-height:0;gap:6px;
+  justify-content:center}
+#flujo{width:100%;height:auto;aspect-ratio:1000/104;flex:none}
+.flwpie{font-family:var(--num);font-size:11px;color:var(--dim);flex:none;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.nodo rect{transition:stroke .3s,fill .3s}
+.nodo.act rect{stroke:#BF5AF2;fill:#241435}
+.nodo.blo rect{stroke:var(--neg);fill:#33110E}
+@media (max-width:760px){ #flujo{min-height:130px} }
 </style>
 
 </head><body>
@@ -439,6 +457,14 @@ footer{font-size:12px;color:var(--dim);line-height:1.6;letter-spacing:-.005em}
       </div>
     </div>
   </section>
+<section class="p" data-a="flw" style="grid-area:flw" id="flw">
+      <div class="ph"><i class="sq" style="background:#BF5AF2"></i><b>Qué está haciendo</b>
+      <span class="r" id="flwEstado">—</span></div>
+      <div class="pb flwwrap">
+        <svg id="flujo" viewBox="0 0 1000 104" preserveAspectRatio="xMidYMid meet"
+          role="img" aria-label="Flujo de trabajo del sistema: de los datos a la orden"></svg>
+        <div class="flwpie" id="flwPie">—</div>
+      </div></section>
 <section class="p" data-a="apr" style="grid-area:apr" id="apr">
       <div class="ph"><i class="sq" style="background:var(--pos)"></i><b>Lo que ha aprendido</b>
       <span class="r">una regla no se aprende porque acierte: se aprende cuando su ventaja se separa del cero</span></div>
@@ -1313,7 +1339,7 @@ setTimeout(round, 800);
    Los mismos paneles del mosaico, enseñados por grupos en pantalla estrecha.
    Al ensanchar vuelven todos, sin recargar. */
 (function(){
-  const GRUPOS = {pulpo:["tur","oct","agt","cnv"], capital:["cap","dec","ops"],
+  const GRUPOS = {pulpo:["flw","tur","oct","agt","cnv"], capital:["cap","dec","ops"],
                   mercado:["prc","mkt","ord"], pruebas:["apr","con","evi"]};
   const nav = document.querySelector(".tabs"); if(!nav) return;
   const paneles = [...document.querySelectorAll(".mosaic > .p[data-a]")];
@@ -1602,6 +1628,119 @@ setTimeout(round, 800);
   try{ const g = localStorage.getItem("pulpo.agr"); if(g) r.value = g; }catch(e){}
   r.addEventListener("input", aplica);
   aplica();
+})();
+</script>
+<script>
+/* ── El flujo de trabajo ────────────────────────────────────────────────────
+   Siete nodos en cadena y los cables entre ellos. Cuando un agente trabaja se
+   le enciende el nodo y sale un pulso hacia el siguiente. Es el mismo dato que
+   mueve el pulpo, dibujado de otra forma: quien mira un diagrama no quiere
+   adivinar, quiere ver por dónde va. */
+(function(){
+  const $ = id => document.getElementById(id);
+  const svg = $("flujo"); if(!svg) return;
+  const NODOS = [
+    {k:"datos", n:"Mercado",     s:"20 pares"},
+    {k:"news",  n:"Noticias",    s:"titulares"},
+    {k:"scan",  n:"Escáner",     s:"fuerza"},
+    {k:"tech",  n:"Técnico",     s:"indicadores"},
+    {k:"corr",  n:"Correlación", s:"¿duplicado?"},
+    {k:"apr",   n:"Aprendizaje", s:"¿funciona?"},
+    {k:"dir",   n:"Director",    s:"pesa votos"},
+    {k:"risk",  n:"Riesgo",      s:"veto"},
+    {k:"exec",  n:"Ejecución",   s:"orden"},
+  ];
+  const W = 1000, ANCHO = 100, ALTO = 56, Y = 24;
+  const paso = (W - 40 - ANCHO) / (NODOS.length - 1);
+  const x = i => 20 + i * paso;
+
+  svg.innerHTML = NODOS.map((nd, i) => {
+    const cable = i < NODOS.length - 1
+      ? `<path id="cb-${i}" d="M${x(i)+ANCHO} ${Y+ALTO/2} C${x(i)+ANCHO+22} ${Y+ALTO/2},
+           ${x(i+1)-22} ${Y+ALTO/2}, ${x(i+1)} ${Y+ALTO/2}"
+         fill="none" stroke="var(--line)" stroke-width="1.6"/>` : "";
+    return cable + `<g class="nodo" id="nd-${nd.k}">
+      <rect x="${x(i)}" y="${Y}" width="${ANCHO}" height="${ALTO}" rx="7"
+        fill="var(--panel2)" stroke="var(--line)" stroke-width="1.4"/>
+      <text x="${x(i)+ANCHO/2}" y="${Y+19}" text-anchor="middle" fill="var(--ink)"
+        font-family="var(--ui)" font-size="12" font-weight="600">${nd.n}</text>
+      <text x="${x(i)+ANCHO/2}" y="${Y+40}" text-anchor="middle" fill="var(--faint)"
+        font-family="var(--num)" font-size="9.5">${nd.s}</text></g>`;
+  }).join("");
+
+  const vivos = [];
+  function pulso(i, color){
+    const cable = $("cb-" + i); if(!cable) return;
+    const c = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+    c.setAttribute("r", "3.4"); c.setAttribute("fill", color || "#BF5AF2");
+    svg.appendChild(c);
+    vivos.push({el:c, path:cable, t0:performance.now(), dur:620});
+  }
+  (function anim(now){
+    for(let i = vivos.length - 1; i >= 0; i--){
+      const p = vivos[i], k = Math.min((now - p.t0) / p.dur, 1);
+      const L = p.path.getTotalLength();
+      const pt = p.path.getPointAtLength(k * L);
+      p.el.setAttribute("cx", pt.x); p.el.setAttribute("cy", pt.y);
+      p.el.setAttribute("opacity", (1 - k * k).toFixed(2));
+      if(k >= 1){ p.el.remove(); vivos.splice(i, 1); }
+    }
+    requestAnimationFrame(anim);
+  })(performance.now());
+
+  let previo = {};
+  function marcar(k, on){
+    const g = $("nd-" + k); if(g) g.classList.toggle("act", !!on);
+  }
+  window.__flujo = function(estado){
+    // qué nodo se enciende: el agente que ha corrido desde la última mirada
+    const mapa = {news:"news", scanner:"scan", technical:"tech",
+                  correlacion:"corr", aprendizaje:"apr", risk:"risk",
+                  execution:"exec"};
+    const idx = {datos:0, news:1, scan:2, tech:3, corr:4, apr:5, dir:6, risk:7, exec:8};
+    (estado.agents || []).forEach(a => {
+      const k = mapa[a.name]; if(!k) return;
+      const cambio = previo[a.name] !== undefined && a.runs > previo[a.name];
+      previo[a.name] = a.runs;
+      marcar(k, a.status === "working" || cambio);
+      if(cambio) pulso(idx[k], "#BF5AF2");
+    });
+    marcar("datos", true);
+    marcar("dir", true);
+    const blo = estado.bloqueado;
+    NODOS.forEach(nd => {
+      const g = $("nd-" + nd.k); if(g) g.classList.toggle("blo", !!blo);
+    });
+    const est = $("flwEstado");
+    if(est){
+      est.textContent = blo ? "BLOQUEADO" : (estado.activo === false ? "en pausa" : "en marcha");
+      est.style.color = blo ? "var(--neg)"
+        : (estado.activo === false ? "var(--dim)" : "var(--pos)");
+    }
+    const pie = $("flwPie");
+    if(pie){
+      const ult = (estado.events || [])[0] || (estado.events || []).slice(-1)[0];
+      pie.textContent = blo ? ("Candado echado: " + (estado.bloqueo_motivo || "motivo sin registrar"))
+        : (ult ? `${(ult.agent || "").toUpperCase()} · ${ult.msg || ""}` : "esperando a los agentes…");
+    }
+  };
+})();
+</script>
+<script>
+/* En la demo no hay agentes corriendo: el flujo late con el propio replay,
+   encendiendo los nodos en cadena para que se vea el recorrido. */
+(function(){
+  if(!window.__flujo) return;
+  const ORDEN = ["news","scanner","technical","correlacion","aprendizaje","risk","execution"];
+  let n = 0;
+  setInterval(() => {
+    n++;
+    window.__flujo({
+      activo: true, bloqueado: false,
+      agents: ORDEN.map((name, i) => ({name, runs: n + i, status: (n % 7 === i) ? "working" : "idle"})),
+      events: [{agent: ORDEN[n % 7], msg: "trabajando sobre la sesión grabada"}],
+    });
+  }, 900);
 })();
 </script>
 </body></html>

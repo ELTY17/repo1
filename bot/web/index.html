@@ -37,13 +37,17 @@ a{color:var(--brass)}
 /* Mosaico: todo el sistema de una sola mirada, sin scroll. Cuatro filas sobre
    doce columnas; el pulpo se queda con la de abajo, que es donde su forma ancha
    luce. Cada panel se desplaza por dentro si su contenido no cabe. */
-.deck{height:100dvh;display:flex;flex-direction:column;overflow:hidden;padding:0}
+/* Con catorce paneles ya no cabe todo en una pantalla sin aplastarlo. Cada
+   fila tiene un mínimo en píxeles y la baraja rueda si la ventana es corta:
+   mejor un scroll corto que seis filas ilegibles. */
+.deck{min-height:100dvh;display:flex;flex-direction:column;padding:0}
 .mosaic{flex:1;min-height:0;display:grid;gap:12px;padding:12px 16px 16px;
   grid-template-columns:repeat(12,minmax(0,1fr));
-  grid-template-rows:minmax(0,.86fr) minmax(0,.7fr) minmax(0,.92fr) minmax(0,.98fr) minmax(0,1.14fr);
+  grid-template-rows:172px 138px 166px 168px 196px 300px;
   grid-template-areas:
     "cap cap prc prc prc prc dec dec dec con con con"
     "agt agt ops ops ops mkt mkt mkt ord ord cnv cnv"
+    "flw flw flw flw flw flw flw flw flw evi evi evi"
     "apr apr apr apr apr apr apr apr apr evi evi evi"
     "tur tur tur tur tur tur tur tur tur evi evi evi"
     "oct oct oct oct oct oct oct oct oct evi evi evi";}
@@ -382,6 +386,20 @@ footer{font-size:12px;color:var(--dim);line-height:1.6;letter-spacing:-.005em}
   .aprwrap{grid-template-columns:1fr;gap:12px}
   .aprlista{max-height:170px}
 }
+
+/* ── El flujo ───────────────────────────────────────────────────────────────
+   Un diagrama de nodos, como los de las herramientas de automatización: se ve
+   por dónde va el trabajo. Los pulsos que viajan por los cables son reales —
+   salen del contador de ciclos de cada agente, no de un temporizador. */
+.flwwrap{display:flex;flex-direction:column;min-height:0;gap:6px;
+  justify-content:center}
+#flujo{width:100%;height:auto;aspect-ratio:1000/104;flex:none}
+.flwpie{font-family:var(--num);font-size:11px;color:var(--dim);flex:none;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.nodo rect{transition:stroke .3s,fill .3s}
+.nodo.act rect{stroke:#BF5AF2;fill:#241435}
+.nodo.blo rect{stroke:var(--neg);fill:#33110E}
+@media (max-width:760px){ #flujo{min-height:130px} }
 </style>
 <div class="deck">
   <div class="bar">
@@ -460,6 +478,14 @@ footer{font-size:12px;color:var(--dim);line-height:1.6;letter-spacing:-.005em}
       </div>
     </div>
   </section>
+<section class="p" data-a="flw" style="grid-area:flw" id="flw">
+      <div class="ph"><i class="sq" style="background:#BF5AF2"></i><b>Qué está haciendo</b>
+      <span class="r" id="flwEstado">—</span></div>
+      <div class="pb flwwrap">
+        <svg id="flujo" viewBox="0 0 1000 104" preserveAspectRatio="xMidYMid meet"
+          role="img" aria-label="Flujo de trabajo del sistema: de los datos a la orden"></svg>
+        <div class="flwpie" id="flwPie">—</div>
+      </div></section>
 <section class="p" data-a="apr" style="grid-area:apr" id="apr">
       <div class="ph"><i class="sq" style="background:var(--pos)"></i><b>Lo que ha aprendido</b>
       <span class="r">una regla no se aprende porque acierte: se aprende cuando su ventaja se separa del cero</span></div>
@@ -1295,6 +1321,7 @@ function reactToLive(s){
 async function tick(){
   try{
     const s = await (await fetch("/api/state", {cache:"no-store"})).json();
+    if(window.__flujo) window.__flujo(s);
     failures = 0;
     $("dot").style.background = s.halted ? "var(--neg)" : "var(--pos)";
     $("mode").textContent = s.mode === "paper"
@@ -1347,7 +1374,7 @@ setInterval(slow, 15000);
    todas las marcas y vuelve el mosaico entero, sin recargar. */
 (function(){
   const GRUPOS = {
-    pulpo:   ["tur","oct","agt","cnv"],
+    pulpo:   ["flw","tur","oct","agt","cnv"],
     capital: ["cap","dec","ops"],
     mercado: ["prc","mkt","ord"],
     pruebas: ["apr","con","evi"],

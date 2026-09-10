@@ -50,6 +50,84 @@ scan ──┼──► score compuesto ──► agente de riesgo (veto) ──
 tech ──┘
 ```
 
+## Operar poco y confirmado: probado, y no sale
+
+La idea era buena: en vez de disparar cada vez que el voto pasa del umbral,
+exigir una segunda llave — que alguna de las reglas **aprendidas** esté de
+acuerdo. `bot/confirmacion.py`.
+
+La honestidad de esto depende de una cosa: las reglas que confirman tienen que
+aprenderse en un tramo y usarse en **otro**. Aprenderlas y usarlas sobre los
+mismos días es mirarse al espejo y llamarlo confirmación. Aprendidas en la
+primera mitad (`rsi2<10`, `rsi7<30`, `stoch<30`, `roc5<-5%`), aplicadas en la
+segunda:
+
+```
+                         retorno   ops   acierto      dd   frecuencia
+señal de siempre         +20.03%    29     62%     -5.64%  1 cada 5.7 días
+siempre + confirmación    +3.14%     8     50%     -5.68%  1 cada 20.5 días
+SOLO lo aprendido         -4.31%    62     37%    -17.57%  1 cada 2.6 días
+```
+
+Sale menos, no más. Y el motivo se ve en los nombres: **todo lo aprendido es
+reversión** —comprar caídas— y la señal base compra fuerza. Rara vez coinciden,
+y cuando coinciden no es mejor.
+
+La tercera fila es la más importante: usar **solo** lo aprendido pierde dinero.
+Las reglas que pasaron el listón estadístico en la primera mitad no sobreviven
+en la segunda. La máquina de aprender funciona; lo que aprende, no dura.
+
+Sobre las "cuatro o seis operaciones al día": con velas diarias y veinte pares,
+el sistema hace **una cada 5,7 días**. Para llegar a cinco al día haría falta
+bajar a velas de minutos, y ahí la comisión de 0,62% por ida y vuelta se come
+todo (`python3 -m bot.velocidad`). Menos operaciones sí se puede — el filtro lo
+hace. Que sean mejores, no está demostrado.
+
+## Botón de parada y candado
+
+`python3 run.py` arranca encendido, y el dashboard tiene **Activar / Parar**.
+Parar no cierra posiciones: solo deja de abrir. Cerrar a destiempo es una
+decisión, no una pausa.
+
+Aparte está el **candado**, que es otra cosa. Salta solo cuando el sistema no
+sabe lo que pasa:
+
+- tres ciclos de decisión seguidos fallando,
+- un agente con cinco errores,
+- un agente que lleva diez cadencias sin responder.
+
+Cuando salta, **no se abre nada más**. Y no se levanta solo ni con el botón de
+activar: hay que soltarlo a mano, y soltarlo deja el bot **en pausa** — quien
+lo revisa decide aparte si vuelve a operar. Un bot que sigue operando con un
+fallo que no entiende es peor que un bot parado.
+
+## Conectar con Claude: qué hay y qué no
+
+`bot/claude.py` está escrito y probado, y **no llama a nadie**. Sin
+`ANTHROPIC_API_KEY` el módulo se comporta como si Claude no existiera y el bot
+funciona exactamente igual, porque los agentes de cálculo no necesitan un
+modelo para nada.
+
+Cuando hay clave, dos cosas mandan sobre todo lo demás:
+
+- **Un tope en dólares.** Cada llamada suma su coste real con el `usage` que
+  devuelve la API. Pasado el tope, se apaga solo. **No hay modo sin límite.**
+- **Una cadencia mínima de cinco minutos**, y por defecto una hora. El sistema
+  opera velas diarias.
+
+Y tres cosas que no puedo hacer, dichas claras:
+
+1. **No puedo usar los tokens de esta cuenta.** Una sesión de Claude Code no es
+   un endpoint que un bot pueda llamar. Para que el bot hable con Claude hace
+   falta una clave de la API de Anthropic, que se crea en la consola de
+   Anthropic y se paga aparte.
+2. **No voy a manejar esa clave.** Va en tu `.env`, en tu máquina. Nunca en un
+   chat.
+3. **24/7 al máximo es exactamente lo que el tope impide.** Siete agentes
+   preguntando cada 20 segundos son **270 $/día** (`python3 -m bot.coste`),
+   contra los 0,0027 $/día que el sistema gana sobre $100. Gastar tokens no es
+   un objetivo: es el coste de una decisión que hay que justificar.
+
 ## Solo cripto: 20 monedas, fuera la bolsa
 
 SPY y QQQ se van del universo. Dos razones y ninguna es de gusto:

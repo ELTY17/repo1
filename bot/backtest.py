@@ -12,7 +12,7 @@ from __future__ import annotations
 
 import argparse
 
-from . import correlacion, feeds, signals
+from . import confirmacion, correlacion, feeds, playbook, signals
 from .broker import PaperBroker
 from .config import CONFIG, UNIVERSE, Config
 
@@ -50,7 +50,8 @@ BAR_SECONDS = {"1h": 3600, "1d": 86400}
 
 def run(cfg: Config = CONFIG, warmup: int = 100, features=None,
         verbose: bool = True, timeframe: str = "1d", enforce_minimums: bool = False,
-        trade_from: int = 0, trade_to: int | None = None, record: bool = False):
+        trade_from: int = 0, trade_to: int | None = None, record: bool = False,
+        confirmador=None):
     """`trade_from`/`trade_to` limitan las barras en las que se OPERA.
 
     Los indicadores siguen usando todo el histórico anterior a cada barra —eso no
@@ -76,6 +77,10 @@ def run(cfg: Config = CONFIG, warmup: int = 100, features=None,
     # esperar y por que— para poder reproducir la sesion en las demos. No cambia
     # nada de lo que hace: solo lo apunta.
     broker.rounds = []
+    # Las reglas aprendidas trabajan sobre indicadores precalculados: hacerlo
+    # una vez por activo en vez de en cada barra.
+    pre_conf = ({s_: playbook.prepare(c) for s_, c in series.items()}
+                if confirmador else {})
 
     def anota(bar, sym, kind, reason, price, pnl=None, sc=None, det=None):
         if not record:
@@ -197,8 +202,16 @@ def run(cfg: Config = CONFIG, warmup: int = 100, features=None,
 
         compradas = 0
         veto = None                       # por que no se compro, para la demo
-        for sym, sc in sorted(scores.items(), key=lambda x: -x[1]):
-            if sc < cfg.buy_threshold:
+        orden = sorted(scores.items(), key=lambda x: -x[1])
+        if confirmador and getattr(confirmador, "solo", False):
+            # Manda lo aprendido: solo entran los que una regla aprendida marca,
+            # y entre esos se prefiere el de mejor voto.
+            idx = lambda s_: len(series[s_]) - n + k                # noqa: E731
+            orden = [(s_, sc) for s_, sc in orden
+                     if confirmador.ok(pre_conf[s_], idx(s_))[0]]
+        for sym, sc in orden:
+            if (not (confirmador and getattr(confirmador, "solo", False))
+                    and sc < cfg.buy_threshold):
                 veto = veto or f"score {sc:+.2f} < umbral {cfg.buy_threshold:+.2f}"
                 continue
             if sym in broker.positions:
@@ -225,6 +238,14 @@ def run(cfg: Config = CONFIG, warmup: int = 100, features=None,
                 if not ok:
                     blocked_entries += 1
                     veto = veto or f"proteccion activa: {motivo}"
+                    continue
+            if confirmador and not getattr(confirmador, "solo", False):
+                # Segunda llave: el voto no basta, tiene que coincidir con algo
+                # que el bot ya demostro que funciona.
+                idx = len(series[sym]) - n + k
+                ok, cuales = confirmador.ok(pre_conf[sym], idx)
+                if not ok:
+                    veto = veto or "sin confirmacion de ninguna regla aprendida"
                     continue
             a = atr(window[sym], 14)
             price = prices[sym]

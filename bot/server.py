@@ -100,6 +100,21 @@ def make_handler(orch):
                 return self._send(200, body)
             if path == "/api/turbo":
                 return self._send(200, json.dumps(_turbo_datos()).encode())
+            if path == "/api/control":
+                from urllib.parse import parse_qs, urlparse
+                q = parse_qs(urlparse(self.path).query)
+                acc = (q.get("accion") or [""])[0]
+                if acc == "activar":
+                    orch.activar(True)
+                elif acc == "parar":
+                    orch.activar(False)
+                elif acc == "desbloquear":
+                    orch.desbloquear()
+                elif acc == "bloquear":
+                    orch.bloquear("bloqueo pedido a mano")
+                return self._send(200, json.dumps(
+                    {"activo": orch.activo, "bloqueado": orch.bloqueado,
+                     "motivo": orch.bloqueo_motivo}).encode())
             if path == "/api/aprendizaje":
                 ag = getattr(orch, "learning", None)
                 body = json.dumps(ag.output if ag else {}, default=str).encode()
