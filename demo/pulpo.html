@@ -41,7 +41,7 @@ a{color:var(--brass)}
 .deck{min-height:100dvh;display:flex;flex-direction:column;padding:0}
 .mosaic{flex:1;min-height:0;display:grid;gap:12px;padding:12px 16px 16px;
   grid-template-columns:repeat(12,minmax(0,1fr));
-  grid-template-rows:336px 296px 238px 252px 508px 448px;
+  grid-template-rows:336px 296px 238px 286px 508px 448px;
   grid-template-areas:
     "cap cap prc prc prc prc dec dec dec con con con"
     "agt agt ops ops ops mkt mkt mkt ord ord cnv cnv"
@@ -425,6 +425,35 @@ body{background:#04080F}
   .mhead .me{margin-left:auto}
 }
 @media (min-width:761px){ .fxm{display:none} }
+
+/* ── El estado de la cuenta ─────────────────────────────────────────────────
+   A ×1 pasa un día de mercado cada dos segundos y solo el 11% tienen
+   operación: durante veinte segundos no se mueve nada y parece colgado. El
+   chip dice en qué estado está, y el latido parpadea en CADA día — también en
+   los que no pasa nada, que son la mayoría. Ver que late es la diferencia
+   entre "está trabajando" y "no sé si le he dado". */
+.estado{display:inline-flex;align-items:center;gap:7px;margin-top:10px;
+  padding:5px 11px 5px 9px;border-radius:980px;font-family:var(--ui);
+  font-size:11px;font-weight:700;letter-spacing:.07em;border:1px solid transparent}
+.estado b{font-weight:700}
+.estado .pulso{width:8px;height:8px;border-radius:50%;background:currentColor;flex:none}
+.lat{font-family:var(--num);font-size:11px;color:var(--dim);margin-top:5px;
+  white-space:nowrap}
+.estado b{white-space:nowrap}
+.estado[data-e="on"]{color:var(--pos);background:rgba(48,209,88,.13);
+  border-color:rgba(48,209,88,.38)}
+.estado[data-e="on"] .pulso{animation:latir 1.1s ease-in-out infinite}
+.estado[data-e="off"]{color:var(--dim);background:var(--panel2);border-color:var(--hair)}
+.estado[data-e="mal"]{color:var(--neg);background:rgba(255,69,58,.13);
+  border-color:rgba(255,69,58,.42)}
+.estado[data-e="mal"] .pulso{animation:none}
+.estado.tic{animation:tic .34s ease-out}
+@keyframes latir{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.35;transform:scale(.82)}}
+@keyframes tic{0%{box-shadow:0 0 0 0 rgba(48,209,88,.5)}
+               100%{box-shadow:0 0 0 9px rgba(48,209,88,0)}}
+@media (prefers-reduced-motion:reduce){
+  .estado[data-e="on"] .pulso{animation:none}.estado.tic{animation:none}
+}
 </style>
 
 </head><body>
@@ -556,8 +585,11 @@ body{background:#04080F}
           <div class="turcifra">
             <div class="turbig" id="tEq">$10.00</div>
             <div class="turx" id="tX">×1.00 · 0 operaciones</div>
-            <div class="turx" id="tT" style="color:var(--faint)">0 días de mercado</div>
-            <div class="turx" id="tFin" style="margin-top:8px">Parada. Dale a Lanzar.</div>
+              <div class="estado" id="tEstado" data-e="off">
+            <i class="pulso"></i><b id="tEstadoTxt">EN PAUSA</b>
+          </div>
+          <div class="turx lat" id="tLat">—</div>
+          <div class="turx" id="tFin">Dale a Lanzar.</div>
           </div>
           <div class="turgraf">
             <svg id="tCurve" viewBox="0 0 620 150" style="width:100%;height:104px;flex:none"
@@ -1497,7 +1529,11 @@ setTimeout(round, 800);
   try{
     const g = JSON.parse(localStorage.getItem(CLAVE) || "null");
     if(g && typeof g.eq === "number"){
-      ({eq, puesto, dias, ops, ganadas, pico, hundido, fin} = g);
+      // Un estado guardado por una version anterior puede no traer todos los
+      // campos: sin esto salia "Ganadoras: NaN %".
+      eq = g.eq; puesto = g.puesto || 10; dias = g.dias || 0; ops = g.ops || 0;
+      ganadas = g.ganadas || 0; pico = g.pico || eq; hundido = g.hundido || 0;
+      fin = g.fin || null;
       curva = g.curva || [eq]; cinta = g.cinta || [];
     }
   }catch(e){}
@@ -1574,8 +1610,7 @@ setTimeout(round, 800);
     // queda para lo que no es ganancia ni pérdida: la etiqueta de simulación.
     $("tEq").style.color = eq < puesto ? "var(--neg)" : "var(--pos)";
     $("tX").textContent = `×${(eq / puesto).toFixed(2)} sobre ${money(puesto)}`;
-    $("tT").textContent = `${ops} ${ops === 1 ? "operación" : "operaciones"} · `
-      + reloj_txt();
+    latido();
     $("tKv").innerHTML = [
       ["Ingresado", money(puesto)],
       ["Máximo", money(pico)],
@@ -1591,19 +1626,45 @@ setTimeout(round, 800);
     dibujar();
   }
 
+  /* Tres estados y ninguno ambiguo: funcionando, en pausa, o en cero con el
+     motivo escrito. El latido cuenta lo que lleva hecho para que se vea que
+     avanza aunque no haya operaciones. */
+  let t0 = 0, transcurrido = 0;
+  function estado(modo, detalle){
+    const ch = $("tEstado"), tx = $("tEstadoTxt"), fn = $("tFin");
+    if(!ch) return;
+    ch.dataset.e = modo === "on" ? "on" : (modo === "mal" ? "mal" : "off");
+    tx.textContent = modo === "on" ? "FUNCIONANDO"
+      : (modo === "mal" ? "EN CERO" : "EN PAUSA");
+    if(detalle !== undefined){
+      fn.textContent = detalle;
+      fn.style.color = modo === "mal" ? "var(--neg)" : "var(--dim)";
+    }
+    latido();
+  }
+  function latido(){
+    const l = $("tLat"); if(!l) return;
+    const seg = Math.floor(transcurrido / 1000);
+    const t = seg < 60 ? `${seg}s` : `${Math.floor(seg / 60)}m ${seg % 60}s`;
+    l.textContent = `${reloj_txt()} · ${ops} ${ops === 1 ? "op" : "ops"} · ${t}`;
+  }
+
   function parar(txt, cls){
     clearInterval(reloj); reloj = null;
+    if(t0){ transcurrido += Date.now() - t0; t0 = 0; }
     if(txt) fin = {txt, cls};
-    const f = fin || {txt: "Parada.", cls: ""};
-    $("tFin").textContent = f.txt;
-    $("tFin").style.color = f.cls === "mal" ? "var(--neg)"
-      : (f.cls === "bien" ? "var(--pos)" : "var(--dim)");
+    const f = fin || {txt: "En pausa. Dale a Lanzar.", cls: ""};
+    estado(f.cls === "mal" ? "mal" : "off", f.txt);
     guardar();
   }
 
   /* Un día de mercado. La mayoría no pasa nada, y eso también cuenta. */
   function dia(){
     dias++;
+    if(t0) transcurrido = transcurrido + (Date.now() - t0), t0 = Date.now();
+    const ch = $("tEstado");
+    if(ch){ ch.classList.remove("tic"); void ch.offsetWidth; ch.classList.add("tic"); }
+    latido();
     if(Math.random() >= FREQ){
       curva.push(eq);
       if(dias % 30 === 0) pintar();
@@ -1625,27 +1686,28 @@ setTimeout(round, 800);
     if(ops % 10 === 0) guardar();
     pintar();
     if(eq <= STOP)
-      parar(`Cero, en el día ${dias} tras ${ops} operaciones. Se acabó.`, "mal");
+      parar(`Tocó $1 en el día ${dias}. Por debajo ningún exchange `
+        + `acepta la orden.`, "mal");
   }
 
   function arrancar(){
     if(reloj || muerta()) return;
     fin = null;
-    $("tFin").textContent = "Mercado abierto.";
-    $("tFin").style.color = "var(--dim)";
+    t0 = Date.now();
+    estado("on", "Mercado abierto.");
     reloj = setInterval(dia, MS[veloc] || 2000);
   }
 
   window.__repintar = () => { pintar(); avisaCapital(); };
   $("tGo").onclick = arrancar;
-  $("tStop").onclick = () => parar("Parada. Dale a Lanzar para seguir.", "");
+  $("tStop").onclick = () => parar("En pausa. Dale a Lanzar.", "");
   $("tReset").onclick = () => {
     clearInterval(reloj); reloj = null;
     eq = 10; puesto = 10; dias = 0; ops = 0; ganadas = 0; pico = 10; hundido = 0;
     curva = [10]; cinta = []; fin = null;
+    transcurrido = 0; t0 = 0;
     guardar(); pintar(); avisaCapital();
-    $("tFin").textContent = "Cuenta nueva: $10, día cero.";
-    $("tFin").style.color = "var(--dim)";
+    estado("off", "Cuenta nueva: $10, día cero.");
   };
   document.querySelectorAll(".tv").forEach(b => b.onclick = () => {
     veloc = parseInt(b.dataset.v, 10);
@@ -1657,7 +1719,7 @@ setTimeout(round, 800);
      En una cuenta muerta no vale: cero es cero. */
   document.querySelectorAll(".td").forEach(b => b.onclick = () => {
     if(muerta()){
-      $("tFin").textContent = "En cero no se ingresa. Vacía y empieza otra.";
+      estado("mal", "En cero no se ingresa. Vacía y empieza otra.");
       return;
     }
     // el botón dice euros cuando se ven euros, pero por dentro todo es dólar
