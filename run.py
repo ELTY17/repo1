@@ -73,7 +73,7 @@ def main():
     httpd = serve(orch, args.host, args.port)
     url = f"http://{args.host}:{args.port}"
     print("=" * 62)
-    print("  SISTEMA MULTI-AGENTE DE TRADING")
+    print("  OCTOPUS BOT · sistema multi-agente de trading")
     print("=" * 62)
     modo = ("REAL · MUEVE DINERO" if (args.live and args.real)
             else "VALIDACIÓN · el exchange comprueba, no ejecuta" if args.live
@@ -81,7 +81,8 @@ def main():
     print(f"  Modo            : {modo}")
     print(f"  Capital inicial : ${CONFIG.starting_cash:,.2f}"
           + ("" if args.live else " simulados"))
-    print(f"  Agentes         : noticias, escaner, tecnico, riesgo, ejecucion")
+    print("  Agentes         : noticias, escaner, tecnico, correlacion,")
+    print("                    aprendizaje, riesgo, ejecucion")
     print(f"  Dashboard       : {url}")
     print(f"  Ctrl+C para parar")
     print("=" * 62)

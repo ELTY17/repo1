@@ -1,7 +1,7 @@
-# Sala de Agentes — sistema multi-agente de trading (modo papel)
+# Octopus Bot — sistema multi-agente de trading (modo papel)
 
-Cinco agentes autónomos que analizan cripto, el S&P 500 y el Nasdaq, votan, y
-operan una cartera simulada. Con **dashboard visual en local**.
+Siete agentes autónomos que analizan veinte criptomonedas, votan, y operan una
+cartera simulada. Con **dashboard visual en local**.
 
 > **Esto opera con dinero simulado.** Los precios son reales; el dinero no.
 > No hay ninguna ruta de código capaz de mover fondos reales: `LiveBroker`
