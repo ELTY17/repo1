@@ -43,7 +43,7 @@ a{color:var(--brass)}
 .deck{min-height:100dvh;display:flex;flex-direction:column;padding:0}
 .mosaic{flex:1;min-height:0;display:grid;gap:12px;padding:12px 16px 16px;
   grid-template-columns:repeat(12,minmax(0,1fr));
-  grid-template-rows:172px 138px 166px 168px 196px 300px;
+  grid-template-rows:172px 138px 318px 168px 196px 300px;
   grid-template-areas:
     "cap cap prc prc prc prc dec dec dec con con con"
     "agt agt ops ops ops mkt mkt mkt ord ord cnv cnv"
@@ -393,7 +393,7 @@ footer{font-size:12px;color:var(--dim);line-height:1.6;letter-spacing:-.005em}
    salen del contador de ciclos de cada agente, no de un temporizador. */
 .flwwrap{display:flex;flex-direction:column;min-height:0;gap:6px;
   justify-content:center}
-#flujo{width:100%;height:auto;aspect-ratio:1000/104;flex:none}
+#flujo{width:100%;height:auto;aspect-ratio:1000/250;flex:none}
 .flwpie{font-family:var(--num);font-size:11px;color:var(--dim);flex:none;
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .nodo rect{transition:stroke .3s,fill .3s}
@@ -482,7 +482,7 @@ footer{font-size:12px;color:var(--dim);line-height:1.6;letter-spacing:-.005em}
       <div class="ph"><i class="sq" style="background:#BF5AF2"></i><b>Qué está haciendo</b>
       <span class="r" id="flwEstado">—</span></div>
       <div class="pb flwwrap">
-        <svg id="flujo" viewBox="0 0 1000 104" preserveAspectRatio="xMidYMid meet"
+        <svg id="flujo" viewBox="0 0 1000 250" preserveAspectRatio="xMidYMid meet"
           role="img" aria-label="Flujo de trabajo del sistema: de los datos a la orden"></svg>
         <div class="flwpie" id="flwPie">—</div>
       </div></section>
@@ -546,6 +546,8 @@ footer{font-size:12px;color:var(--dim);line-height:1.6;letter-spacing:-.005em}
           <button class="tv" data-v="5" aria-pressed="false">×5</button>
           <button class="tv" data-v="20" aria-pressed="false">×20</button>
           <button class="tv" data-v="50" aria-pressed="false">×50</button>
+          <button class="tv" data-v="100" aria-pressed="false">×100</button>
+          <button class="tv" data-v="200" aria-pressed="false">×200</button>
           <span class="tsep"></span>
           <span class="tlab">ingresar</span>
           <button class="td" data-d="10">+$10</button>
@@ -1454,7 +1456,10 @@ setInterval(slow, 15000);
   const STOP = 1, CLAVE = "pulpo.cuenta.viva.v3";
   /* ×1 = un día de mercado cada dos segundos. Es rápido, pero es un
      calendario: una hora mirando son unos siete años de mercado. */
-  const MS = {1: 2000, 2: 1000, 5: 400, 20: 100, 50: 40};
+  /* Por encima de x10 no se acorta mas el intervalo —los navegadores no
+     bajan de unos 4 ms— sino que se hacen varios dias por tanda. */
+  const MS = {1: 2000, 2: 1000, 5: 400, 20: 100, 50: 40, 100: 40, 200: 40};
+  const TANDA = {1: 1, 2: 1, 5: 1, 20: 1, 50: 1, 100: 3, 200: 5};
 
   let eq = 10, puesto = 10, dias = 0, ops = 0, ganadas = 0, pico = 10, hundido = 0;
   let curva = [10], cinta = [], reloj = null, veloc = 1, fin = null;
@@ -1627,5 +1632,199 @@ setInterval(slow, 15000);
     if(fin){ parar(); } else { arrancar(); }
   }).catch(() => setTimeout(pedir, 5000));
   pedir();
+})();
+</script>
+
+<script>
+/* Estos tres bloques van al final del fichero a proposito: index.html se
+   sirve como fragmento y NO tiene </body>, asi que cualquier insercion
+   anclada ahi se pierde en silencio. Ya paso una vez. */
+/* ── Aprendizaje ────────────────────────────────────────────────────────────
+   Pinta dos listas: lo demostrado y lo que sigue en juicio, con la barra de
+   cuánto le falta a cada regla. El estado se recalcula con todo lo acumulado,
+   así que una regla puede PERDER la promoción si deja de funcionar. */
+(function(){
+  const $ = id => document.getElementById(id);
+  if(!$("aprOK")) return;
+
+  function fila(f, ok){
+    const pct = Math.round(f.progreso * 100);
+    const faltan = f.faltan ? `faltan ${f.faltan.toLocaleString("es")} observaciones`
+                            : `${f.n.toLocaleString("es")} observaciones`;
+    return `<div class="aprfila ${ok ? "aprok" : "aprgo"}">
+      <div class="l1"><span class="nm">${f.regla}</span>
+        <span class="vl ${f.media >= 0 ? "pos" : "neg"}">${(f.media*100).toFixed(3)} %</span></div>
+      <div class="bar"><i style="width:${pct}%"></i></div>
+      <div class="sub">t ${f.t.toFixed(2)} · ${faltan}</div></div>`;
+  }
+
+  function pintar(r){
+    if(!r || !r.reglas) return;
+    const ok = r.reglas.filter(f => f.estado === "aprendido");
+    const go = r.reglas.filter(f => f.estado === "aprendiendo").slice(0, 14);
+    $("aprN").textContent = `${r.aprendidas} de ${r.total}`;
+    $("aprM").textContent = `${r.total - r.aprendidas - r.descartadas} en juicio`;
+    $("aprOK").innerHTML = ok.map(f => fila(f, true)).join("")
+      || '<div class="sub" style="padding:8px 0;color:var(--faint)">Nada demostrado todavía. Es la respuesta honesta.</div>';
+    $("aprGO").innerHTML = go.map(f => fila(f, false)).join("");
+    $("aprPct").textContent = Math.round(r.progreso * 100) + "%";
+    $("aprKv").innerHTML = [
+      ["Observaciones", (r.observaciones||0).toLocaleString("es")],
+      ["Descartadas", r.descartadas],
+    ].map(([k,v]) => `<div><dt>${k}</dt><dd>${v}</dd></div>`).join("");
+  }
+  window.__pintarApr = pintar;
+  const leer = () => fetch("/api/aprendizaje").then(x => x.json()).then(pintar).catch(()=>{});
+  leer();
+  setInterval(leer, 30000);       // la evidencia se mueve por barra, no por segundo
+})();
+
+/* ── Agresividad ────────────────────────────────────────────────────────────
+   No es un adorno: mueve el riesgo por operación de la cuenta simulada. A la
+   izquierda, mordiscos pequeños; a la derecha, la varianza se multiplica y el
+   suelo de $1 deja de ser una hipótesis. */
+(function(){
+  const $ = id => document.getElementById(id);
+  const r = $("agrR"), v = $("agrV");
+  if(!r || !v) return;
+  const NIV = [
+    {h:20,  n:"Muy prudente", f:0.35, c:"#30D158"},
+    {h:40,  n:"Prudente",     f:0.7,  c:"#9BD15A"},
+    {h:60,  n:"Normal",       f:1.0,  c:"#FFD426"},
+    {h:80,  n:"Agresiva",     f:1.8,  c:"#FF9F0A"},
+    {h:101, n:"Temeraria",    f:3.2,  c:"#FF453A"},
+  ];
+  function nivel(x){ return NIV.find(o => x < o.h) || NIV[NIV.length-1]; }
+  function aplica(){
+    const x = +r.value, n = nivel(x);
+    v.textContent = n.n;
+    v.style.color = n.c;
+    window.__agresividad = n.f;          // lo lee el motor de la cuenta
+    try{ localStorage.setItem("pulpo.agr", String(x)); }catch(e){}
+  }
+  try{ const g = localStorage.getItem("pulpo.agr"); if(g) r.value = g; }catch(e){}
+  r.addEventListener("input", aplica);
+  aplica();
+})();
+
+/* ── El flujo de trabajo, en árbol ──────────────────────────────────────────
+   La cadena recta mentía: el sistema no es una fila india. Tres agentes votan
+   dirección y van al Director; Correlación y Aprendizaje no votan y entran por
+   otro lado —uno vetando, otro juzgando lo que pasó después—. Y hay una flecha
+   que vuelve: lo que hace Ejecución es exactamente lo que Aprendizaje mira.
+
+   Dibujarlo en fila hacía creer que Aprendizaje decide antes de operar, y es al
+   revés. */
+(function(){
+  const $ = id => document.getElementById(id);
+  const svg = $("flujo"); if(!svg) return;
+
+  const W = 1000, H = 250, AN = 128, AL = 44;
+  const COL = [24, 224, 452, 640, 828];
+  const NODOS = [
+    {k:"datos", c:0, y:103, n:"Mercado",     s:"20 pares",     t:"fuente"},
+    {k:"news",  c:1, y:20,  n:"Noticias",    s:"titulares",    t:"voto"},
+    {k:"scan",  c:1, y:76,  n:"Escáner",     s:"fuerza",       t:"voto"},
+    {k:"tech",  c:1, y:132, n:"Técnico",     s:"indicadores",  t:"voto"},
+    {k:"corr",  c:1, y:188, n:"Correlación", s:"¿duplicado?",  t:"veto"},
+    {k:"dir",   c:2, y:76,  n:"Director",    s:"pesa 3 votos", t:"decide"},
+    {k:"risk",  c:3, y:103, n:"Riesgo",      s:"tamaño y veto",t:"decide"},
+    {k:"exec",  c:4, y:103, n:"Ejecución",   s:"orden",        t:"actúa"},
+    {k:"apr",   c:2, y:196, n:"Aprendizaje", s:"¿funcionó?",   t:"juzga"},
+  ];
+  const TONO = {fuente:"var(--dim)", voto:"#BF5AF2", veto:"#FF9F0A",
+                decide:"var(--blue)", actúa:"var(--pos)", juzga:"#64D2FF"};
+  const pos = {};
+  NODOS.forEach(n => { pos[n.k] = {x:COL[n.c], y:n.y, cx:COL[n.c]+AN/2, cy:n.y+AL/2}; });
+
+  // de dónde a dónde va el trabajo; `vuelta` es la flecha que regresa
+  const CABLES = [
+    ["datos","news"], ["datos","scan"], ["datos","tech"], ["datos","corr"],
+    ["news","dir"], ["scan","dir"], ["tech","dir"],
+    ["dir","risk"], ["corr","risk"], ["risk","exec"],
+    ["exec","apr","vuelta"], ["apr","dir","vuelta"],
+  ];
+  const curva = (a, b, vuelta) => {
+    const A = pos[a], B = pos[b];
+    const x1 = vuelta ? A.cx : A.x + AN, y1 = vuelta ? A.y + AL : A.cy;
+    const x2 = vuelta ? B.cx : B.x,      y2 = vuelta ? B.y + AL : B.cy;
+    if(vuelta) return `M${x1} ${y1} C${x1} ${y1+34}, ${x2} ${y2+34}, ${x2} ${y2}`;
+    const d = Math.max(26, (x2 - x1) * 0.45);
+    return `M${x1} ${y1} C${x1+d} ${y1}, ${x2-d} ${y2}, ${x2} ${y2}`;
+  };
+
+  svg.innerHTML =
+    CABLES.map(([a,b,v], i) => `<path id="cb-${i}" d="${curva(a,b,v)}" fill="none"
+        stroke="${v ? "var(--hair)" : "var(--line)"}" stroke-width="1.5"
+        ${v ? 'stroke-dasharray="3 4"' : ''}/>`).join("")
+    + NODOS.map(nd => `<g class="nodo" id="nd-${nd.k}">
+        <rect x="${pos[nd.k].x}" y="${nd.y}" width="${AN}" height="${AL}" rx="8"
+          fill="var(--panel2)" stroke="var(--line)" stroke-width="1.4"/>
+        <rect x="${pos[nd.k].x}" y="${nd.y}" width="3.5" height="${AL}" rx="2"
+          fill="${TONO[nd.t]}"/>
+        <text x="${pos[nd.k].x+13}" y="${nd.y+19}" fill="var(--ink)"
+          font-family="var(--ui)" font-size="12" font-weight="600">${nd.n}</text>
+        <text x="${pos[nd.k].x+13}" y="${nd.y+34}" fill="var(--faint)"
+          font-family="var(--num)" font-size="9">${nd.s}</text></g>`).join("");
+
+  const vivos = [];
+  function pulso(ci, color){
+    const cable = $("cb-" + ci); if(!cable) return;
+    const c = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+    c.setAttribute("r", "3.2"); c.setAttribute("fill", color || "#BF5AF2");
+    svg.appendChild(c);
+    vivos.push({el:c, path:cable, t0:performance.now(), dur:700});
+  }
+  (function anim(now){
+    for(let i = vivos.length - 1; i >= 0; i--){
+      const p = vivos[i], k = Math.min((now - p.t0) / p.dur, 1);
+      const L = p.path.getTotalLength();
+      const pt = p.path.getPointAtLength(k * L);
+      p.el.setAttribute("cx", pt.x); p.el.setAttribute("cy", pt.y);
+      p.el.setAttribute("opacity", (1 - k * k).toFixed(2));
+      if(k >= 1){ p.el.remove(); vivos.splice(i, 1); }
+    }
+    requestAnimationFrame(anim);
+  })(performance.now());
+
+  // qué cable sale de cada nodo, para encender el camino correcto
+  const SALE = {};
+  CABLES.forEach(([a,, ], i) => { (SALE[a] = SALE[a] || []).push(i); });
+
+  let previo = {};
+  const marcar = (k, on) => { const g = $("nd-"+k); if(g) g.classList.toggle("act", !!on); };
+
+  window.__flujo = function(estado){
+    const mapa = {news:"news", scanner:"scan", technical:"tech",
+                  correlacion:"corr", aprendizaje:"apr", risk:"risk",
+                  execution:"exec"};
+    (estado.agents || []).forEach(a => {
+      const k = mapa[a.name]; if(!k) return;
+      const cambio = previo[a.name] !== undefined && a.runs > previo[a.name];
+      previo[a.name] = a.runs;
+      marcar(k, a.status === "working" || cambio);
+      if(cambio) (SALE[k] || []).forEach(ci => pulso(ci, TONO[
+        (NODOS.find(n => n.k === k) || {}).t] || "#BF5AF2"));
+    });
+    marcar("datos", true);
+    marcar("dir", true);
+    const blo = estado.bloqueado;
+    NODOS.forEach(nd => { const g = $("nd-"+nd.k); if(g) g.classList.toggle("blo", !!blo); });
+    const est = $("flwEstado");
+    if(est){
+      est.textContent = blo ? "BLOQUEADO"
+        : (estado.activo === false ? "en pausa" : "en marcha");
+      est.style.color = blo ? "var(--neg)"
+        : (estado.activo === false ? "var(--dim)" : "var(--pos)");
+    }
+    const pie = $("flwPie");
+    if(pie){
+      const ult = (estado.events || [])[0] || (estado.events || []).slice(-1)[0];
+      pie.textContent = blo
+        ? ("Candado echado: " + (estado.bloqueo_motivo || "motivo sin registrar"))
+        : (ult ? `${(ult.agent || "").toUpperCase()} · ${ult.msg || ""}`
+               : "esperando a los agentes…");
+    }
+  };
 })();
 </script>
