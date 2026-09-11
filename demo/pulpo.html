@@ -809,13 +809,17 @@ const ARMS = [
   {k:"news",  base:[418,318], bow:[ 74,-46], w:34},
   {k:"scan",  base:[432,336], bow:[ 54, 40], w:34},
   {k:"tech",  base:[456,348], bow:[ 58,-34], w:33},
-  {k:"f1",    base:[484,354], bow:[-38, 32], w:30, tip:[418,470]},
-  {k:"f2",    base:[516,354], bow:[ 34,-30], w:30, tip:[612,468]},
+  /* estos dos no sujetan nada: son los que saludan, y por eso suben por los
+     lados hasta la altura de la cara en vez de colgar hacia abajo */
+  {k:"f1",    base:[470,352], bow:[-72, 54], w:30, tip:[316,230]},
+  {k:"f2",    base:[530,352], bow:[ 68,-52], w:30, tip:[692,230]},
   {k:"risk",  base:[544,348], bow:[-56,-34], w:33},
   {k:"exec",  base:[568,336], bow:[-66,-46], w:34},
   {k:"corr",  base:[582,318], bow:[-34, 38], w:32},
 ];
 ARMS.forEach(a=>{ if(AG[a.k]) a.tip = AG[a.k].tip; });
+/* los dos que no sujetan instrumento son los que saludan */
+const MANOS = ["f1", "f2"];
 
 
 const NS = 30;                                     // muestras por brazo
@@ -904,6 +908,24 @@ function pod(k){
       letter-spacing="1.5" fill="var(--dim)">${a.n}</text></g>`;
 }
 
+/* La manopla: el guante de dibujo animado, en la PUNTA de un tentaculo. Tener
+   bracitos aparte y ademas tentaculos no tenia sentido — un pulpo tiene ocho
+   brazos, y dos de ellos son los que gesticulan. Se dibuja centrada en el
+   origen para poder colgarla de la punta, que se mueve en cada fotograma. */
+function manopla(k){
+  return `<g id="mano-${k}">
+    <path d="M-30 -6 C-34 -26, -16 -40, 4 -36 C26 -32, 38 -16, 34 4
+             C30 24, 10 34, -8 28 C-24 22, -27 8, -30 -6 Z"
+      fill="${CREMA}" stroke="${TINTA}" stroke-width="5" stroke-linejoin="round"/>
+    <path d="M-13 -12 C-6 -22, 6 -22, 12 -13" fill="none" stroke="${TINTA}"
+      stroke-width="3.2" stroke-linecap="round"/>
+    <path d="M-10 4 l4 18 M3 1 l5 19 M15 -4 l5 17" stroke="${TINTA}"
+      stroke-width="3.2" stroke-linecap="round" fill="none"/>
+    <path d="M-27 12 C-16 22, 4 26, 20 20" fill="none" stroke="${TINTA}"
+      stroke-width="2.6" opacity=".55" stroke-linecap="round"/>
+  </g>`;
+}
+
 /* ---- el bicho: blob de dibujo animado de los años treinta ----------------
    Rubber hose: una silueta redonda y blanda, tinta negra gorda y constante,
    color plano con UNA sombra, ojos enormes con pupila negra grande, cejas que
@@ -937,28 +959,6 @@ function headSVG(){
     <path class="ceja" id="ceja-${side}" d="M${cx-32} 130 Q${cx-2} 112, ${cx+32} 132"
       fill="none" stroke="${TINTA}" stroke-width="10" stroke-linecap="round"/></g>`;
 
-  /* Los bracitos: dos mangueras que salen del cuerpo y acaban en manopla. La
-     manopla es un guante de dibujo: bulto redondo, puño y tres rayas. */
-  const brazo = (lado)=>{
-    const f = lado === "l" ? -1 : 1;
-    const x0 = 500 + f * 150, y0 = 268;
-    const x1 = 500 + f * 232, y1 = 250;
-    return `<g id="brazo-${lado}">
-      <path d="M${x0} ${y0} C${x0 + f*44} ${y0 + 26}, ${x1 - f*24} ${y1 + 40},
-               ${x1} ${y1}" fill="none" stroke="${TINTA}" stroke-width="24"
-        stroke-linecap="round"/>
-      <path d="M${x0} ${y0} C${x0 + f*44} ${y0 + 26}, ${x1 - f*24} ${y1 + 40},
-               ${x1} ${y1}" fill="none" stroke="${ROJO}" stroke-width="16"
-        stroke-linecap="round"/>
-      <g transform="translate(${x1 + f*10},${y1 - 6})">
-        <path d="M${-26*1} -30 C${10} -46, ${34} -22, ${30} 2
-                 C${27} 24, ${4} 34, ${-14} 26 C${-32} 18, ${-36} -18, ${-26} -30 Z"
-          fill="${CREMA}" stroke="${TINTA}" stroke-width="5" stroke-linejoin="round"/>
-        <path d="M-14 -6 l6 20 M-1 -10 l6 22 M12 -12 l6 20" stroke="${TINTA}"
-          stroke-width="3.4" stroke-linecap="round" fill="none"/>
-      </g></g>`;
-  };
-
   return `<g id="octoWrap"><g id="octo">
     <ellipse class="halo" cx="500" cy="205" rx="150" ry="142" fill="${ROJO}"
       opacity=".03"/>
@@ -967,7 +967,6 @@ function headSVG(){
         <feGaussianBlur stdDeviation="17"/>
       </filter>
     </defs>
-    ${brazo("l")} ${brazo("r")}
     <path d="${blob}" fill="${ROJO}" stroke="${TINTA}" stroke-width="6"
       stroke-linejoin="round"/>
     <clipPath id="mclip"><path d="${blob}"/></clipPath>
@@ -1010,7 +1009,8 @@ function headSVG(){
       <g id="suck-${a.k}"></g>
       <path id="lk-${a.k}" fill="none" stroke="none"/>
     </g>`).join("");
-  $("ring").innerHTML = `<g id="burbujas"></g><g id="arms">${arms}</g>${headSVG()}
+  const manos = MANOS.map(manopla).join("");
+  $("ring").innerHTML = `<g id="burbujas"></g><g id="arms">${arms}</g><g id="manos">${manos}</g>${headSVG()}
     ${KEYS.map(pod).join("")}<g id="pulses"></g>`;
   // burbujas: suben despacio por detrás de todo; es lo que dice que hay agua
   $("burbujas").innerHTML = Array.from({length:18},(_,i)=>
@@ -1081,6 +1081,10 @@ ARMS.forEach((a,i)=>armState[a.k]={ph:i*2.1, amp:1});
     const tip = [a.tip[0] + s2*5*w, a.tip[1] + s1*5*w];
     /* el instrumento viaja con la punta que lo sujeta: si se queda clavado
        mientras el brazo ondula, se ve al momento que no lo está agarrando */
+    const mn = $("mano-"+a.k);
+    if(mn) mn.setAttribute("transform",
+      `translate(${tip[0].toFixed(1)},${tip[1].toFixed(1)}) ` +
+      `rotate(${(s1*9*w).toFixed(1)})`);
     const pd = $("pod-"+a.k);
     if(pd) pd.setAttribute("transform",
       `translate(${tip[0].toFixed(1)},${tip[1].toFixed(1)}) ` +
@@ -1724,8 +1728,15 @@ setTimeout(round, 800);
       return c >= 1000 ? SIG[DIVISA] + (c / 1000).toFixed(0) + "k"
                        : SIG[DIVISA] + (c < 10 ? c.toFixed(c < 1 ? 2 : 1) : c.toFixed(0));
     };
+    /* La escala arranca en la potencia de diez que toca, no en 1: con una
+       cuenta de $10 la linea del $1 no dice nada y encima se lee como si la
+       cuenta valiera uno. Solo aparece si la cuenta baja de verdad ahi. */
+    let suelo = 10;
+    const minimo = Math.min(puesto, ...p);
+    while(suelo > 1 && minimo < suelo) suelo /= 10;
+    while(suelo * 10 <= minimo) suelo *= 10;
     let g = "";
-    for(let v = 1; v <= alto; v *= 10)
+    for(let v = suelo; v <= alto; v *= 10)
       g += `<line x1="34" y1="${yOf(v).toFixed(1)}" x2="${W-12}" y2="${yOf(v).toFixed(1)}"
         stroke="var(--hair)" stroke-width="1"/>
       <text x="0" y="${(yOf(v)+3.5).toFixed(1)}" fill="var(--faint)" font-size="9"
