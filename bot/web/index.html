@@ -776,14 +776,31 @@ let speed = 1;                       // el pulpo lo usa para cronometrar impulso
    afilan con dos hileras de ventosas alternas en la cara oral. Cinco brazos
    sujetan un instrumento; los otros tres solo se mueven. */
 
+/* Arcoiris: cada agente tiene su color y su brazo va pintado de ese color.
+   No es solo que quede vivo — es lo que permite mirar el bicho y saber cual
+   es cual sin leer un rotulo. Los colores van en hexadecimal, no en variable
+   de CSS, porque de ellos se derivan las tres luces de cada brazo. */
 const AG = {
-  news:{n:"Noticias", c:"var(--c-news)", job:"Titulares",      tip:[142, 92]},
-  scan:{n:"Escáner",  c:"var(--c-scan)", job:"Fuerza relativa",tip:[ 96,258]},
-  tech:{n:"Técnico",  c:"var(--c-tech)", job:"Indicadores",    tip:[266,424]},
-  corr:{n:"Correlación",c:"#64D2FF",     job:"¿Es la misma apuesta?", tip:[918,306]},
-  risk:{n:"Riesgo",   c:"var(--c-risk)", job:"Veto y tamaño",  tip:[744,422]},
-  exec:{n:"Ejecución",c:"var(--c-exec)", job:"Órdenes",        tip:[908,162]},
+  news:{n:"Noticias", c:"#FF4D7E", job:"Titulares",      tip:[142, 92]},
+  scan:{n:"Escáner",  c:"#FF9F2E", job:"Fuerza relativa",tip:[ 96,258]},
+  tech:{n:"Técnico",  c:"#FFD426", job:"Indicadores",    tip:[266,424]},
+  corr:{n:"Correlación",c:"#2FD6C9", job:"¿Es la misma apuesta?", tip:[918,306]},
+  risk:{n:"Riesgo",   c:"#A87BFF", job:"Veto y tamaño",  tip:[744,422]},
+  exec:{n:"Ejecución",c:"#30D158", job:"Órdenes",        tip:[908,162]},
 };
+/* los dos brazos libres tambien tienen color: si no, el arcoiris se rompe */
+const COLOR_BRAZO = {news:"#FF4D7E", scan:"#FF9F2E", tech:"#FFD426",
+                     f1:"#7BE04A", f2:"#2FD6C9", risk:"#A87BFF",
+                     exec:"#30D158", corr:"#3FA0FF"};
+/* Tres tonos a partir de uno: sombra, medio y luz. Sin esto habria que
+   escribir veinticuatro colores a mano y el dia que cambie uno, los tres. */
+function tono(hex, k){
+  const n = parseInt(hex.slice(1), 16);
+  const r = (n >> 16) & 255, g = (n >> 8) & 255, b = n & 255;
+  const m = (v) => Math.max(0, Math.min(255, Math.round(
+    k < 0 ? v * (1 + k) : v + (255 - v) * k)));
+  return `rgb(${m(r)},${m(g)},${m(b)})`;
+}
 const KEYS = Object.keys(AG);
 $("gthr").style.left = ((0.35+1)/2*100) + "%";
 
@@ -933,34 +950,36 @@ function headSVG(){
      Lo que NO cambia son los identificadores: pup, gl, lidT y lidB siguen
      donde estaban y con las mismas coordenadas, así que los seis humores y la
      mirada que vaga cuando no hay nada que decidir siguen funcionando. */
+  /* La cara, quinta version. La anterior era una cuña dura con pupila en barra
+     y no gustaba: se leia rara y antipatica. Esta es redonda y limpia — ojo
+     grande de almendra, iris con degradado, brillo gordo arriba y una linea
+     de pestaña SOLO por encima, nunca un aro cerrado alrededor (un aro se lee
+     como gafas, ya pasó dos veces). Los identificadores no cambian: pup, gl,
+     lidT y lidB siguen donde estaban, asi que los seis humores siguen vivos. */
   const eye = (side, cx, flip)=>{
-    const s = flip;
-    const P = (x, y) => `${(cx + x * s).toFixed(1)} ${226 + y}`;
-    const cuna = `M${P(-31, 3)} C${P(-26, -17)}, ${P(-6, -22)}, ${P(29, 4)}
-                  C${P(12, 18)}, ${P(-17, 16)}, ${P(-31, 3)} Z`;
+    const ojo = `M${cx - 31} 226 C${cx - 31} 203, ${cx + 31} 203, ${cx + 31} 226
+                 C${cx + 31} 249, ${cx - 31} 249, ${cx - 31} 226 Z`;
     return `<g>
-    <path d="${cuna}" transform="translate(${-2.5 * s},2.5)" fill="#04100E"
-      opacity=".8"/>
-    <clipPath id="ec-${side}"><path d="${cuna}"/></clipPath>
-    <g clip-path="url(#ec-${side})">
-      <rect x="${cx - 38}" y="196" width="76" height="60" fill="url(#irisJefe)"/>
-      <ellipse cx="${cx}" cy="211" rx="20" ry="7" fill="#FFFFFF" opacity=".14"/>
-      <rect class="pup" id="pup-${side}" x="${cx-15}" y="221" width="30" height="9.5"
-        rx="4.7" fill="#07131F"/>
-      <ellipse class="glint" id="gl-${side}" cx="${cx-7*flip}" cy="222" rx="4" ry="2.7"
-        fill="#fff" opacity=".95"/>
-      <rect class="lidT" id="lidT-${side}" x="${cx-30}" y="188" width="60" height="22"
-        fill="var(--oct)"/>
-      <rect class="lidB" id="lidB-${side}" x="${cx-30}" y="243" width="60" height="22"
-        fill="var(--oct)"/>
-    </g>
-    <path d="${cuna}" fill="none" stroke="#04100E" stroke-width="2.6"
-      stroke-linejoin="round"/>
-    <path d="M${P(-35, 2)} C${P(-29, -23)}, ${P(-5, -28)}, ${P(32, 3)}
-             C${P(5, -15)}, ${P(-20, -13)}, ${P(-35, 2)} Z"
-      fill="var(--oct)" stroke="#04100E" stroke-width="2" stroke-linejoin="round"/>
-    <path d="M${P(-30, -6)} C${P(-22, -16)}, ${P(-6, -18)}, ${P(18, -2)}"
-      fill="none" stroke="#FFFFFF" stroke-width="1.6" opacity=".13"/></g>`;
+      <path d="${ojo}" transform="translate(0,3)" fill="#04100E" opacity=".45"/>
+      <clipPath id="ec-${side}"><path d="${ojo}"/></clipPath>
+      <g clip-path="url(#ec-${side})">
+        <rect x="${cx - 34}" y="200" width="68" height="52" fill="url(#irisJefe)"/>
+        <ellipse cx="${cx}" cy="212" rx="24" ry="8" fill="#FFFFFF" opacity=".2"/>
+        <rect class="pup" id="pup-${side}" x="${cx-9}" y="221" width="18" height="9.5"
+          rx="4.7" fill="#0B1524"/>
+        <ellipse class="glint" id="gl-${side}" cx="${cx-9*flip}" cy="219" rx="6.5" ry="4.6"
+          fill="#fff" opacity=".95"/>
+        <circle cx="${cx+10*flip}" cy="233" r="2.6" fill="#fff" opacity=".45"/>
+        <rect class="lidT" id="lidT-${side}" x="${cx-34}" y="188" width="68" height="22"
+          fill="url(#pielJefe)"/>
+        <rect class="lidB" id="lidB-${side}" x="${cx-34}" y="243" width="68" height="22"
+          fill="url(#pielJefe)"/>
+      </g>
+      <path d="M${cx - 31} 226 C${cx - 31} 203, ${cx + 31} 203, ${cx + 31} 226"
+        fill="none" stroke="#04100E" stroke-width="3.4" stroke-linecap="round"/>
+      <path d="M${cx - 24} 243 C${cx - 12} 250, ${cx + 12} 250, ${cx + 24} 243"
+        fill="none" stroke="#FFFFFF" stroke-width="2" opacity=".22"
+        stroke-linecap="round"/></g>`;
   };
 
   return `<g id="octoWrap"><g id="octo">
@@ -971,12 +990,20 @@ function headSVG(){
       <filter id="soft" x="-40%" y="-40%" width="180%" height="180%">
         <feGaussianBlur stdDeviation="17"/>
       </filter>
-      <radialGradient id="pielJefe" cx=".34" cy=".18" r="1">
-        <stop offset="0" stop-color="#9AD4FF"/>
-        <stop offset=".28" stop-color="#3E9BF2"/>
-        <stop offset=".62" stop-color="#1A5396"/>
-        <stop offset="1" stop-color="#061A33"/>
+      <!-- piel tornasolada: un pulpo de verdad cambia de color, y aqui ademas
+           es lo que hace juego con los ocho brazos del arcoiris -->
+      <radialGradient id="pielJefe" cx=".33" cy=".16" r="1.05">
+        <stop offset="0" stop-color="#FFD1F0"/>
+        <stop offset=".2" stop-color="#B07BFF"/>
+        <stop offset=".46" stop-color="#4A8FF0"/>
+        <stop offset=".72" stop-color="#2BB3C8"/>
+        <stop offset="1" stop-color="#0B2B4A"/>
       </radialGradient>
+      <linearGradient id="tornasol" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0" stop-color="#FF8AD8" stop-opacity=".4"/>
+        <stop offset=".45" stop-color="#7BE0FF" stop-opacity=".12"/>
+        <stop offset="1" stop-color="#FFE58A" stop-opacity=".3"/>
+      </linearGradient>
       <radialGradient id="irisJefe" cx=".42" cy=".3" r=".8">
         <stop offset="0" stop-color="#CFF8FF"/>
         <stop offset=".42" stop-color="#2FBBD6"/>
@@ -997,6 +1024,7 @@ function headSVG(){
       <ellipse cx="468" cy="98" rx="42" ry="54" fill="#BFE0FF" opacity=".13"/>
       <ellipse cx="500" cy="300" rx="190" ry="96" fill="#04101F" opacity=".4"
         filter="url(#soft)"/>
+      <path d="${mantle}" fill="url(#tornasol)"/>
       ${spots}${bumps}
       <!-- arrugas: siguen la curva del manto y le dan superficie sin romper
            la silueta. Las papilas en el canto se probaron y salía un collar
@@ -1017,7 +1045,8 @@ function headSVG(){
     </g>
     <path d="M418 208 q82 40 164 0" fill="none" stroke="var(--oct-dark)"
       stroke-width="9" opacity=".38" stroke-linecap="round"/>
-    <path d="M578 196 q22 6 20 26 q-14 6 -24 -8 z" fill="var(--oct-dark)"
+    <!-- el sifón, por donde un pulpo expulsa el agua -->
+    <path d="M578 196 q22 6 20 26 q-14 6 -24 -8 z" fill="url(#pielJefe)"
       stroke="#04100E" stroke-width="2.4"/>
     <!-- el resplandor del ojo late; cuando el bicho se pone a pensar se nota -->
     <ellipse class="halo" cx="452" cy="226" rx="42" ry="26" fill="#2FBBD6"
@@ -1040,10 +1069,10 @@ function headSVG(){
 
 (function buildOcto(){
   const arms = ARMS.map(a=>`<g id="arm-${a.k}">
-      <path id="body-${a.k}" fill="var(--oct-dark)" stroke="#04100E" stroke-width="2.4"
-        stroke-linejoin="round"/>
-      <path id="lz1-${a.k}" fill="var(--oct)" opacity=".95"/>
-      <path id="lz2-${a.k}" fill="var(--oct-lite)" opacity=".5"/>
+      <path id="body-${a.k}" fill="${tono(COLOR_BRAZO[a.k], -0.62)}" stroke="#04100E"
+        stroke-width="2.4" stroke-linejoin="round"/>
+      <path id="lz1-${a.k}" fill="${tono(COLOR_BRAZO[a.k], -0.18)}" opacity=".97"/>
+      <path id="lz2-${a.k}" fill="${tono(COLOR_BRAZO[a.k], 0.34)}" opacity=".8"/>
       <g id="suck-${a.k}"></g>
       <path id="lk-${a.k}" fill="none" stroke="none"/>
     </g>`).join("");
@@ -1057,9 +1086,10 @@ function headSVG(){
     const g = $("suck-"+a.k);
     // dos hileras de nueve; cada ventosa lleva su propio brillo dentro
     g.innerHTML = Array.from({length:2*18},(_,i)=>
-      `<g id="sk-${a.k}-${i}"><circle class="vv" r="2.6" fill="var(--oct-lite)"
-        stroke="var(--oct-dark)" stroke-width=".8" opacity=".95"/>
-        <circle class="vb" r="1" cy="-.7" fill="#EAF6FF" opacity=".5"/></g>`).join("");
+      `<g id="sk-${a.k}-${i}"><circle class="vv" r="2.6"
+        fill="${tono(COLOR_BRAZO[a.k], 0.62)}" stroke="${tono(COLOR_BRAZO[a.k], -0.5)}"
+        stroke-width=".8" opacity=".95"/>
+        <circle class="vb" r="1" cy="-.7" fill="#FFFFFF" opacity=".6"/></g>`).join("");
   });
 })();
 
@@ -1187,18 +1217,18 @@ function lamp(k, on){
    aparezca nada que parezca unas gafas. Se aplica en espejo en cada ojo.
    `pup[2]` es el alto de la pupila: cuanto menos, más rasgada — un ojo de
    depredador es una ranura, no un botón. */
+/* El reposo era la cara de alguien harto: parpado caido, ojo entrecerrado y
+   boca recta, con el parpado inclinado 16 grados. Quedaba antipatica. Ahora el
+   reposo es el ojo ABIERTO y la boca con media sonrisa; el gesto duro se
+   guarda para cuando toca —pensando y perdiendo—, que es cuando significa
+   algo. Menos inclinacion en todo: la ceja caida es lo que endurecia la cara. */
 const FACE = {
-  /* El reposo no es una cara neutra: es la cara de alguien que lleva horas
-     mirando gráficos y no se fía de ninguno. Párpado caído, ojo entrecerrado
-     y boca recta. Todo lo demás se mide contra esta. */
-  neutral:{mouth:"M483 254 h34",                     lidT:6,  lidB:0,  tilt:16, pup:[0,0,6.5],  skin:null,       hold:0},
-  think:  {mouth:"M490 254 h20",                     lidT:9,  lidB:3,  tilt:21, pup:[-6,-2,6],  skin:"#1E63B0",  hold:0},
-  /* ni ganando se le va la cara: media sonrisa torcida y el ojo sigue duro */
-  happy:  {mouth:"M484 250 q16 11 33 -4",            lidT:2,  lidB:6,  tilt:9,  pup:[0,1,8],    skin:"#16A06B",  hold:2600},
-  glad:   {mouth:"M484 252 q16 7 33 -2",             lidT:4,  lidB:3,  tilt:12, pup:[0,0,7.5],  skin:"#1B8F72",  hold:1400},
-  /* la cara de perder ya no es tristeza: es que le han tocado la cuenta */
-  sad:    {mouth:"M480 259 q20 -13 40 0",            lidT:13, lidB:2,  tilt:26, pup:[0,2,5.5],  skin:"#C0392B",  hold:2600, snarl:1},
-  wow:    {mouth:"M489 244 q11 19 22 0 q-11 9 -22 0", lidT:0, lidB:0, tilt:4,  pup:[0,-1,13], skin:"#3FA0FF",  hold:1800},
+  neutral:{mouth:"M484 252 q16 6 33 -1",             lidT:0,  lidB:0,  tilt:0,  pup:[0,0,9],    skin:null,       hold:0},
+  think:  {mouth:"M490 253 h20",                     lidT:3,  lidB:2,  tilt:7,  pup:[-6,-2,8],  skin:"#1E63B0",  hold:0},
+  happy:  {mouth:"M482 249 q18 13 36 -5",            lidT:0,  lidB:9,  tilt:0,  pup:[0,1,10.5], skin:"#16A06B",  hold:2600},
+  glad:   {mouth:"M484 251 q16 9 33 -3",             lidT:0,  lidB:5,  tilt:0,  pup:[0,0,10],   skin:"#1B8F72",  hold:1400},
+  sad:    {mouth:"M480 259 q20 -13 40 0",            lidT:10, lidB:2,  tilt:12, pup:[0,2,7],    skin:"#C0392B",  hold:2600},
+  wow:    {mouth:"M489 244 q11 19 22 0 q-11 9 -22 0", lidT:0, lidB:0, tilt:0,  pup:[0,-1,14], skin:"#3FA0FF",  hold:1800},
 };
 
 function setFace(_, m){
@@ -1222,10 +1252,10 @@ function setFace(_, m){
     if(b) b.setAttribute("y", 243 - f.lidB);
     if(pu){
       const cx = side === "l" ? 452 : 548;
-      pu.setAttribute("x", cx - 15 + f.pup[0]);
+      pu.setAttribute("x", cx - 9 + f.pup[0]);
       pu.setAttribute("y", 226 - f.pup[2]/2 + f.pup[1]);
       pu.setAttribute("height", f.pup[2]);
-      pu.setAttribute("rx", Math.min(f.pup[2]/2, 5));
+      pu.setAttribute("rx", Math.min(f.pup[2]/2, 9));
     }
   });
   // Un pulpo no se repinta entero: se le enciende una zona. Un lavado muy leve
