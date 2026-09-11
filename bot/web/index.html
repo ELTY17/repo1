@@ -43,7 +43,7 @@ a{color:var(--brass)}
 .deck{min-height:100dvh;display:flex;flex-direction:column;padding:0}
 .mosaic{flex:1;min-height:0;display:grid;gap:12px;padding:12px 16px 16px;
   grid-template-columns:repeat(12,minmax(0,1fr));
-  grid-template-rows:336px 296px 238px 286px 508px 448px;
+  grid-template-rows:336px 296px 238px 286px 508px 560px;
   grid-template-areas:
     "cap cap prc prc prc prc dec dec dec con con con"
     "agt agt ops ops ops mkt mkt mkt ord ord cnv cnv"
@@ -398,7 +398,7 @@ footer{font-size:12px;color:var(--dim);line-height:1.6;letter-spacing:-.005em}
    salen del contador de ciclos de cada agente, no de un temporizador. */
 .flwwrap{display:flex;flex-direction:column;min-height:0;gap:6px;
   justify-content:center}
-#flujo{width:100%;height:auto;aspect-ratio:1000/250;flex:none}
+#flujo{width:100%;height:auto;aspect-ratio:1000/300;flex:none}
 .flwpie{font-family:var(--num);font-size:11px;color:var(--dim);flex:none;
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .nodo rect{transition:stroke .3s,fill .3s}
@@ -753,7 +753,7 @@ const AG = {
   news:{n:"Noticias", c:"var(--c-news)", job:"Titulares",      tip:[142, 92]},
   scan:{n:"Escáner",  c:"var(--c-scan)", job:"Fuerza relativa",tip:[ 96,258]},
   tech:{n:"Técnico",  c:"var(--c-tech)", job:"Indicadores",    tip:[266,424]},
-  corr:{n:"Correlación",c:"#64D2FF",     job:"¿Es la misma apuesta?", tip:[956,306]},
+  corr:{n:"Correlación",c:"#64D2FF",     job:"¿Es la misma apuesta?", tip:[918,306]},
   risk:{n:"Riesgo",   c:"var(--c-risk)", job:"Veto y tamaño",  tip:[744,422]},
   exec:{n:"Ejecución",c:"var(--c-exec)", job:"Órdenes",        tip:[908,162]},
 };
@@ -866,7 +866,10 @@ function pod(k){
   if(k==="exec") g=`<path d="M-22 16 l5 -14 h34 l5 14 z" fill="var(--sunk)" ${P}/>
     <circle cy="-6" r="12" fill="var(--neg)" ${P}/>
     <circle cy="-9" r="7" fill="none" stroke="#fff" stroke-opacity=".28" stroke-width="2.4"/>`;
-  return `<g transform="translate(${a.tip[0]},${a.tip[1]})"><g class="blob" id="bl-${k}">${g}</g>
+  /* el instrumento entero va a escala 1,4: a tamaño original se leían como
+     iconitos y lo que sujeta cada brazo es justo lo que hay que ver */
+  return `<g id="pod-${k}" transform="translate(${a.tip[0]},${a.tip[1]}) scale(1.4)">
+    <g class="blob" id="bl-${k}">${g}</g>
     <circle class="lamp" id="lamp-${k}" cx="0" cy="-30" r="4.6" fill="var(--sunk)"
       stroke="#04100E" stroke-width="2"/>
     <text y="42" text-anchor="middle" font-family="IBM Plex Mono,monospace" font-size="9.5"
@@ -968,6 +971,17 @@ function headSVG(){
       <ellipse cx="500" cy="300" rx="190" ry="96" fill="#04101F" opacity=".4"
         filter="url(#soft)"/>
       ${spots}${bumps}
+      <!-- arrugas: siguen la curva del manto y le dan superficie sin romper
+           la silueta. Las papilas en el canto se probaron y salía un collar
+           de bolas, que era peor que el globo liso. -->
+      ${[["M418 150 C452 128, 548 128, 582 150", .30],
+         ["M414 178 C450 158, 550 158, 586 178", .22],
+         ["M430 112 C458 94, 542 94, 570 112", .26],
+         ["M448 214 C470 200, 530 200, 552 214", .18]]
+        .map(([d,o])=>`<path d="${d}" fill="none" stroke="#04101F"
+          stroke-width="2.4" opacity="${o}" stroke-linecap="round"/>
+          <path d="${d}" transform="translate(0,-2.6)" fill="none" stroke="#BFE0FF"
+          stroke-width="1.6" opacity="${(o*0.55).toFixed(2)}" stroke-linecap="round"/>`).join("")}
       <path class="mantle" id="mantle" d="${mantle}" fill="var(--oct)" opacity="0"/>
       ${[[462,102,44,32],[548,120,38,28],[500,176,50,32],[436,190,32,26],
          [560,196,30,24],[494,72,30,20],[452,246,42,17],[548,246,42,17]]
@@ -978,6 +992,11 @@ function headSVG(){
       stroke-width="9" opacity=".38" stroke-linecap="round"/>
     <path d="M578 196 q22 6 20 26 q-14 6 -24 -8 z" fill="var(--oct-dark)"
       stroke="#04100E" stroke-width="2.4"/>
+    <!-- el resplandor del ojo late; cuando el bicho se pone a pensar se nota -->
+    <ellipse class="halo" cx="452" cy="226" rx="42" ry="26" fill="#2FBBD6"
+      opacity=".22" filter="url(#soft)"/>
+    <ellipse class="halo" cx="548" cy="226" rx="42" ry="26" fill="#2FBBD6"
+      opacity=".22" filter="url(#soft)"/>
     ${eye("l",452,1)} ${eye("r",548,-1)}
     <path d="M436 262 q18 20 32 11 q16 18 32 7 q16 11 32 -7 q14 9 32 -11"
       fill="var(--oct-dark)" opacity=".8" stroke="#04100E" stroke-width="2"/>
@@ -986,18 +1005,6 @@ function headSVG(){
       style="transition:opacity .22s"/>
     <path id="mouth" d="M485 252 q15 3 30 0" fill="none" stroke="#08121C"
       stroke-width="4.8" stroke-linecap="round" stroke-linejoin="round"/>
-    <!-- la corona: este bicho es el Director -->
-    <g id="corona" transform="translate(500,52)">
-      <path d="M-78 16 L-78 -14 L-54 3 L-36 -26 L-19 -8 L0 -54 L19 -8 L36 -26
-               L54 3 L78 -14 L78 16 Z" fill="url(#oroJefe)" stroke="#6B4B08"
-        stroke-width="2.4" stroke-linejoin="round"/>
-      <path d="M-78 16 L78 16" stroke="#FFE9A8" stroke-width="3.4" opacity=".75"/>
-      <path d="M0 -54 L-8 -30 L0 -23 L8 -30 Z" fill="#FFF0B8" opacity=".92"/>
-      <circle cx="0" cy="5" r="7" fill="#2E7BD6"/>
-      <circle cx="0" cy="5" r="7" fill="url(#gemaJefe)"/>
-      <circle cx="-36" cy="0" r="3.4" fill="#FFE9A8" opacity=".9"/>
-      <circle cx="36" cy="0" r="3.4" fill="#FFE9A8" opacity=".9"/>
-    </g>
     <text id="chest" x="500" y="486" text-anchor="middle" font-family="IBM Plex Mono,monospace"
       font-size="17" font-weight="600" fill="var(--faint)">· · ·</text>
 
@@ -1013,13 +1020,19 @@ function headSVG(){
       <g id="suck-${a.k}"></g>
       <path id="lk-${a.k}" fill="none" stroke="none"/>
     </g>`).join("");
-  $("ring").innerHTML = `<g id="arms">${arms}</g>${headSVG()}
+  $("ring").innerHTML = `<g id="burbujas"></g><g id="arms">${arms}</g>${headSVG()}
     ${KEYS.map(pod).join("")}<g id="pulses"></g>`;
+  // burbujas: suben despacio por detrás de todo; es lo que dice que hay agua
+  $("burbujas").innerHTML = Array.from({length:18},(_,i)=>
+    `<circle id="bu-${i}" r="${(1.4+(i%4)*1.05).toFixed(1)}" fill="#8FD0FF"
+      opacity="${(0.09+(i%3)*0.05).toFixed(2)}"/>`).join("");
   ARMS.forEach(a=>{
     const g = $("suck-"+a.k);
-    g.innerHTML = Array.from({length:2*14},(_,i)=>
-      `<circle id="sk-${a.k}-${i}" r="2.6" fill="var(--oct-lite)" stroke="var(--oct-dark)"
-        stroke-width=".8" opacity=".9"/>`).join("");
+    // dos hileras de nueve; cada ventosa lleva su propio brillo dentro
+    g.innerHTML = Array.from({length:2*18},(_,i)=>
+      `<g id="sk-${a.k}-${i}"><circle class="vv" r="2.6" fill="var(--oct-lite)"
+        stroke="var(--oct-dark)" stroke-width=".8" opacity=".95"/>
+        <circle class="vb" r="1" cy="-.7" fill="#EAF6FF" opacity=".5"/></g>`).join("");
   });
 })();
 
@@ -1051,6 +1064,12 @@ ARMS.forEach((a,i)=>armState[a.k]={ph:i*2.1, amp:1});
       pu.setAttribute("y", (221.25 + dy).toFixed(1));
     });
   }
+    for(let i=0;i<18;i++){
+      const b = $("bu-"+i); if(!b) continue;
+      const s = (t*0.017 + i*181) % 620;
+      b.setAttribute("cx", (30 + i*54 + Math.sin(t*0.0012+i)*13).toFixed(1));
+      b.setAttribute("cy", (560 - s).toFixed(1));
+    }
   ARMS.forEach(a=>{
     const st = armState[a.k];
     const on = KEYS.includes(a.k) && $("bl-"+a.k) &&
@@ -1068,6 +1087,12 @@ ARMS.forEach((a,i)=>armState[a.k]={ph:i*2.1, amp:1});
     const c1 = [base[0]+bx*0.34 + nx*(a.bow[0]+s1*22*w), base[1]+by*0.34 + ny*(a.bow[0]+s1*22*w)];
     const c2 = [base[0]+bx*0.70 + nx*(a.bow[1]+s2*26*w), base[1]+by*0.70 + ny*(a.bow[1]+s2*26*w)];
     const tip = [a.tip[0] + s2*5*w, a.tip[1] + s1*5*w];
+    /* el instrumento viaja con la punta que lo sujeta: si se queda clavado
+       mientras el brazo ondula, se ve al momento que no lo está agarrando */
+    const pd = $("pod-"+a.k);
+    if(pd) pd.setAttribute("transform",
+      `translate(${tip[0].toFixed(1)},${tip[1].toFixed(1)}) ` +
+      `rotate(${(s1*2.4*w).toFixed(2)}) scale(1.4)`);
     const pts = Array.from({length:NS},(_,i)=>cubic(base,c1,c2,tip,i/(NS-1)));
     const ns = normals(pts);
     $("body-"+a.k).setAttribute("d", outline(pts, ns, a.w));
@@ -1076,16 +1101,17 @@ ARMS.forEach((a,i)=>armState[a.k]={ph:i*2.1, amp:1});
     $("lk-"+a.k).setAttribute("d",
       "M"+pts.map(p=>`${p[0].toFixed(1)},${p[1].toFixed(1)}`).join("L"));
     /* dos hileras de ventosas, alternas, en la cara oral */
-    for(let i=0;i<14;i++){
-      const idx = 2 + i*2, tt = idx/(NS-1);
+    for(let i=0;i<18;i++){
+      const idx = 1 + Math.round(i*(NS-3)/17), tt = idx/(NS-1);
       const p = pts[Math.min(idx,NS-1)], n = ns[Math.min(idx,NS-1)];
-      const wA = widthAt(tt, a.w)*0.42, r = Math.max(3.4 - i*0.19, 1.1);
-      [[0, wA],[1,-wA]].forEach(([row,off],q)=>{
+      const wA = widthAt(tt, a.w)*0.44, r = Math.max(3.6 - i*0.17, 1);
+      [[0, wA],[1,-wA*0.55]].forEach(([row,off],q)=>{
         const e = $(`sk-${a.k}-${i*2+q}`);
-        const k2 = off + (row ? 0 : 0);
-        e.setAttribute("cx",(p[0]+n[0]*k2).toFixed(1));
-        e.setAttribute("cy",(p[1]+n[1]*k2).toFixed(1));
-        e.setAttribute("r", r.toFixed(1));
+        const cx = p[0]+n[0]*off, cy = p[1]+n[1]*off, rr = row ? r*0.6 : r;
+        e.setAttribute("transform", `translate(${cx.toFixed(1)},${cy.toFixed(1)})`);
+        e.firstChild.setAttribute("r", rr.toFixed(1));
+        e.lastChild.setAttribute("r", (rr*0.38).toFixed(1));
+        e.lastChild.setAttribute("cy", (-rr*0.3).toFixed(1));
       });
     }
   });
