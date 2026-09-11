@@ -785,84 +785,182 @@ const EQUIPO = [
 const POR_K = Object.fromEntries(EQUIPO.map(a => [a.k, a]));
 const KEYS_EQ = EQUIPO.filter(a => !a.jefe).map(a => a.k);
 
-/* ---- un pulpo ---------------------------------------------------------- */
+/* ---- un pulpo, con detalle ---------------------------------------------
+   Lo anterior era una seta con ojos. Esto lleva: manto con volumen y luz de
+   borde, papilas en la cabeza, ocho brazos que se estrechan y se enroscan con
+   dos hileras de ventosas, puntos bioluminiscentes, ojo con esclera, iris
+   degradado, pupila y reflejo, y una pantalla holográfica con marco y brillo.
+   Todo vector: sigue pesando nada, sigue animándose y sigue cambiando de cara. */
 function bicho(a){
-  const T = 'stroke="#04121E" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"';
   const jefe = !!a.jefe;
-  // seis brazos que salen del manto y se enroscan; los de fuera, más largos
-  const brazos = [
-    [-44, 10,-72, 44,-58, 62], [-28, 16,-46, 56,-22, 66],
-    [-10, 18,-14, 60,  6, 64], [ 10, 18, 16, 60, -2, 68],
-    [ 28, 16, 48, 56, 24, 66], [ 44, 10, 74, 44, 58, 62],
-  ].map(([x1,y1,x2,y2,x3,y3], i) =>
-    `<path class="tnt" d="M${x1*0.6} ${y1} C${x1} ${y1+16}, ${x2} ${y2}, ${x3} ${y3}"
-       fill="none" stroke="${a.c}" stroke-width="${11 - i%2*2}" stroke-linecap="round"
-       opacity=".92"/>
-     <path d="M${x1*0.6} ${y1} C${x1} ${y1+16}, ${x2} ${y2}, ${x3} ${y3}"
-       fill="none" stroke="#04121E" stroke-width="${13 - i%2*2}" stroke-linecap="round"
-       opacity=".28"/>`).join("");
-  // ventosas: tres puntos por brazo exterior, lo justo para que se lea
-  const vent = [[-58,50],[-50,60],[-30,58],[30,58],[50,60],[58,50]]
-    .map(([x,y]) => `<circle cx="${x}" cy="${y}" r="2.6" fill="#ffffff" opacity=".22"/>`).join("");
+  const T = 'stroke="#04121E" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"';
+  const id = k => `${k}-${a.k}`;
 
-  const ojos = jefe ? "" : `
-    <ellipse cx="-15" cy="-6" rx="10.5" ry="11.5" fill="#F4F8FF"/>
-    <ellipse cx="15"  cy="-6" rx="10.5" ry="11.5" fill="#F4F8FF"/>
-    <ellipse cx="-14" cy="-4.5" rx="5.6" ry="6.4" fill="#12243C"/>
-    <ellipse cx="16"  cy="-4.5" rx="5.6" ry="6.4" fill="#12243C"/>
-    <circle cx="-16" cy="-8" r="2.4" fill="#fff"/>
-    <circle cx="14"  cy="-8" r="2.4" fill="#fff"/>
-    <path d="M-27 -19 q12 -4 23 0" fill="none" stroke="#0A1A2C" stroke-width="2.4"
-      stroke-linecap="round" opacity=".5"/>
-    <path d="M27 -19 q-12 -4 -23 0" fill="none" stroke="#0A1A2C" stroke-width="2.4"
-      stroke-linecap="round" opacity=".5"/>
-    <path d="M-7 10 q7 5 14 0" fill="none" stroke="#0A1A2C" stroke-width="2.2"
-      stroke-linecap="round" opacity=".6"/>`;
+  /* Ocho brazos. Cada uno es una curva con grosor decreciente dibujada como
+     contorno cerrado —no un trazo— para poder estrecharla de verdad, con las
+     ventosas siguiendo su eje. */
+  const BRAZOS = [
+    [-46,  6, -98, 38, -88, 74, 22],
+    [-34, 14, -70, 58, -52, 86, 20],
+    [-19, 18, -34, 68, -18, 88, 18],
+    [ -6, 20, -10, 72,  10, 84, 17],
+    [  6, 20,  10, 72, -10, 84, 17],
+    [ 19, 18,  34, 68,  18, 88, 18],
+    [ 34, 14,  70, 58,  52, 86, 20],
+    [ 46,  6,  98, 38,  88, 74, 22],
+  ];
+  const cubic = (p0, p1, p2, p3, t) => {
+    const u = 1 - t, a3 = u*u*u, b3 = 3*u*u*t, c3 = 3*u*t*t, d3 = t*t*t;
+    return [a3*p0[0] + b3*p1[0] + c3*p2[0] + d3*p3[0],
+            a3*p0[1] + b3*p1[1] + c3*p2[1] + d3*p3[1]];
+  };
+  let brazos = "", vent = "", luces = "";
+  BRAZOS.forEach(([x1, y1, x2, y2, x3, y3, w0], i) => {
+    const base = [x1 * 0.55, y1], c1 = [x1, y1 + 20], c2 = [x2, y2], fin = [x3, y3];
+    const N = 16, pts = [], izq = [], der = [];
+    for(let k = 0; k <= N; k++) pts.push(cubic(base, c1, c2, fin, k / N));
+    pts.forEach((p, k) => {
+      const t = k / N;
+      const q = pts[Math.min(k + 1, N)], r = pts[Math.max(k - 1, 0)];
+      const dx = q[0] - r[0], dy = q[1] - r[1], m = Math.hypot(dx, dy) || 1;
+      const nx = -dy / m, ny = dx / m;
+      const w = Math.max(w0 * Math.pow(1 - t, 1.7) + 1.2, 1.2);
+      izq.push([p[0] + nx * w, p[1] + ny * w]);
+      der.push([p[0] - nx * w, p[1] - ny * w]);
+      // dos hileras de ventosas en la cara interior, decrecientes
+      if(k > 1 && k % 2 === 0 && t < 0.86){
+        const rv = Math.max(w * 0.42, 0.9);
+        vent += `<circle cx="${(p[0] + nx * w * 0.42).toFixed(1)}"
+          cy="${(p[1] + ny * w * 0.42).toFixed(1)}" r="${rv.toFixed(1)}"
+          fill="#FFFFFF" opacity=".26"/>`;
+        if(k % 4 === 0) luces += `<circle cx="${(p[0] - nx * w * 0.5).toFixed(1)}"
+          cy="${(p[1] - ny * w * 0.5).toFixed(1)}" r="1.5" fill="${a.c}"
+          opacity=".85"/>`;
+      }
+    });
+    const f = p => `${p[0].toFixed(1)},${p[1].toFixed(1)}`;
+    brazos += `<path d="M${izq.map(f).join("L")}L${der.reverse().map(f).join("L")}Z"
+      fill="url(#${id("gb")})" ${T}/>`;
+  });
 
-  // la pantalla holográfica que cada uno sujeta, con su glifo
+  /* Manto: silueta con hombros, papilas arriba y luz de borde. */
+  const manto = "M-54 -2 C-56 -46, -34 -80, 0 -80 C34 -80, 56 -46, 54 -2 "
+              + "C52 26, 30 34, 0 34 C-30 34, -52 26, -54 -2 Z";
+  const papilas = [[-30,-62],[-14,-72],[0,-76],[14,-72],[30,-62]]
+    .map(([x,y],i) => `<ellipse cx="${x}" cy="${y}" rx="${5-i%2}" ry="${3.4-i%2*.6}"
+      fill="#FFFFFF" opacity=".13"/>`).join("");
+  const motas = [[-32,-30,7],[-16,-50,5],[14,-44,6],[30,-22,5],[-26,-8,6],
+                 [22,-4,7],[0,-24,4],[-8,6,5],[16,12,4]]
+    .map(([x,y,r]) => `<circle cx="${x}" cy="${y}" r="${r}" fill="#000" opacity=".07"/>`).join("");
+
+  /* El ojo. Tres intentos:
+     1) blanco grande + pupila redonda -> rana de dibujos animados.
+     2) iris dorado con contorno -> sobre piel dorada se leía como GAFAS.
+     3) esto: globo oscuro hundido en la cuenca, pupila en BARRA HORIZONTAL
+        —la forma real de la pupila de un pulpo— encendida en el color del
+        agente, y un capuchón de piel tapando el tercio de arriba. Contrasta
+        con cualquier color de manto y no hay ningún aro cerrado que leer. */
+  const ojo = (cx, flip) => jefe ? "" : `
+    <ellipse cx="${cx}" cy="-3" rx="15.8" ry="12.6" fill="#04121E" opacity=".9"/>
+    <ellipse cx="${cx}" cy="-3.5" rx="13.4" ry="10.4" fill="url(#${id("gi")})"/>
+    <ellipse cx="${cx}" cy="-8" rx="9" ry="4" fill="#FFFFFF" opacity=".1"/>
+    <rect x="${cx - 9}" y="-6.6" width="18" height="6" rx="3" fill="${a.c}"
+      opacity=".28"/>
+    <rect x="${cx - 8}" y="-6" width="16" height="4.8" rx="2.4" fill="${a.c}"/>
+    <rect x="${cx - 8}" y="-6" width="16" height="2" rx="1" fill="#FFFFFF"
+      opacity=".45"/>
+    <ellipse cx="${cx + flip * 5}" cy="-7.6" rx="3" ry="1.7" fill="#fff"
+      opacity=".75"/>
+    <circle cx="${cx - flip * 5.6}" cy="1.4" r="1.3" fill="#fff" opacity=".3"/>
+    <path d="M${cx - 15.8} -4 C${cx - 14} -16.5, ${cx + 14} -16.5, ${cx + 15.8} -4
+      C${cx + 9} -10.8, ${cx - 9} -10.8, ${cx - 15.8} -4 Z"
+      fill="url(#${id("gm")})" opacity=".97"/>
+    <path d="M${cx - 15.2} -4.4 C${cx - 9} -11, ${cx + 9} -11, ${cx + 15.2} -4.4"
+      fill="none" stroke="#04121E" stroke-width="1.7" stroke-linecap="round"
+      opacity=".7"/>
+    <path d="M${cx - 13} -11.4 q13 -6 26 -1" fill="none" stroke="#FFFFFF"
+      stroke-width="1.4" opacity=".16"/>`;
+
   const glifo = {
-    scan:'<path d="M-13 6 L-5 -4 L2 3 L13 -9" fill="none" stroke="CC" stroke-width="2.4"/>',
-    tech:'<circle r="7" fill="none" stroke="CC" stroke-width="2.2"/><path d="M0 -13 v4 M0 9 v4 M-13 0 h4 M9 0 h4" stroke="CC" stroke-width="2.2"/>',
-    risk:'<path d="M0 -11 L11 -5 V4 Q0 12 -11 4 V-5 Z" fill="none" stroke="CC" stroke-width="2.2"/>',
-    news:'<rect x="-12" y="-9" width="24" height="18" rx="2" fill="none" stroke="CC" stroke-width="2"/><path d="M-7 -3 h14 M-7 2 h9" stroke="CC" stroke-width="1.8"/>',
+    scan:'<path d="M-13 6 L-5 -4 L2 3 L13 -9" fill="none" stroke="CC" stroke-width="2.4" stroke-linecap="round"/><circle cx="13" cy="-9" r="2" fill="CC"/>',
+    tech:'<circle r="7" fill="none" stroke="CC" stroke-width="2.2"/><path d="M0 -13 v4 M0 9 v4 M-13 0 h4 M9 0 h4" stroke="CC" stroke-width="2.2" stroke-linecap="round"/>',
+    risk:'<path d="M0 -11 L11 -5 V4 Q0 12 -11 4 V-5 Z" fill="none" stroke="CC" stroke-width="2.2"/><path d="M-4 0 l3 3 l6 -6" fill="none" stroke="CC" stroke-width="2"/>',
+    news:'<rect x="-12" y="-9" width="24" height="18" rx="2" fill="none" stroke="CC" stroke-width="2"/><path d="M-7 -3 h14 M-7 2 h9" stroke="CC" stroke-width="1.8" stroke-linecap="round"/>',
     corr:'<path d="M-11 -9 h8 v8 h-8 z M3 -9 h8 v8 h-8 z M-11 3 h8 v8 h-8 z" fill="none" stroke="CC" stroke-width="1.9"/><rect x="3" y="3" width="8" height="8" fill="CC" opacity=".75"/>',
-    apr: '<path d="M-12 8 C-6 8, -6 -8, 0 -8 C6 -8, 6 8, 12 8" fill="none" stroke="CC" stroke-width="2.3"/><circle cx="12" cy="8" r="2.6" fill="CC"/>',
+    apr: '<path d="M-12 8 C-6 8, -6 -8, 0 -8 C6 -8, 6 8, 12 8" fill="none" stroke="CC" stroke-width="2.3" stroke-linecap="round"/><circle cx="12" cy="8" r="2.6" fill="CC"/>',
     exec:'<path d="M2 -12 L-8 2 H0 L-2 12 L9 -2 H1 Z" fill="CC" opacity=".9"/>',
   }[a.k] || "";
   const panel = jefe ? "" : `
-    <g transform="translate(0,44)">
-      <rect x="-30" y="-16" width="60" height="32" rx="4" fill="#08182B"
-        stroke="${a.c}" stroke-width="1.5" opacity=".9"/>
-      <g transform="scale(.8)">${glifo.replaceAll("CC", a.c)}</g>
+    <g transform="translate(0,46)">
+      <rect x="-34" y="-18" width="68" height="36" rx="5" fill="#06152680"
+        stroke="${a.c}" stroke-width="1.6"/>
+      <rect x="-34" y="-18" width="68" height="36" rx="5" fill="url(#${id("gh")})"/>
+      <line x1="-34" y1="-11" x2="34" y2="-11" stroke="${a.c}" stroke-width="1" opacity=".35"/>
+      <g transform="translate(0,3) scale(.78)">${glifo.replaceAll("CC", a.c)}</g>
     </g>`;
 
-  const oro = jefe ? `<g opacity=".85">${[[-58,58],[-24,64],[6,64],[26,64],[58,58]]
-    .map(([x,y]) => `<circle cx="${x}" cy="${y}" r="4.2" fill="#E8B33C"/>`).join("")}</g>` : "";
+  const corona = jefe ? `<g transform="translate(0,-88)">
+      <path d="M-40 12 L-40 -16 L-24 -3 L-9 -22 L9 -22 L24 -3 L40 -16 L40 12 Z"
+        fill="url(#${id("gc")})" stroke="#6B4B08" stroke-width="2.2" stroke-linejoin="round"/>
+      <path d="M-40 12 L40 12" stroke="#FFE08A" stroke-width="2.6" opacity=".7"/>
+      <circle cx="0" cy="-26" r="4.6" fill="#FFE9A8"/>
+      <circle cx="-26" cy="-9" r="3" fill="#FFE9A8" opacity=".85"/>
+      <circle cx="26" cy="-9" r="3" fill="#FFE9A8" opacity=".85"/>
+    </g>` : "";
+
   return `<g id="ag-${a.k}" transform="translate(${a.x},${a.y}) scale(${a.s})">
+    <defs>
+      <radialGradient id="${id("gm")}" cx=".38" cy=".26" r=".85">
+        <stop offset="0" stop-color="#FFFFFF" stop-opacity=".42"/>
+        <stop offset=".45" stop-color="${a.c}" stop-opacity="1"/>
+        <stop offset="1" stop-color="#04121E" stop-opacity=".72"/>
+      </radialGradient>
+      <linearGradient id="${id("gb")}" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="${a.c}"/>
+        <stop offset=".55" stop-color="${a.c}" stop-opacity=".85"/>
+        <stop offset="1" stop-color="#0C2E4A"/>
+      </linearGradient>
+      <radialGradient id="${id("gi")}" cx=".4" cy=".3" r=".85">
+        <stop offset="0" stop-color="#33506B"/>
+        <stop offset=".55" stop-color="#122536"/>
+        <stop offset="1" stop-color="#04101B"/>
+      </radialGradient>
+      <linearGradient id="${id("go")}" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#93B7DA" stop-opacity=".55"/>
+        <stop offset=".6" stop-color="#FFFFFF" stop-opacity="0"/>
+      </linearGradient>
+      <linearGradient id="${id("gh")}" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0" stop-color="${a.c}" stop-opacity=".22"/>
+        <stop offset="1" stop-color="${a.c}" stop-opacity=".04"/>
+      </linearGradient>
+      <linearGradient id="${id("gc")}" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#FFD98A"/><stop offset="1" stop-color="#C68A12"/>
+      </linearGradient>
+      <clipPath id="${id("cl")}"><path d="${manto}"/></clipPath>
+    </defs>
     <g id="bl-${a.k}" class="ag" data-busy="0">
-    <ellipse id="rc-glow-${a.k}" cx="0" cy="6" rx="86" ry="74" fill="${a.c}"
-      opacity=".10" filter="url(#agSoft)"/>
-    <g class="brazos">${brazos}${vent}${oro}</g>
-    <path d="M-52 -4 C-52 -54, -26 -78, 0 -78 C26 -78, 52 -54, 52 -4
-             C52 22, 26 30, 0 30 C-26 30, -52 22, -52 -4 Z"
-      fill="${a.c}" ${T}/>
-    <path d="M-52 -4 C-52 -54, -26 -78, 0 -78 C26 -78, 52 -54, 52 -4
-             C52 22, 26 30, 0 30 C-26 30, -52 22, -52 -4 Z"
-      fill="url(#agLuz)" opacity=".55"/>
-    ${jefe ? "" : ojos}
-    ${jefe ? "" : panel}
-    ${jefe ? `<g transform="translate(0,-84)">
-        <path d="M-38 10 L-38 -14 L-22 -2 L-8 -20 L8 -2 L24 -16 L38 8 Z"
-          fill="#E8B33C" stroke="#5B3F06" stroke-width="2.4" stroke-linejoin="round"/>
-        <circle cx="-8" cy="-26" r="4.2" fill="#FFE08A"/>
-      </g>` : ""}
-    <circle class="lamp" id="lamp-${a.k}" cx="0" cy="-64" r="4.4"
-      fill="var(--sunk)" stroke="#04121E" stroke-width="1.6"/>
-    <text y="86" text-anchor="middle" font-family="IBM Plex Mono,monospace"
-      font-size="12" font-weight="600" letter-spacing="1.6" fill="${a.c}">${a.rol}</text>
-    <text y="101" text-anchor="middle" font-family="IBM Plex Mono,monospace"
-      font-size="9.5" fill="var(--faint)">${a.sub}</text>
-  </g></g>`;
+      <ellipse id="rc-glow-${a.k}" cx="0" cy="10" rx="92" ry="78" fill="${a.c}"
+        opacity=".11" filter="url(#agSoft)"/>
+      <g class="brazos">${brazos}${vent}${luces}</g>
+      <path d="${manto}" fill="url(#${id("gm")})" ${T}/>
+      <g clip-path="url(#${id("cl")})">
+        ${motas}${papilas}
+        <ellipse cx="-22" cy="-54" rx="22" ry="15" fill="#FFFFFF" opacity=".16"/>
+        <path d="M-54 4 C-30 22, 30 22, 54 4 L54 34 L-54 34 Z" fill="#04121E" opacity=".22"/>
+      </g>
+      <path d="${manto}" fill="none" stroke="#FFFFFF" stroke-width="1.6" opacity=".16"/>
+      ${ojo(-23, 1)} ${ojo(23, -1)}
+      ${jefe ? "" : `<path d="M-8 11 q8 5 16 0" fill="none" stroke="#04121E"
+        stroke-width="2.2" stroke-linecap="round" opacity=".5"/>`}
+      ${corona}
+      ${panel}
+      <circle class="lamp" id="lamp-${a.k}" cx="0" cy="-70" r="4.4"
+        fill="var(--sunk)" stroke="#04121E" stroke-width="1.6"/>
+      <text y="92" text-anchor="middle" font-family="IBM Plex Mono,monospace"
+        font-size="12" font-weight="600" letter-spacing="1.6" fill="${a.c}">${a.rol}</text>
+      <text y="107" text-anchor="middle" font-family="IBM Plex Mono,monospace"
+        font-size="9.5" fill="var(--faint)">${a.sub}</text>
+    </g></g>`;
 }
 
 /* ---- la cara del Director, que es la que cambia de humor -------------- */
