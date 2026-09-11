@@ -937,6 +937,13 @@ function pod(k){
       letter-spacing="1.5" fill="var(--dim)">${a.n}</text></g>`;
 }
 
+/* Las medidas de los ojos, en UN solo sitio: el dibujo, setFace y el bucle de
+   la mirada leen de aqui. Repetirlas fue el bug de la pupila mirando al suelo. */
+const OJOS = {
+  l: {cx: 462, cy: 184, rot: -7, flip:  1},
+  r: {cx: 548, cy: 178, rot:  7, flip: -1},
+};
+
 /* La manopla: el guante de dibujo animado, en la PUNTA de un tentaculo. Tener
    bracitos aparte y ademas tentaculos no tenia sentido — un pulpo tiene ocho
    brazos, y dos de ellos son los que gesticulan. Se dibuja centrada en el
@@ -962,31 +969,43 @@ function manopla(k){
    cuerpo son la misma mancha: un pulpo-blob, no un muñeco con cabeza.
    Todo sigue siendo vector y sigue animandose. */
 function headSVG(){
-  const blob = "M500 60 C605 60, 653 139, 641 212 C631 277, 588 318, 550 334 C524 344, 476 344, 450 334 C412 318, 369 277, 359 212 C347 139, 395 60, 500 60 Z";
+  /* El manto es una CAMPANA: ancho arriba, estrechando hacia donde salen los
+     brazos. Una pelota se lee como una cabeza; esto se lee como un pulpo. */
+  const blob = "M500 52 C578 52, 636 104, 642 178 C648 246, 616 288, 578 320 "
+             + "C550 344, 522 356, 500 356 C478 356, 450 344, 422 320 "
+             + "C384 288, 352 246, 358 178 C364 104, 422 52, 500 52 Z";
 
   /* El ojo: ovalo crema enorme, pupila negra grande con su brillo en cuña, y
      una ceja por encima. Los parpados siguen siendo rectangulos recortados por
      el ovalo, con los mismos identificadores, para que los humores no cambien. */
-  const eye = (side, cx, flip)=>`<g>
-    <ellipse cx="${cx}" cy="190" rx="47" ry="57" fill="${CREMA}"
+  /* Los ojos, inclinados hacia fuera como en los dibujos de entonces, y con
+     la ceja fina y separada. Las coordenadas salen de OJOS —un solo sitio—
+     porque tenerlas repetidas en el dibujo, en setFace y en el bucle de la
+     mirada ya mando al bicho a mirar al suelo una vez. */
+  const eye = (side)=>{
+    const o = OJOS[side], cx = o.cx, cy = o.cy, f = o.flip;
+    return `<g transform="rotate(${o.rot} ${cx} ${cy})">
+    <ellipse cx="${cx}" cy="${cy}" rx="42" ry="52" fill="${CREMA}"
       stroke="${TINTA}" stroke-width="5"/>
-    <clipPath id="ec-${side}"><ellipse cx="${cx}" cy="190" rx="47" ry="57"/></clipPath>
+    <clipPath id="ec-${side}"><ellipse cx="${cx}" cy="${cy}" rx="42" ry="52"/></clipPath>
     <g clip-path="url(#ec-${side})">
-      <rect class="pup" id="pup-${side}" x="${cx-24}" y="164" width="48" height="52"
-        rx="24" fill="${TINTA}"/>
+      <rect class="pup" id="pup-${side}" x="${cx-22}" y="${cy-24}" width="44" height="48"
+        rx="22" fill="${TINTA}"/>
       <g class="glint" id="gl-${side}">
-        <circle cx="${cx - 9*flip}" cy="168" r="7.5" fill="${CREMA}"/>
-        <circle cx="${cx - 20*flip}" cy="184" r="3.4" fill="${CREMA}" opacity=".85"/>
+        <path d="M${cx + 12*f} ${cy-16} l${16*f} 8 l${-16*f} 9 z" fill="${CREMA}"/>
+        <circle cx="${cx - 12*f}" cy="${cy-22}" r="5" fill="${CREMA}" opacity=".9"/>
       </g>
-      <rect class="lidT" id="lidT-${side}" x="${cx-52}" y="81" width="104" height="52"
-        fill="${ROJO}"/>
-      <rect class="lidB" id="lidB-${side}" x="${cx-52}" y="247" width="104" height="52"
-        fill="${ROJO}"/>
+      <rect class="lidT" id="lidT-${side}" x="${cx-48}" y="${cy-109}" width="96"
+        height="52" fill="${ROJO}"/>
+      <rect class="lidB" id="lidB-${side}" x="${cx-48}" y="${cy+57}" width="96"
+        height="52" fill="${ROJO}"/>
     </g>
-    <ellipse cx="${cx}" cy="190" rx="47" ry="57" fill="none" stroke="${TINTA}"
+    <ellipse cx="${cx}" cy="${cy}" rx="42" ry="52" fill="none" stroke="${TINTA}"
       stroke-width="5"/>
-    <path class="ceja" id="ceja-${side}" d="M${cx-32} 130 Q${cx-2} 112, ${cx+32} 132"
-      fill="none" stroke="${TINTA}" stroke-width="10" stroke-linecap="round"/></g>`;
+    <path class="ceja" id="ceja-${side}" d="M${cx-30} ${cy-64} Q${cx} ${cy-82},
+      ${cx+30} ${cy-60}" fill="none" stroke="${TINTA}" stroke-width="7"
+      stroke-linecap="round"/></g>`;
+  };
 
   return `<g id="octoWrap"><g id="octo">
     <ellipse class="halo" cx="500" cy="205" rx="150" ry="142" fill="${ROJO}"
@@ -1001,28 +1020,28 @@ function headSVG(){
     <clipPath id="mclip"><path d="${blob}"/></clipPath>
     <g clip-path="url(#mclip)">
       <!-- la sombra del cel-shading: una sola mancha, abajo y a la derecha -->
-      <path d="M600 36 C700 120, 700 300, 560 366 L720 366 L720 20 Z"
-        fill="${ROJO_OSCURO}" opacity=".55"/>
+      <path d="M592 40 C692 128, 686 300, 556 372 L720 372 L720 24 Z"
+        fill="${ROJO_OSCURO}" opacity=".5"/>
       <!-- y dos brillos, arriba y a la izquierda, como en los dibujos viejos -->
-      <ellipse cx="408" cy="118" rx="27" ry="19" transform="rotate(-28 408 118)"
+      <ellipse cx="428" cy="108" rx="26" ry="17" transform="rotate(-32 428 108)"
         fill="${CREMA}" opacity=".85"/>
-      <ellipse cx="378" cy="166" rx="13" ry="10" transform="rotate(-28 378 166)"
+      <ellipse cx="398" cy="152" rx="12" ry="9" transform="rotate(-32 398 152)"
         fill="${CREMA}" opacity=".7"/>
       <path class="mantle" id="mantle" d="${blob}" fill="${ROJO}" opacity="0"/>
       <!-- Los mofletes. Iban con desenfoque y sobre un dibujo de linea plana
            eso es una mancha sucia, no una mejilla: aqui van planos, como se
            pintaban entonces. -->
-      ${[[396,236,30,19],[604,236,30,19]]
+      ${[[404,258,28,18],[600,254,28,18]]
         .map(([x,y,rx,ry])=>`<ellipse class="blush" cx="${x}" cy="${y}" rx="${rx}"
           ry="${ry}" fill="#E8746A" opacity="0"/>`).join("")}
     </g>
-    ${eye("l",452,1)} ${eye("r",556,-1)}
+    ${eye("l")} ${eye("r")}
     <!-- Los dientes de rabia eran de la cara anterior y encima de esta boca
          abierta se leen como una mancha rara. Fuera: la cara de perder ya se
          ve en la boca y en las cejas. Se deja el nodo, vacio, porque setFace
          sigue buscandolo y un hueco en el codigo es peor que un nodo inerte. -->
     <path id="snarl" d="" opacity="0"/>
-    <path id="mouth" d="M440 258 Q500 344 562 258 Q500 286 440 258 Z"
+    <path id="mouth" d="M452 266 Q502 348 554 264 Q502 288 452 266 Z"
       fill="${ROJO_OSCURO}" stroke="${TINTA}" stroke-width="5"
       stroke-linejoin="round" stroke-linecap="round"/>
     <text id="chest" x="500" y="500" text-anchor="middle" font-family="IBM Plex Mono,monospace"
@@ -1082,11 +1101,9 @@ ARMS.forEach((a,i)=>armState[a.k]={ph:i*2.1, amp:1});
     const dx = Math.sin(t*0.00037)*4.5, dy = Math.sin(t*0.00052+2.1)*1.8;
     ["l","r"].forEach(side=>{
       const pu = $("pup-"+side); if(!pu) return;
-      // mismas coordenadas que setFace: si se quedan a la antigua, la pupila
-      // se va al suelo del ojo y el bicho mira al piso. Ya paso.
-      const cx = side === "l" ? 452 : 556;
-      pu.setAttribute("x", (cx - 24 + dx).toFixed(1));
-      pu.setAttribute("y", (158 + dy).toFixed(1));
+      const o = OJOS[side];                 // el unico sitio con las medidas
+      pu.setAttribute("x", (o.cx - 22 + dx).toFixed(1));
+      pu.setAttribute("y", (o.cy - 30 + dy).toFixed(1));
     });
   }
     for(let i=0;i<18;i++){
@@ -1200,17 +1217,17 @@ function lamp(k, on){
    endurece la mirada sin tocar nada mas. `ceja` es cuanto baja la ceja por
    dentro, que es de donde sale casi toda la expresion. */
 const FACE = {
-  neutral:{mouth:"M440 258 Q500 344 562 258 Q500 286 440 258 Z",
+  neutral:{mouth:"M452 266 Q502 348 554 264 Q502 288 452 266 Z",
            lidT:0,  lidB:0,  ceja:0,  pup:[0,-6,52], skin:null,      hold:0},
-  think:  {mouth:"M470 276 Q500 292 534 274 Q500 284 470 276 Z",
+  think:  {mouth:"M474 278 Q502 296 532 276 Q502 288 474 278 Z",
            lidT:14, lidB:4,  ceja:8,  pup:[-10,-6,44], skin:"#5C6BA8", hold:0},
-  happy:  {mouth:"M424 252 Q500 378 578 252 Q500 292 424 252 Z",
+  happy:  {mouth:"M440 262 Q502 360 566 258 Q502 296 440 262 Z",
            lidT:0,  lidB:14, ceja:-6, pup:[0,-2,56], skin:"#2FA36A",  hold:2600},
-  glad:   {mouth:"M434 256 Q500 356 568 256 Q500 288 434 256 Z",
+  glad:   {mouth:"M446 262 Q502 356 560 260 Q502 288 446 262 Z",
            lidT:0,  lidB:8,  ceja:-3, pup:[0,-4,54], skin:"#3A9B76",  hold:1400},
-  sad:    {mouth:"M452 300 Q500 258 550 300 Q500 280 452 300 Z",
+  sad:    {mouth:"M458 306 Q502 264 548 304 Q502 284 458 306 Z",
            lidT:22, lidB:2,  ceja:16, pup:[0,8,34],  skin:"#B3332A",  hold:2600},
-  wow:    {mouth:"M466 258 Q500 228 534 258 Q500 330 466 258 Z",
+  wow:    {mouth:"M472 268 Q502 240 534 268 Q502 334 472 268 Z",
            lidT:0,  lidB:0,  ceja:-14, pup:[0,-4,64], skin:"#E0A21F", hold:1800},
 };
 
@@ -1225,20 +1242,20 @@ function setFace(_, m){
   const sn = $("snarl"); if(sn) sn.setAttribute("opacity", f.snarl ? ".95" : "0");
   ["l","r"].forEach(side=>{
     const t = $("lidT-"+side), b = $("lidB-"+side), pu = $("pup-"+side);
-    const cx = side === "l" ? 452 : 556, esp = side === "l" ? 1 : -1;
-    if(t) t.setAttribute("y", 81 + f.lidT);
-    if(b) b.setAttribute("y", 247 - f.lidB);
+    const o = OJOS[side], cx = o.cx, cy = o.cy, esp = o.flip;
+    if(t) t.setAttribute("y", cy - 109 + f.lidT);
+    if(b) b.setAttribute("y", cy + 57 - f.lidB);
     if(pu){
-      pu.setAttribute("x", cx - 24 + f.pup[0] * esp);
-      pu.setAttribute("y", 190 - f.pup[2] / 2 + f.pup[1]);
+      pu.setAttribute("x", cx - 22 + f.pup[0] * esp);
+      pu.setAttribute("y", cy - f.pup[2] / 2 + f.pup[1]);
       pu.setAttribute("height", f.pup[2]);
-      pu.setAttribute("rx", Math.min(f.pup[2] / 2, 24));
+      pu.setAttribute("rx", Math.min(f.pup[2] / 2, 22));
     }
     // la ceja baja por el lado de DENTRO: enfadado por dentro, sorprendido
     // por fuera. Es un giro pequeño y se nota mas que todo lo demas junto.
     const cj = $("ceja-" + side);
     if(cj) cj.setAttribute("transform",
-      `rotate(${((f.ceja || 0) * esp).toFixed(1)} ${cx} 130)`);
+      `rotate(${((f.ceja || 0) * esp).toFixed(1)} ${cx} ${cy - 62})`);
   });
   // Un pulpo no se repinta entero: se le enciende una zona. Un lavado muy leve
   // sobre todo el manto, y el color de verdad concentrado en dos manchas.
