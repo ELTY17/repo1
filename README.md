@@ -485,6 +485,42 @@ Ese margen es todo lo que separa una estrategia rentable de una que regala diner
 exchange. Comprueba la tarifa que te aplican a ti antes de dar por bueno cualquier
 número de este repositorio.
 
+## Comprar la caída del 20% y vender el rebote: medido, y sale peor que a ciegas
+
+La idea más propuesta de todas: *compro cuando algo se ha desplomado un 20% y
+vendo cuando sube un 20%*. Se midió entera — `python3 -m bot.rebote`.
+
+Con la propuesta tal cual (caída 20%, subida 20%, techo de 20 días), sobre los
+19 activos y 720 días:
+
+| ventana | rebote | no hacer nada | colgadas | peor caída viva |
+|---|---|---|---|---|
+| 20 días | **−49,20 %** | −20,47 % | 19 de 19 | **−91,2 %** |
+| 60 días | −55,25 % | −48,05 % | 19 de 19 | −91,2 % |
+| 120 días | −57,46 % | −61,09 % | 19 de 19 | −88,0 % |
+
+Se barrieron además **108 combinaciones** (caídas y subidas del 10 al 40 %, tres
+ventanas), eligiendo la mejor **mirando solo el tramo de entrenamiento**. En el
+tramo no tocado da **−18,27 %** contra −17,36 % de comprar y estarse.
+
+**El detalle que lo entierra.** Parece que 91 de 108 combinaciones baten a
+comprar y estarse (84 %), pero eso es una trampa del calendario: en un mercado
+que cae, entrar más tarde bate a entrar el primer día *siempre*, tenga razón la
+regla o no. La prueba justa es comparar contra **entrar un día al azar**:
+
+- entrada al azar, 300 sorteos: mediana **+6,50 %** (p10 +0,26 %, p90 +14,27 %)
+- el rebote: **−18,27 %** → **percentil 0** de esa nube
+
+Es decir: esperar a la caída del 20 % no solo no ayuda, sino que es **peor que
+comprar un día cualquiera con los ojos cerrados**. Lo que la regla llama
+"barato" es un activo que sigue cayendo.
+
+**Y el defecto de forma.** Vender a +20 % corta a los ganadores; no tener stop
+deja a los perdedores sin suelo. Por eso acaban **19 de 19 posiciones colgadas**
+y una llega a perder el 91 % mientras espera un rebote que no llega. Poniéndole
+freno la herida se cierra pero no cura: con stop −20 % la peor caída viva baja
+de −91 % a −32 %, y el resultado sigue siendo **−4,56 %**.
+
 ## Cono de ruina
 
 `python3 -m bot.montecarlo` coge las operaciones cerradas del backtest, las remuestrea
