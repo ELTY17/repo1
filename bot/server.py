@@ -79,6 +79,10 @@ def make_handler(orch):
             if path in ("/", "/index.html"):
                 with open(os.path.join(WEB, "index.html"), "rb") as f:
                     return self._send(200, f.read(), "text/html; charset=utf-8")
+            if path == "/octopus.png":
+                # la mascota: el único binario que sirve este servidor
+                with open(os.path.join(WEB, "octopus.png"), "rb") as f:
+                    return self._send(200, f.read(), "image/png")
             if path == "/api/state":
                 body = json.dumps(orch.state(), default=str).encode()
                 return self._send(200, body)
