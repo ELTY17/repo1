@@ -12,7 +12,7 @@ from collections import deque
 
 from . import feeds
 from .agents import (CorrelationAgent, ExecutionAgent, LearningAgent, NewsAgent,
-                     RiskAgent, ScannerAgent, TechnicalAgent)
+                     OracleAgent, RiskAgent, ScannerAgent, TechnicalAgent)
 from .broker import PaperBroker
 from .config import CONFIG, UNIVERSE
 
@@ -42,8 +42,12 @@ class Orchestrator:
         self.learning = LearningAgent(self)
         self.risk = RiskAgent(self)
         self.execution = ExecutionAgent(self)
+        # El octavo llega el ultimo a proposito: habla despues de riesgo y solo
+        # sobre lo que riesgo ya ha aprobado.
+        self.oraculo = OracleAgent(self)
         self.agents = [self.news, self.scanner, self.technical,
-                       self.correlation, self.learning, self.risk, self.execution]
+                       self.correlation, self.learning, self.risk,
+                       self.execution, self.oraculo]
 
     # --- utilidades compartidas ---
     def feed_event(self, entry):
@@ -119,9 +123,21 @@ class Orchestrator:
                 decisions.append({"symbol": sym, "action": "VETO", "score": c["score"],
                                   "note": f"riesgo: {plan['reason']}"})
                 continue
+            # El ultimo filtro: Claude, y solo sobre lo que ya esta aprobado.
+            # Sin clave o sin presupuesto devuelve "sin opinion" y esto es un
+            # no-op exacto, igual que antes de existir.
+            voz = self.oraculo.opina(sym, c, prices[sym], plan,
+                                     readings.get(sym))
+            if not voz["ok"]:
+                decisions.append({"symbol": sym, "action": "VETO",
+                                  "score": c["score"],
+                                  "note": f"oraculo: {voz['motivo']}"})
+                continue
             reason = (f"score {c['score']:+.2f} (news {c['votes']['news']:+.2f}, "
                       f"scan {c['votes']['scanner']:+.2f}, "
                       f"tech {c['votes']['technical']:+.2f})")
+            if voz["fuente"] == "claude":
+                reason += f" · oraculo {voz['confianza']:.0%}: {voz['motivo']}"
             self.execution.execute_buy(sym, prices[sym], plan, reason)
             decisions.append({"symbol": sym, "action": "BUY", "score": c["score"],
                               "note": reason})
