@@ -43,7 +43,7 @@ a{color:var(--brass)}
 .deck{min-height:100dvh;display:flex;flex-direction:column;padding:0}
 .mosaic{flex:1;min-height:0;display:grid;gap:12px;padding:12px 16px 16px;
   grid-template-columns:repeat(12,minmax(0,1fr));
-  grid-template-rows:172px 138px 318px 168px 196px 452px;
+  grid-template-rows:336px 296px 238px 252px 508px 448px;
   grid-template-areas:
     "cap cap prc prc prc prc dec dec dec con con con"
     "agt agt ops ops ops mkt mkt mkt ord ord cnv cnv"
@@ -442,9 +442,13 @@ body{background:#04080F}
         
       </div>
     </div>
-    <div class="meta" style="gap:10px">
+    <div class="meta" style="gap:10px;align-items:center">
       <span id="uptime">—</span>
       <span id="mode" style="color:var(--blue)">…</span>
+      <span class="ctrls" style="gap:4px">
+        <button class="fx" data-fx="usd" aria-pressed="true" title="Dólares">$</button>
+        <button class="fx" data-fx="eur" aria-pressed="false" title="Euros · 1 USD = 0,8607 EUR (11 sep 2026)">€</button>
+      </span>
     </div>
   </div>
   <header class="mhead"><i class="tickerdot"></i><h1>Octopus Bot</h1><div class="me"><b id="mEq">—</b><span id="mDl" class="dim">—</span></div></header>
@@ -539,7 +543,7 @@ body{background:#04080F}
         </div>
       </div></section>
 <section class="p" data-a="tur" style="grid-area:tur" id="tur">
-      <div class="ph"><i class="sq" style="background:#FFD426"></i><b>Tu cuenta de $10</b>
+      <div class="ph"><i class="sq" style="background:#FFD426"></i><b>Tu cuenta de prueba</b>
       <span class="ficc">simulación</span>
       <span class="r">ritmo de mercado · sin techo · si toca cero, se acabó</span></div>
       <div class="pb turwrap">
@@ -581,10 +585,10 @@ body{background:#04080F}
           <button class="tv" data-v="200" aria-pressed="false">×200</button>
           <span class="tsep"></span>
           <span class="tlab">ingresar</span>
-          <button class="td" data-d="10">+$10</button>
-          <button class="td" data-d="20">+$20</button>
-          <button class="td" data-d="50">+$50</button>
-          <button class="td" data-d="100">+$100</button>
+          <button class="td" data-d="10"><span data-usd="10">+$10</span></button>
+          <button class="td" data-d="20"><span data-usd="20">+$20</span></button>
+          <button class="td" data-d="50"><span data-usd="50">+$50</span></button>
+          <button class="td" data-d="100"><span data-usd="100">+$100</span></button>
         </div>
       </div></section>
 <section class="p" data-a="evi" style="grid-area:evi"><div class="ph"><i class="sq"></i>
@@ -648,7 +652,30 @@ body{background:#04080F}
    ===================================================================== */
 const $ = i => document.getElementById(i);
 const esc = s => String(s).replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
-const money = v => (v<0?"−$":"$") + Math.abs(v).toFixed(2);
+/* ── Moneda ─────────────────────────────────────────────────────────────────
+   Todo el dinero de la pantalla pasa por money(), así que cambiar de divisa es
+   cambiar una función y no cincuenta sitios. El tipo de cambio es real y lleva
+   fecha: inventárselo sería mentir por comodidad. */
+const FX = {usd: 1, eur: 0.860738};          // 1 USD → EUR · 11 sep 2026
+const SIG = {usd: "$", eur: "€"};
+let DIVISA = "usd";
+try{ DIVISA = localStorage.getItem("pulpo.divisa") || "usd"; }catch(e){}
+
+const money = v => {
+  const c = v * FX[DIVISA];
+  return (c < 0 ? "−" : "") + SIG[DIVISA] + Math.abs(c).toFixed(2);
+};
+/* Cambiar de divisa no recalcula nada: solo vuelve a pintar lo que ya estaba. */
+function setDivisa(d){
+  DIVISA = d;
+  try{ localStorage.setItem("pulpo.divisa", d); }catch(e){}
+  document.querySelectorAll(".fx").forEach(b =>
+    b.setAttribute("aria-pressed", String(b.dataset.fx === d)));
+  document.querySelectorAll("[data-usd]").forEach(el => {
+    el.textContent = "+" + SIG[DIVISA] + (parseFloat(el.dataset.usd) || 0);
+  });
+  if(window.__repintar) window.__repintar();
+}
 const sgn = v => (v>=0?"+":"−") + Math.abs(v).toFixed(2);
 const cl = v => v>0?"pos":(v<0?"neg":"dim");
 const pctS = v => (v>=0?"+":"−") + Math.abs(v*100).toFixed(2) + " %";
@@ -1511,10 +1538,10 @@ setInterval(slow, 15000);
     if(!ap || !eqEl) return;
     const total = parseFloat((eqEl.dataset.bruto || eqEl.textContent)
       .replace(/[^0-9.\-]/g, "")) || 0;
-    ap.textContent = `− $${puesto.toFixed(2)} en la cuenta de prueba`;
+    ap.textContent = `− ${money(puesto)} en la cuenta de prueba`;
     // se actualiza también la cifra grande: esperar al siguiente ciclo del
     // panel de Capital dejaba el total sin descontar durante segundos
-    eqEl.textContent = "$" + (total - puesto).toFixed(2);
+    eqEl.textContent = money(total - puesto);
   };
   const guardar = () => { try{ localStorage.setItem(CLAVE, JSON.stringify(
     {eq, puesto, dias, ops, ganadas, pico, hundido, fin,
@@ -1534,7 +1561,11 @@ setInterval(slow, 15000);
       ? curva.filter((_,i)=> i % Math.ceil(curva.length/600) === 0).concat(curva[curva.length-1])
       : curva;
     const n = p.length, ult = p[n-1];
-    const eti = v => v >= 1000 ? "$" + (v/1000) + "k" : "$" + v;
+    const eti = v => {
+      const c = v * FX[DIVISA];
+      return c >= 1000 ? SIG[DIVISA] + (c / 1000).toFixed(0) + "k"
+                       : SIG[DIVISA] + (c < 10 ? c.toFixed(c < 1 ? 2 : 1) : c.toFixed(0));
+    };
     let g = "";
     for(let v = 1; v <= alto; v *= 10)
       g += `<line x1="34" y1="${yOf(v).toFixed(1)}" x2="${W-12}" y2="${yOf(v).toFixed(1)}"
@@ -1546,7 +1577,7 @@ setInterval(slow, 15000);
     g += `<line x1="34" y1="${yOf(puesto).toFixed(1)}" x2="${W-12}" y2="${yOf(puesto).toFixed(1)}"
         stroke="var(--dim)" stroke-width="1" stroke-dasharray="2 5" opacity=".6"/>`;
     const d = p.map((v,i)=>`${i?"L":"M"}${xOf(i,n).toFixed(1)} ${yOf(v).toFixed(1)}`).join(" ");
-    const col = eq >= puesto ? "#FFD426" : "var(--neg)";
+    const col = eq >= puesto ? "var(--pos)" : "var(--neg)";
     $("tCurve").innerHTML = g
       + `<path d="${d}" fill="none" stroke="${col}" stroke-width="1.6"
            stroke-linejoin="round"/>`
@@ -1564,22 +1595,24 @@ setInterval(slow, 15000);
     return `${(dias / 252).toFixed(1)} años`;
   }
   function pintar(){
-    $("tEq").textContent = "$" + eq.toFixed(2);
-    $("tEq").style.color = eq < puesto ? "var(--neg)" : "#FFD426";
-    $("tX").textContent = `×${(eq / puesto).toFixed(2)} sobre $${puesto.toFixed(0)}`;
+    $("tEq").textContent = money(eq);
+    // verde si va por encima de lo puesto, rojo si por debajo. El ámbar se
+    // queda para lo que no es ganancia ni pérdida: la etiqueta de simulación.
+    $("tEq").style.color = eq < puesto ? "var(--neg)" : "var(--pos)";
+    $("tX").textContent = `×${(eq / puesto).toFixed(2)} sobre ${money(puesto)}`;
     $("tT").textContent = `${ops} ${ops === 1 ? "operación" : "operaciones"} · `
       + reloj_txt();
     $("tKv").innerHTML = [
-      ["Ingresado", "$" + puesto.toFixed(2)],
-      ["Máximo", "$" + pico.toFixed(2)],
+      ["Ingresado", money(puesto)],
+      ["Máximo", money(pico)],
       ["Ganadoras", ops ? (ganadas/ops*100).toFixed(0) + " %" : "—"],
       ["Caída máx.", (hundido*100).toFixed(1) + " %"],
     ].map(([k,v]) => `<div><dt>${k}</dt><dd>${v}</dd></div>`).join("");
     $("tOps").innerHTML = cinta.length ? cinta.map(o =>
       `<div><span class="dim">${o.dep ? "ingreso" : "día " + o.d}</span>
-        <span class="${o.r>=0?"pos":"neg"}">${o.dep ? "+$" + o.r.toFixed(0)
+        <span class="${o.r>=0?"pos":"neg"}">${o.dep ? "+" + money(o.r)
           : (o.r>=0?"▲":"▼") + " " + (o.r*100).toFixed(2) + " %"}</span>
-        <span>$${o.eq.toFixed(2)}</span></div>`).join("")
+        <span>${money(o.eq)}</span></div>`).join("")
       : '<div class="dim" style="border:0;padding:6px 0">Todavía sin operaciones. Días de mercado sin señal.</div>';
     dibujar();
   }
@@ -1629,6 +1662,7 @@ setInterval(slow, 15000);
     reloj = setInterval(dia, MS[veloc] || 2000);
   }
 
+  window.__repintar = () => { pintar(); avisaCapital(); };
   $("tGo").onclick = arrancar;
   $("tStop").onclick = () => parar("Parada. Dale a Lanzar para seguir.", "");
   $("tReset").onclick = () => {
@@ -1652,7 +1686,8 @@ setInterval(slow, 15000);
       $("tFin").textContent = "En cero no se ingresa. Vacía y empieza otra.";
       return;
     }
-    const d = parseFloat(b.dataset.d);
+    // el botón dice euros cuando se ven euros, pero por dentro todo es dólar
+    const d = parseFloat(b.dataset.d) / FX[DIVISA];
     eq += d; puesto += d; pico = Math.max(pico, eq);
     curva.push(eq);
     cinta.unshift({d: dias, r: d, eq, dep: true}); if(cinta.length > 12) cinta.pop();
@@ -1913,5 +1948,16 @@ setInterval(slow, 15000);
     if(el !== d && !el.style.position) el.style.position = "relative";
     if(el !== d) el.style.zIndex = el.style.zIndex || "1";
   });
+})();
+</script>
+
+<script>
+/* ── El botón de divisa ─────────────────────────────────────────────────────
+   Vive fuera de los paneles para que ninguno tenga que saber de divisas: pulsa,
+   guarda la elección y pide un repintado. Lo demás ya pasa por money(). */
+(function(){
+  document.querySelectorAll(".fx").forEach(b =>
+    b.addEventListener("click", () => setDivisa(b.dataset.fx)));
+  setDivisa(DIVISA);          // aplica lo que hubiera guardado de la otra vez
 })();
 </script>
