@@ -746,9 +746,13 @@ const SIG = {usd: "$", eur: "€"};
 let DIVISA = "usd";
 try{ DIVISA = localStorage.getItem("pulpo.divisa") || "usd"; }catch(e){}
 
+/* Doce mil y pico escrito "12355.67" no se lee: hay que contar cifras con el
+   dedo. Con separador de miles y coma decimal, se lee de un vistazo. */
+const MILES = new Intl.NumberFormat("es-ES",
+  {minimumFractionDigits: 2, maximumFractionDigits: 2});
 const money = v => {
   const c = v * FX[DIVISA];
-  return (c < 0 ? "−" : "") + SIG[DIVISA] + Math.abs(c).toFixed(2);
+  return (c < 0 ? "−" : "") + SIG[DIVISA] + MILES.format(Math.abs(c));
 };
 /* Cambiar de divisa no recalcula nada: solo vuelve a pintar lo que ya estaba. */
 function setDivisa(d){
@@ -1005,15 +1009,19 @@ function headSVG(){
       <ellipse cx="378" cy="166" rx="13" ry="10" transform="rotate(-28 378 166)"
         fill="${CREMA}" opacity=".7"/>
       <path class="mantle" id="mantle" d="${blob}" fill="${ROJO}" opacity="0"/>
-      <!-- los mofletes: aqui es donde se ve el humor -->
-      ${[[392,238,34,22],[608,238,34,22],[500,318,44,20]]
+      <!-- Los mofletes. Iban con desenfoque y sobre un dibujo de linea plana
+           eso es una mancha sucia, no una mejilla: aqui van planos, como se
+           pintaban entonces. -->
+      ${[[396,236,30,19],[604,236,30,19]]
         .map(([x,y,rx,ry])=>`<ellipse class="blush" cx="${x}" cy="${y}" rx="${rx}"
-          ry="${ry}" fill="#E8746A" filter="url(#soft)" opacity="0"/>`).join("")}
+          ry="${ry}" fill="#E8746A" opacity="0"/>`).join("")}
     </g>
     ${eye("l",452,1)} ${eye("r",556,-1)}
-    <path id="snarl" d="M470 276 L530 276 L522 292 L508 278 L500 294 L492 278 L478 290 Z"
-      fill="${CREMA}" stroke="${TINTA}" stroke-width="2.4" opacity="0"
-      style="transition:opacity .22s"/>
+    <!-- Los dientes de rabia eran de la cara anterior y encima de esta boca
+         abierta se leen como una mancha rara. Fuera: la cara de perder ya se
+         ve en la boca y en las cejas. Se deja el nodo, vacio, porque setFace
+         sigue buscandolo y un hueco en el codigo es peor que un nodo inerte. -->
+    <path id="snarl" d="" opacity="0"/>
     <path id="mouth" d="M440 258 Q500 344 562 258 Q500 286 440 258 Z"
       fill="${ROJO_OSCURO}" stroke="${TINTA}" stroke-width="5"
       stroke-linejoin="round" stroke-linecap="round"/>
@@ -1201,7 +1209,7 @@ const FACE = {
   glad:   {mouth:"M434 256 Q500 356 568 256 Q500 288 434 256 Z",
            lidT:0,  lidB:8,  ceja:-3, pup:[0,-4,54], skin:"#3A9B76",  hold:1400},
   sad:    {mouth:"M452 300 Q500 258 550 300 Q500 280 452 300 Z",
-           lidT:22, lidB:2,  ceja:16, pup:[0,8,34],  skin:"#B3332A",  hold:2600, snarl:1},
+           lidT:22, lidB:2,  ceja:16, pup:[0,8,34],  skin:"#B3332A",  hold:2600},
   wow:    {mouth:"M466 258 Q500 228 534 258 Q500 330 466 258 Z",
            lidT:0,  lidB:0,  ceja:-14, pup:[0,-4,64], skin:"#E0A21F", hold:1800},
 };
@@ -1239,12 +1247,16 @@ function setFace(_, m){
     mt.setAttribute("fill", f.skin || ROJO);
     // En un dibujo plano, teñir el cuerpo entero lo ensucia: el humor se ve
     // en la cara y en los mofletes, que es como se hacia en los años treinta.
-    mt.setAttribute("opacity", f.skin ? ".07" : "0");
+    // Nada de teñir el cuerpo: en un dibujo de linea plana cualquier lavado
+    // de color por encima se ve como suciedad. El humor se ve en la cara.
+    mt.setAttribute("opacity", "0");
   }
+  /* Los mofletes NO cambian de color con el humor: un moflete verde sobre una
+     cara roja se ve como una mancha, no como una emocion. Siempre rosados; lo
+     que cambia es cuanto se encienden. */
   document.querySelectorAll("#octo .blush").forEach((e, i)=>{
-    e.setAttribute("fill", f.skin || "#E8746A");
-    // opacidades distintas: el color le sube a manchas, no de golpe
-    e.setAttribute("opacity", f.skin ? String(0.5 + (i % 3) * 0.1) : "0");
+    e.setAttribute("fill", "#F08C7E");
+    e.setAttribute("opacity", f.skin ? "0.5" : "0");
     e.style.transitionDelay = (i * 55) + "ms";
   });
   const w = $("octoWrap");
@@ -1783,24 +1795,30 @@ setInterval(slow, 15000);
       ? curva.filter((_,i)=> i % Math.ceil(curva.length/600) === 0).concat(curva[curva.length-1])
       : curva;
     const n = p.length, ult = p[n-1];
-    const eti = v => {
-      const c = v * FX[DIVISA];
-      return c >= 1000 ? SIG[DIVISA] + (c / 1000).toFixed(0) + "k"
-                       : SIG[DIVISA] + (c < 10 ? c.toFixed(c < 1 ? 2 : 1) : c.toFixed(0));
-    };
+    /* Las lineas se dibujan en cifras redondas de la divisa que se VE, no de
+       dolares convertidos: con euros salian $10 -> 8,6 €, que es una escala
+       que no significa nada para quien la mira. */
+    const eti = c => c >= 1000 ? SIG[DIVISA] + (c / 1000).toFixed(c >= 10000 ? 0 : 1) + "k"
+                               : SIG[DIVISA] + (c < 10 ? c.toFixed(1) : c.toFixed(0));
     /* La escala arranca en la potencia de diez que toca, no en 1: con una
        cuenta de $10 la linea del $1 no dice nada y encima se lee como si la
        cuenta valiera uno. Solo aparece si la cuenta baja de verdad ahi. */
-    let suelo = 10;
-    const minimo = Math.min(puesto, ...p);
-    while(suelo > 1 && minimo < suelo) suelo /= 10;
-    while(suelo * 10 <= minimo) suelo *= 10;
+    const fx = FX[DIVISA];
+    const minimo = Math.min(puesto, ...p) * fx;
+    /* La primera linea es la potencia de diez que queda justo debajo de lo mas
+       bajo que ha tocado la cuenta; si queda MUY por debajo (pasa en euros:
+       10 $ son 8,6 €, y entonces la potencia de abajo es el 1) se sube una,
+       porque una linea del 1 debajo de una cuenta de diez no dice nada. */
+    let suelo = Math.pow(10, Math.floor(Math.log10(Math.max(minimo, 0.01))));
+    if(suelo < minimo * 0.6) suelo *= 10;
     let g = "";
-    for(let v = suelo; v <= alto; v *= 10)
+    for(let c = suelo; c <= alto * fx; c *= 10){
+      const v = c / fx;                       // la linea, de vuelta a dolares
       g += `<line x1="34" y1="${yOf(v).toFixed(1)}" x2="${W-12}" y2="${yOf(v).toFixed(1)}"
         stroke="var(--hair)" stroke-width="1"/>
       <text x="0" y="${(yOf(v)+3.5).toFixed(1)}" fill="var(--faint)" font-size="9"
-        font-family="var(--num)">${eti(v)}</text>`;
+        font-family="var(--num)">${eti(c)}</text>`;
+    }
     g += `<line x1="34" y1="${yOf(STOP).toFixed(1)}" x2="${W-12}" y2="${yOf(STOP).toFixed(1)}"
         stroke="var(--neg)" stroke-width="1" stroke-dasharray="3 3" opacity=".75"/>`;
     g += `<line x1="34" y1="${yOf(puesto).toFixed(1)}" x2="${W-12}" y2="${yOf(puesto).toFixed(1)}"
