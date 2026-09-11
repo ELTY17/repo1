@@ -276,7 +276,9 @@ footer{font-size:12px;color:var(--dim);line-height:1.6;letter-spacing:-.005em}
     padding:calc(9px + env(safe-area-inset-top)) 16px 9px;
     background:rgba(20,20,22,.82);-webkit-backdrop-filter:saturate(180%) blur(20px);
     backdrop-filter:saturate(180%) blur(20px);border-bottom:.5px solid var(--line)}
-  .mhead h1{font-family:var(--disp);font-size:15px;font-weight:600;letter-spacing:-.02em}
+  .mhead h1{font-family:var(--disp);font-size:15px;font-weight:600;
+    letter-spacing:-.02em;white-space:nowrap}
+  .fxm{margin-left:8px}
   .mhead .me{margin-left:auto;text-align:right;line-height:1.15}
   .mhead .me b{font-family:var(--num);font-size:17px;font-weight:600;
     font-variant-numeric:tabular-nums;display:block}
@@ -404,6 +406,25 @@ body{background:#04080F}
 /* relieve del fondo: siluetas de coral y roca, solo en los márgenes */
 .lecho{position:absolute;left:0;right:0;bottom:0;height:230px;opacity:.5}
 @media (prefers-reduced-motion:reduce){ .rayo,.mota{animation:none} }
+
+/* ── El interruptor de divisa ───────────────────────────────────────────────
+   Es un interruptor de dos posiciones, no dos botones sueltos: van pegados,
+   con un marco alrededor, y la posición activa se enciende. Así se entiende sin
+   leer nada que una excluye a la otra. */
+.ctrls .fx, .fxm .fx{font-family:var(--num);font-size:14px;font-weight:600;
+  min-width:38px;padding:6px 10px;border-radius:0;background:var(--panel2);
+  color:var(--dim);border:none}
+.ctrls .fx:first-of-type, .fxm .fx:first-of-type{border-radius:980px 0 0 980px}
+.ctrls .fx:last-of-type, .fxm .fx:last-of-type{border-radius:0 980px 980px 0}
+.ctrls .fx[aria-pressed="true"], .fxm .fx[aria-pressed="true"]{
+  background:var(--blue);color:#fff}
+.fxm{display:flex;gap:1px;margin-left:12px;padding:2px;border-radius:980px;
+  background:var(--hair)}
+@media (max-width:760px){
+  .fxm .fx{min-width:44px;min-height:34px;font-size:15px}
+  .mhead .me{margin-left:auto}
+}
+@media (min-width:761px){ .fxm{display:none} }
 </style>
 
 </head><body>
@@ -429,7 +450,13 @@ body{background:#04080F}
       <button id="rst">↺ Reiniciar</button>
     </div>
   </div>
-  <header class="mhead"><i class="tickerdot"></i><h1>Octopus Bot</h1><div class="me"><b id="mEq">—</b><span id="mDl" class="dim">—</span></div></header>
+  <header class="mhead"><i class="tickerdot"></i><h1>Octopus Bot</h1>
+    <div class="fxm" role="group" aria-label="Divisa">
+      <button class="fx" data-fx="usd" aria-pressed="true" title="Dólares">$</button>
+      <button class="fx" data-fx="eur" aria-pressed="false"
+        title="Euros · 1 USD = 0,8607 EUR (11 sep 2026)">€</button>
+    </div>
+    <div class="me"><b id="mEq">—</b><span id="mDl" class="dim">—</span></div></header>
   <main class="mosaic">
 <section class="p" data-a="cap" style="grid-area:cap"><div class="ph"><i class="sq"></i><b>Capital</b><span class="r" id="eqr">—</span></div>
       <div class="pb">
@@ -646,6 +673,8 @@ function setDivisa(d){
   document.querySelectorAll("[data-usd]").forEach(el => {
     el.textContent = "+" + SIG[DIVISA] + (parseFloat(el.dataset.usd) || 0);
   });
+  // el cambio de divisa alcanza a los dos sitios donde hay dinero escrito
+  if(window.__stats) window.__stats();
   if(window.__repintar) window.__repintar();
 }
 const sgn = v => (v>=0?"+":"−") + Math.abs(v).toFixed(2);
@@ -1216,6 +1245,7 @@ function drawStatus(){
 drawStatus();
 
 function stats(){
+  window.__stats = stats;
   const ret = V.equity/BASE - 1;
   /* El capital que se enseña es el TOTAL menos lo apartado en la cuenta de
      prueba: ese dinero existe, pero ya no está aquí. El bruto se guarda al
