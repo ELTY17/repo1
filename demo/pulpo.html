@@ -41,7 +41,7 @@ a{color:var(--brass)}
 .deck{min-height:100dvh;display:flex;flex-direction:column;padding:0}
 .mosaic{flex:1;min-height:0;display:grid;gap:12px;padding:12px 16px 16px;
   grid-template-columns:repeat(12,minmax(0,1fr));
-  grid-template-rows:336px 296px 238px 286px 508px 560px;
+  grid-template-rows:336px 296px 238px 312px 508px 560px;
   grid-template-areas:
     "cap cap prc prc prc prc dec dec dec con con con"
     "agt agt ops ops ops mkt mkt mkt ord ord cnv cnv"
@@ -243,6 +243,20 @@ footer{font-size:12px;color:var(--dim);line-height:1.6;letter-spacing:-.005em}
 .turctl{display:flex;align-items:center;gap:5px;flex-wrap:wrap;flex:none;
   padding-top:9px;border-top:.5px solid var(--hair)}
 .turctl button{padding:5px 11px;font-size:12px}
+/* Ingreso libre: de cero a lo que sea. Los botones de +$10 son un atajo, no un
+   techo — el campo acepta cualquier cifra y no tiene tope por arriba. */
+.libre{display:flex;align-items:center;gap:1px;background:var(--hair);
+  border-radius:980px;padding:2px;overflow:hidden}
+.libre i{font-family:var(--num);font-size:13px;font-weight:600;color:var(--dim);
+  padding:0 2px 0 9px;font-style:normal}
+.libre input{width:104px;border:none;outline:none;background:var(--panel2);
+  color:var(--ink);font-family:var(--num);font-size:12.5px;padding:6px 9px;
+  border-radius:980px 0 0 980px;min-width:0}
+.libre input::placeholder{color:var(--faint);font-size:11px}
+.libre input::-webkit-outer-spin-button,
+.libre input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+.libre input[type=number]{-moz-appearance:textfield}
+.libre button{border-radius:0 980px 980px 0}
 .tlab{font-size:10.5px;color:var(--faint);letter-spacing:.04em;text-transform:uppercase}
 .tsep{width:1px;align-self:stretch;background:var(--hair);margin:0 5px}
 .turbig{font-family:var(--disp);font-size:38px;font-weight:600;letter-spacing:-.035em;
@@ -308,6 +322,11 @@ footer{font-size:12px;color:var(--dim);line-height:1.6;letter-spacing:-.005em}
   .turops{max-height:150px;flex:none}
   .turctl{gap:6px}
   .turctl button{min-height:38px}
+  /* en el teléfono el campo se lleva una línea entera: apretado contra los
+     botones, el texto de dentro se cortaba */
+  .libre{flex:1 0 100%;min-width:0}
+  .libre input{flex:1;min-height:40px;font-size:15px;width:auto}
+  .libre button{min-height:40px;white-space:nowrap}
   .tsep{display:none}
   .mosaic > .p[data-hide]{display:none}
   .tabs{display:grid;grid-template-columns:repeat(4,1fr);position:fixed;
@@ -626,6 +645,12 @@ body{background:#04080F}
           <button class="td" data-d="20"><span data-usd="20">+$20</span></button>
           <button class="td" data-d="50"><span data-usd="50">+$50</span></button>
           <button class="td" data-d="100"><span data-usd="100">+$100</span></button>
+          <span class="libre">
+            <i id="tSig">$</i>
+            <input id="tLibre" type="number" min="0" step="any" inputmode="decimal"
+              placeholder="lo que quieras" aria-label="Cantidad a ingresar">
+            <button id="tMete">Ingresar</button>
+          </span>
         </div>
       </div></section>
 <section class="p" data-a="evi" style="grid-area:evi"><div class="ph"><i class="sq"></i>
@@ -706,6 +731,8 @@ function setDivisa(d){
   document.querySelectorAll("[data-usd]").forEach(el => {
     el.textContent = "+" + SIG[DIVISA] + (parseFloat(el.dataset.usd) || 0);
   });
+  const sig = document.getElementById("tSig");
+  if(sig) sig.textContent = SIG[DIVISA];
   // el cambio de divisa alcanza a los dos sitios donde hay dinero escrito
   if(window.__stats) window.__stats();
   if(window.__repintar) window.__repintar();
@@ -1836,18 +1863,33 @@ setTimeout(round, 800);
   });
   /* Ingresar sube el listón contra el que se mide, para que el ×N no mienta.
      En una cuenta muerta no vale: cero es cero. */
-  document.querySelectorAll(".td").forEach(b => b.onclick = () => {
+  /* Un solo sitio donde se ingresa dinero, y los dos caminos —los botones de
+     atajo y el campo libre— pasan por aquí. `cuanto` viene en la divisa que se
+     está viendo; por dentro todo el simulador es dólar. Sin tope por arriba:
+     el único límite es que sea un número y que sea positivo. */
+  function ingresar(cuanto){
     if(muerta()){
       estado("mal", "En cero no se ingresa. Vacía y empieza otra.");
-      return;
+      return false;
     }
-    // el botón dice euros cuando se ven euros, pero por dentro todo es dólar
-    const d = parseFloat(b.dataset.d) / FX[DIVISA];
+    if(!isFinite(cuanto) || cuanto <= 0) return false;
+    const d = cuanto / FX[DIVISA];
     eq += d; puesto += d; pico = Math.max(pico, eq);
     curva.push(eq);
     cinta.unshift({d: dias, r: d, eq, dep: true}); if(cinta.length > 12) cinta.pop();
     guardar(); pintar(); avisaCapital();
-  });
+    return true;
+  }
+  document.querySelectorAll(".td").forEach(b => b.onclick = () =>
+    ingresar(parseFloat(b.dataset.d)));
+
+  const campo = $("tLibre");
+  const meter = () => {
+    if(ingresar(parseFloat(campo.value))) campo.value = "";
+    campo.focus();
+  };
+  $("tMete").onclick = meter;
+  campo.addEventListener("keydown", e => { if(e.key === "Enter") meter(); });
 
     /* Nota corta a propósito: el recuadro son cuatro líneas, y una frase cortada
      por la mitad se lee peor que una frase que cabe. */
