@@ -41,14 +41,14 @@ a{color:var(--brass)}
 .deck{min-height:100dvh;display:flex;flex-direction:column;padding:0}
 .mosaic{flex:1;min-height:0;display:grid;gap:12px;padding:12px 16px 16px;
   grid-template-columns:repeat(12,minmax(0,1fr));
-  grid-template-rows:172px 138px 318px 168px 196px 508px;
+  grid-template-rows:172px 138px 168px 196px 508px 318px;
   grid-template-areas:
     "cap cap prc prc prc prc dec dec dec con con con"
     "agt agt ops ops ops mkt mkt mkt ord ord cnv cnv"
-    "flw flw flw flw flw flw flw flw flw evi evi evi"
     "apr apr apr apr apr apr apr apr apr evi evi evi"
     "tur tur tur tur tur tur tur tur tur evi evi evi"
-    "oct oct oct oct oct oct oct oct oct evi evi evi";}
+    "oct oct oct oct oct oct oct oct oct evi evi evi"
+    "flw flw flw flw flw flw flw flw flw flw flw flw";}
 .mosaic > .p{min-height:0;min-width:0}
 .mosaic .pb{overflow:auto;min-height:0}
 .mosaic #mckv{margin-top:9px}
@@ -429,6 +429,7 @@ body{background:#04080F}
       <div class="pb">
         <div class="big num" id="eq">$100.00</div>
         <div class="sub" id="dl">—</div>
+        <div class="sub" id="aparte" style="color:var(--faint)">—</div>
         <dl class="kv" id="kv"></dl>
       </div></section>
 <section class="p" data-a="prc" style="grid-area:prc"><div class="ph"><i class="sq"></i><b>Precio</b>
@@ -690,18 +691,18 @@ function bicho(a){
     .map(([x,y]) => `<circle cx="${x}" cy="${y}" r="2.6" fill="#ffffff" opacity=".22"/>`).join("");
 
   const ojos = jefe ? "" : `
-    <path d="M-27 -8 q12 -11 24 -1 q-12 9 -24 1 z" fill="#EDF3FF"/>
-    <path d="M27 -8 q-12 -11 -24 -1 q12 9 24 1 z" fill="#EDF3FF"/>
-    <ellipse cx="-15" cy="-6" rx="4.6" ry="5.4" fill="#0A1420"/>
-    <ellipse cx="15"  cy="-6" rx="4.6" ry="5.4" fill="#0A1420"/>
-    <circle cx="-16.5" cy="-8" r="1.5" fill="#fff" opacity=".9"/>
-    <circle cx="13.5"  cy="-8" r="1.5" fill="#fff" opacity=".9"/>
-    <path d="M-29 -15 q13 -7 25 -2" fill="none" stroke="#04121E" stroke-width="3"
-      stroke-linecap="round" opacity=".9"/>
-    <path d="M29 -15 q-13 -7 -25 -2" fill="none" stroke="#04121E" stroke-width="3"
-      stroke-linecap="round" opacity=".9"/>
-    <path d="M-9 9 q9 3 18 0" fill="none" stroke="#04121E" stroke-width="2.2"
-      stroke-linecap="round" opacity=".55"/>`;
+    <ellipse cx="-15" cy="-6" rx="10.5" ry="11.5" fill="#F4F8FF"/>
+    <ellipse cx="15"  cy="-6" rx="10.5" ry="11.5" fill="#F4F8FF"/>
+    <ellipse cx="-14" cy="-4.5" rx="5.6" ry="6.4" fill="#12243C"/>
+    <ellipse cx="16"  cy="-4.5" rx="5.6" ry="6.4" fill="#12243C"/>
+    <circle cx="-16" cy="-8" r="2.4" fill="#fff"/>
+    <circle cx="14"  cy="-8" r="2.4" fill="#fff"/>
+    <path d="M-27 -19 q12 -4 23 0" fill="none" stroke="#0A1A2C" stroke-width="2.4"
+      stroke-linecap="round" opacity=".5"/>
+    <path d="M27 -19 q-12 -4 -23 0" fill="none" stroke="#0A1A2C" stroke-width="2.4"
+      stroke-linecap="round" opacity=".5"/>
+    <path d="M-7 10 q7 5 14 0" fill="none" stroke="#0A1A2C" stroke-width="2.2"
+      stroke-linecap="round" opacity=".6"/>`;
 
   // la pantalla holográfica que cada uno sujeta, con su glifo
   const glifo = {
@@ -752,21 +753,23 @@ function bicho(a){
 /* ---- la cara del Director, que es la que cambia de humor -------------- */
 function caraJefe(){
   const ojo = (lado, cx, flip) => `<g>
-    <clipPath id="ec-${lado}"><ellipse cx="${cx}" cy="118" rx="17" ry="15"/></clipPath>
-    <ellipse cx="${cx}" cy="118" rx="19" ry="17" fill="#0B2038" opacity=".9"/>
+    <clipPath id="ec-${lado}"><ellipse cx="${cx}" cy="118" rx="18" ry="16.5"/></clipPath>
+    <ellipse cx="${cx}" cy="118" rx="20" ry="18.5" fill="#0B2038" opacity=".55"/>
     <g clip-path="url(#ec-${lado})">
-      <ellipse cx="${cx}" cy="118" rx="17" ry="15" fill="#F4EEDC"/>
-      <ellipse cx="${cx}" cy="118" rx="14" ry="11.5" fill="#D9A63C"/>
-      <rect class="pup" id="pup-${lado}" x="${cx-11}" y="113" width="22" height="9.5"
-        rx="4.6" fill="#0A1420"/>
-      <ellipse class="glint" id="gl-${lado}" cx="${cx-5*flip}" cy="114" rx="3.2" ry="2.2"
-        fill="#fff" opacity=".95"/>
-      <rect class="lidT" id="lidT-${lado}" x="${cx-22}" y="188" width="44" height="22"
+      <!-- blanco grande y pupila redonda: la mirada rasgada en ámbar, a este
+           tamaño, no leía como seria sino como inquietante -->
+      <ellipse cx="${cx}" cy="118" rx="18" ry="16.5" fill="#F4F8FF"/>
+      <ellipse cx="${cx}" cy="118" rx="9.5" ry="9.5" fill="#C9922F" opacity=".75"/>
+      <rect class="pup" id="pup-${lado}" x="${cx-6}" y="112" width="12" height="12"
+        rx="6" fill="#12243C"/>
+      <circle class="glint" id="gl-${lado}" cx="${cx-6*flip}" cy="112" r="3.2"
+        fill="#fff"/>
+      <rect class="lidT" id="lidT-${lado}" x="${cx-22}" y="79" width="44" height="22"
         fill="#3E3F93"/>
-      <rect class="lidB" id="lidB-${lado}" x="${cx-22}" y="243" width="44" height="22"
+      <rect class="lidB" id="lidB-${lado}" x="${cx-22}" y="135" width="44" height="22"
         fill="#3E3F93"/>
     </g></g>`;
-  return `${ojo("l", 478, 1)} ${ojo("r", 522, -1)}
+  return `${ojo("l", 476, 1)} ${ojo("r", 524, -1)}
     <path id="snarl" d="M487 141 L513 141 L509 149 L504 142 L500 150 L496 142 L491 148 Z"
       fill="#0A1420" stroke="#04121E" stroke-width="1.2" opacity="0"
       style="transition:opacity .22s"/>
@@ -871,9 +874,9 @@ EQUIPO.forEach((a, i) => fase[a.k] = i * 1.7);
     const dx = Math.sin(t * 0.00037) * 3.2, dy = Math.sin(t * 0.00052 + 2.1) * 1.4;
     ["l", "r"].forEach(lado => {
       const pu = $("pup-" + lado); if(!pu) return;
-      const cx = lado === "l" ? 478 : 522;
-      pu.setAttribute("x", (cx - 11 + dx).toFixed(1));
-      pu.setAttribute("y", (113 + dy).toFixed(1));
+      const cx = lado === "l" ? 476 : 524;
+      pu.setAttribute("x", (cx - 6 + dx).toFixed(1));
+      pu.setAttribute("y", (112 + dy).toFixed(1));
     });
   }
   requestAnimationFrame(flota);
@@ -927,8 +930,8 @@ const FACE = {
   /* El reposo no es una cara neutra: es la cara de alguien que lleva horas
      mirando gráficos y no se fía de ninguno. Párpado caído, ojo entrecerrado
      y boca recta. Todo lo demás se mide contra esta. */
-  neutral:{mouth:"M489 141 h22",                     lidT:6,  lidB:0,  tilt:16, pup:[0,0,6.5],  skin:null,       hold:0},
-  think:  {mouth:"M492 141 h16",                     lidT:9,  lidB:3,  tilt:21, pup:[-6,-2,6],  skin:"#1E63B0",  hold:0},
+  neutral:{mouth:"M490 140 q10 4 20 0",              lidT:3,  lidB:0,  tilt:8,  pup:[0,0,8],    skin:null,       hold:0},
+  think:  {mouth:"M492 141 h16",                     lidT:6,  lidB:2,  tilt:13, pup:[-5,-2,7],  skin:"#1E63B0",  hold:0},
   /* ni ganando se le va la cara: media sonrisa torcida y el ojo sigue duro */
   happy:  {mouth:"M489 138 q11 8 22 -3",            lidT:2,  lidB:6,  tilt:9,  pup:[0,1,8],    skin:"#16A06B",  hold:2600},
   glad:   {mouth:"M489 139 q11 5 22 -1",             lidT:4,  lidB:3,  tilt:12, pup:[0,0,7.5],  skin:"#1B8F72",  hold:1400},
@@ -948,20 +951,20 @@ function setFace(_, m){
   const sn = $("snarl"); if(sn) sn.setAttribute("opacity", f.snarl ? ".95" : "0");
   ["l","r"].forEach(side=>{
     const t = $("lidT-"+side), b = $("lidB-"+side), pu = $("pup-"+side);
-    const cxe = side === "l" ? 478 : 522;
+    const cxe = side === "l" ? 476 : 524;
     if(t){
-      t.setAttribute("y", 96 + f.lidT * 0.75);
+      t.setAttribute("y", 79 + f.lidT * 0.95);
       // en espejo: el ángulo cae siempre hacia el centro de la cara
       const deg = (f.tilt || 0) * (side === "l" ? 1 : -1);
       t.setAttribute("transform", `rotate(${deg} ${cxe} 118)`);
     }
-    if(b) b.setAttribute("y", 129 - f.lidB * 0.75);
+    if(b) b.setAttribute("y", 135 - f.lidB * 0.95);
     if(pu){
-      const cx = side === "l" ? 478 : 522;
-      pu.setAttribute("x", cx - 11 + f.pup[0] * 0.7);
-      pu.setAttribute("y", 118 - f.pup[2]/2 + f.pup[1]);
-      pu.setAttribute("height", f.pup[2]);
-      pu.setAttribute("rx", Math.min(f.pup[2]/2, 5));
+      const cx = side === "l" ? 476 : 524;
+      pu.setAttribute("x", cx - 6 + f.pup[0] * 0.7);
+      pu.setAttribute("y", 118 - f.pup[2] * 0.75 + f.pup[1]);
+      pu.setAttribute("height", (f.pup[2] * 1.5).toFixed(1));
+      pu.setAttribute("rx", Math.min(f.pup[2] * 0.75, 6));
     }
   });
   // Un pulpo no se repinta entero: se le enciende una zona. Un lavado muy leve
@@ -1185,7 +1188,11 @@ drawStatus();
 
 function stats(){
   const ret = V.equity/BASE - 1;
-  $("eq").textContent = money(V.equity);
+  /* El capital que se enseña es el TOTAL menos lo apartado en la cuenta de
+     prueba: ese dinero existe, pero ya no está aquí. El bruto se guarda al
+     lado para que el panel de la cuenta pueda hacer la resta. */
+  $("eq").dataset.bruto = String(V.equity);
+  $("eq").textContent = money(V.equity - (window.__apartado || 0));
   $("eq").className = "big num " + cl(ret);
   $("eqr").textContent = `Barra ${V.bar} de ${NB-1}`;
   $("dl").innerHTML = `<span class="${cl(ret)}">${pctS(ret)}</span>
@@ -1362,7 +1369,7 @@ setTimeout(round, 800);
    Los mismos paneles del mosaico, enseñados por grupos en pantalla estrecha.
    Al ensanchar vuelven todos, sin recargar. */
 (function(){
-  const GRUPOS = {pulpo:["flw","tur","oct","agt","cnv"], capital:["cap","dec","ops"],
+  const GRUPOS = {pulpo:["tur","oct","flw","agt","cnv"], capital:["cap","dec","ops"],
                   mercado:["prc","mkt","ord"], pruebas:["apr","con","evi"]};
   const nav = document.querySelector(".tabs"); if(!nav) return;
   const paneles = [...document.querySelectorAll(".mosaic > .p[data-a]")];
@@ -1437,9 +1444,25 @@ setTimeout(round, 800);
   }catch(e){}
 
   const muerta = () => !!(fin && fin.cls === "mal");
+  /* Lo que hay puesto en la cuenta de prueba no es dinero nuevo: sale del
+     capital. El panel de Capital lo descuenta para que el total no mienta. */
+  const avisaCapital = () => {
+    window.__apartado = puesto;
+    const ap = document.getElementById("aparte");
+    const eqEl = document.getElementById("eq");
+    if(!ap || !eqEl) return;
+    const total = parseFloat((eqEl.dataset.bruto || eqEl.textContent)
+      .replace(/[^0-9.\-]/g, "")) || 0;
+    ap.textContent = `− $${puesto.toFixed(2)} apartados en la cuenta de prueba `
+      + `· quedan $${(total - puesto).toFixed(2)}`;
+    // se actualiza también la cifra grande: esperar al siguiente ciclo del
+    // panel de Capital dejaba el total sin descontar durante segundos
+    eqEl.textContent = "$" + (total - puesto).toFixed(2);
+  };
   const guardar = () => { try{ localStorage.setItem(CLAVE, JSON.stringify(
     {eq, puesto, dias, ops, ganadas, pico, hundido, fin,
-     curva: curva.slice(-800), cinta: cinta.slice(0,12)})); }catch(e){} };
+     curva: curva.slice(-800), cinta: cinta.slice(0,12)})); }catch(e){}
+    avisaCapital(); };
 
   /* ── la curva ───────────────────────────────────────────────────────────
      Logarítmica y con el techo abierto: la parte de arriba crece con la cuenta,
@@ -1555,7 +1578,7 @@ setTimeout(round, 800);
     clearInterval(reloj); reloj = null;
     eq = 10; puesto = 10; dias = 0; ops = 0; ganadas = 0; pico = 10; hundido = 0;
     curva = [10]; cinta = []; fin = null;
-    guardar(); pintar();
+    guardar(); pintar(); avisaCapital();
     $("tFin").textContent = "Cuenta nueva: $10, día cero.";
     $("tFin").style.color = "var(--dim)";
   };
@@ -1576,7 +1599,7 @@ setTimeout(round, 800);
     eq += d; puesto += d; pico = Math.max(pico, eq);
     curva.push(eq);
     cinta.unshift({d: dias, r: d, eq, dep: true}); if(cinta.length > 12) cinta.pop();
-    guardar(); pintar();
+    guardar(); pintar(); avisaCapital();
   });
 
   $("tNota").innerHTML = `Cada tic es un <b>día de mercado</b> y solo el
@@ -1586,6 +1609,7 @@ setTimeout(round, 800);
     llegar de $10 a $100 sale a una mediana de veintiséis años.`;
 
   pintar();
+  avisaCapital();
   if(fin){ parar(); } else { arrancar(); }
 })();
 </script>
@@ -1670,7 +1694,7 @@ setTimeout(round, 800);
   const svg = $("flujo"); if(!svg) return;
 
   const W = 1000, H = 250, AN = 128, AL = 44;
-  const COL = [24, 224, 452, 640, 828];
+  const COL = [22, 230, 466, 662, 852];
   const NODOS = [
     {k:"datos", c:0, y:103, n:"Mercado",     s:"20 pares",     t:"fuente"},
     {k:"news",  c:1, y:20,  n:"Noticias",    s:"titulares",    t:"voto"},
