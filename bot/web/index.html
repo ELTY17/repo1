@@ -656,15 +656,17 @@ body{background:#04080F}
         <table id="abl"></table>
         <div class="notes"><section class="p"><div class="pb">
       <h3>Un pulpo, siete agentes</h3>
-      <p>El de la imagen es el <strong>Director</strong>, con corona, y cada brazo suyo
-      está ocupado en algo distinto: gráficos, monedas, datos, prensa, escudo, terminal.
-      Eso es la identidad de la marca — <em>una inteligencia con muchas capacidades</em>.</p>
-      <p>Lo que hay debajo, en cambio, no es un bicho: cada agente es un
-      <strong>hilo independiente</strong> con su propia cadencia — Noticias cada 180 s,
-      Escáner cada 60, Técnico cada 30— que calcula por su cuenta y solo manda un número.
-      Por eso los siete están <strong>fuera del pulpo</strong>, cada uno en su módulo, con
-      su lámpara y su cable. La lámpara se enciende cuando ese agente está calculando de
-      verdad, y por el cable viaja su voto.</p>
+      <p>El bicho es el <strong>Director</strong>, con corona, y cada brazo suyo está
+      ocupado en algo distinto: titulares, mercado, datos, aprendizaje, riesgo, estrategia,
+      ejecución. Eso es la identidad — <em>una inteligencia con muchas capacidades</em>.
+      Está dibujado <strong>con código</strong>, no es una imagen: por eso respira,
+      parpadea, se le enciende el brazo que trabaja y pesa lo que pesa un párrafo.</p>
+      <p>Cada agente es un <strong>hilo independiente</strong> con su propia cadencia
+      — Noticias cada 180 s, Escáner cada 60, Técnico cada 30— que calcula por su cuenta y
+      solo manda un número. Por eso cada uno cuelga de <strong>un brazo distinto</strong>,
+      con su lámpara: la lámpara se enciende cuando ese agente está calculando de verdad,
+      y el impulso que sube por el brazo es su voto llegando al Director. El octavo brazo
+      no lleva agente: lleva el montón de monedas, que es el dinero.</p>
       <p>El Director no ordena: <strong>recibe votos</strong> y los pesa (0,45 técnico ·
       0,30 escáner · 0,25 noticias). Ni siquiera vota todo el mundo: Correlación solo veta,
       y Aprendizaje ni eso, juzga después. Un pulpo mandando y siete brazos obedeciendo
@@ -764,33 +766,123 @@ $("gthr").style.left = ((0.35+1)/2*100) + "%";
 let moodUntil = 0, mood = "neutral";
 
 /* ══ EL EQUIPO ══════════════════════════════════════════════════════════════
-   UN solo pulpo —el Director, con corona— y siete módulos a los lados. Hasta
-   ahora había ocho pulpos dibujados a mano; el bicho de verdad es uno, y cada
-   brazo suyo está ocupado en una cosa distinta: gráficos, monedas, datos,
-   prensa, escudo, terminal. Los módulos de los lados no son decoración: cada
-   uno es un agente real, con su lámpara —que se enciende cuando ese agente
-   está calculando— y su cable, por el que viajan los votos.
+   UN pulpo, dibujado con código. Nada de PNG: una imagen fija no respira, no
+   parpadea, no se le enciende un brazo cuando ese agente está calculando, y
+   pesa doscientas veces más. Todo lo que hay aquí son curvas y degradados.
 
-   El pulpo es una imagen (octopus.png). Lo que NO puede hacer una imagen es
-   cambiar de cara, así que el humor se sigue viendo: el resplandor de detrás
-   cambia de color, y el conjunto da un salto al ganar y un respingo al perder. */
+   La forma copia la referencia: manto bulboso con vetas doradas, corona de
+   tridente, ojos cian encendidos y ocho brazos que salen en estrella y se
+   enroscan en la punta. Y cada brazo lleva EN LA PUNTA lo suyo — noticias,
+   mercado, datos, aprendizaje, ejecución, riesgo, estrategia— más el montón
+   de monedas, que no es un agente: es el dinero.
+
+   Que cada capacidad cuelgue de un brazo no es solo estética; la lámpara de
+   esa punta se enciende cuando ese agente calcula de verdad, y el impulso que
+   viaja por el brazo es su voto llegando al Director. */
 const EQUIPO = [
-  {k:"dir",  x:500, y:250, s:1, c:"#3E8FD6", rol:"DIRECTOR", sub:"coordina · decide", jefe:1},
-  {k:"news", x:118, y:86,  s:1, c:"#3FC98B", rol:"NEWS",     sub:"titulares"},
-  {k:"scan", x:118, y:208, s:1, c:"#E0A93A", rol:"MARKET",   sub:"fuerza relativa"},
-  {k:"corr", x:118, y:330, s:1, c:"#43C2C8", rol:"DATA",     sub:"correlación"},
-  {k:"apr",  x:118, y:452, s:1, c:"#E8C15A", rol:"LEARNING", sub:"aprende"},
-  {k:"tech", x:882, y:126, s:1, c:"#4FD6E8", rol:"STRATEGY", sub:"indicadores"},
-  {k:"risk", x:882, y:270, s:1, c:"#A487F0", rol:"RISK",     sub:"veto y tamaño"},
-  {k:"exec", x:882, y:414, s:1, c:"#D96BD0", rol:"EXECUTION",sub:"órdenes"},
+  {k:"dir",  x:500, y:170, c:"#5AA9E8", rol:"DIRECTOR", sub:"coordina · decide", jefe:1},
+  {k:"news", x:150, y:150, c:"#3FC98B", rol:"NEWS",     sub:"titulares",
+   base:[440,196], c1:[338,152], c2:[198,82]},
+  {k:"scan", x:100, y:302, c:"#E0A93A", rol:"MARKET",   sub:"fuerza relativa",
+   base:[430,234], c1:[314,212], c2:[146,226]},
+  {k:"corr", x:170, y:452, c:"#43C2C8", rol:"DATA",     sub:"correlación",
+   base:[442,276], c1:[338,338], c2:[178,352]},
+  {k:"apr",  x:352, y:508, c:"#E8C15A", rol:"LEARNING", sub:"aprende",
+   base:[470,294], c1:[452,390], c2:[300,450]},
+  {k:"cap",  x:648, y:508, c:"#F0C651", rol:"CAPITAL",  sub:"lo que hay", dinero:1,
+   base:[530,294], c1:[548,390], c2:[700,450]},
+  {k:"exec", x:830, y:452, c:"#D96BD0", rol:"EXECUTION",sub:"órdenes",
+   base:[558,276], c1:[662,338], c2:[822,352]},
+  {k:"risk", x:900, y:302, c:"#A487F0", rol:"RISK",     sub:"veto y tamaño",
+   base:[570,234], c1:[686,212], c2:[854,226]},
+  {k:"tech", x:850, y:150, c:"#4FD6E8", rol:"STRATEGY", sub:"indicadores",
+   base:[560,196], c1:[662,152], c2:[802,82]},
 ];
 const POR_K = Object.fromEntries(EQUIPO.map(a => [a.k, a]));
-const KEYS_EQ = EQUIPO.filter(a => !a.jefe).map(a => a.k);
-const CROWN = {x:500, y:250};
+const BRAZOS = EQUIPO.filter(a => a.base);
+const KEYS_EQ = BRAZOS.filter(a => !a.dinero).map(a => a.k);
+const CROWN = {x:500, y:170};
 
-/* ---- un módulo: chapa de cristal con lámpara ----------------------------
-   Se dibuja centrado en el origen para que al marcarlo como ocupado crezca
-   desde su propio centro y no se desplace. El icono es el mismo de antes. */
+/* ---- geometría de un brazo ----------------------------------------------
+   El brazo es una cúbica muestreada; en cada muestra se calcula la normal y
+   se separa el contorno a izquierda y derecha por un grosor que cae con la
+   distancia. Dibujarlo como CONTORNO CERRADO y no como trazo es lo que
+   permite que se estreche de verdad y que la punta acabe en pico. */
+const cubic = (p0, p1, p2, p3, t) => {
+  const u = 1 - t, a = u*u*u, b = 3*u*u*t, c = 3*u*t*t, d = t*t*t;
+  return [a*p0[0] + b*p1[0] + c*p2[0] + d*p3[0],
+          a*p0[1] + b*p1[1] + c*p2[1] + d*p3[1]];
+};
+
+function brazo(a, w0){
+  /* El brazo no termina en la punta: la RODEA. Primero una cúbica que llega
+     cerca del objeto y luego una espiral de doscientos grados alrededor de él,
+     con el radio cayendo. Eso es lo que hace que el brazo parezca que agarra
+     y no que señala — era la diferencia entre un pulpo y una estrella de mar. */
+  const p0 = a.base, p1 = a.c1, p2 = a.c2, tip = [a.x, a.y];
+  const R0 = 54, R1 = 30, GIRO = a.x < 500 ? -1 : 1, ARCO = 3.7;
+  // punto de aproximación: a R0 del objeto, en la dirección en que viene
+  const dx0 = tip[0] - p2[0], dy0 = tip[1] - p2[1];
+  const m0 = Math.hypot(dx0, dy0) || 1;
+  const p3 = [tip[0] - dx0 / m0 * R0, tip[1] - dy0 / m0 * R0];
+  const N = 22, pts = [];
+  for(let i = 0; i <= N; i++) pts.push(cubic(p0, p1, p2, p3, i / N));
+  const a0 = Math.atan2(p3[1] - tip[1], p3[0] - tip[0]);
+  const M = 16;
+  for(let j = 1; j <= M; j++){
+    const u = j / M, ang = a0 + GIRO * ARCO * u, r = R0 + (R1 - R0) * u;
+    pts.push([tip[0] + Math.cos(ang) * r, tip[1] + Math.sin(ang) * r]);
+  }
+  const izq = [], der = [], ejes = [];
+  let vent = "", luces = "";
+  pts.forEach((p, i) => {
+    const t = i / (pts.length - 1);
+    const q = pts[Math.min(i + 1, pts.length - 1)], r = pts[Math.max(i - 1, 0)];
+    const dx = q[0] - r[0], dy = q[1] - r[1], m = Math.hypot(dx, dy) || 1;
+    const nx = -dy / m, ny = dx / m;
+    const w = Math.max(w0 * Math.pow(1 - t, 1.35) + 1.3, 1.3);
+    izq.push([p[0] + nx * w, p[1] + ny * w]);
+    der.push([p[0] - nx * w, p[1] - ny * w]);
+    ejes.push({p, nx, ny, w});
+    // ventosas: en la cara interior, decreciendo con el brazo
+    if(i > 1 && t < 0.98 && w > 2.4){
+      const rv = Math.max(w * 0.13, 0.6);
+      const lado = a.x < 500 ? -1 : 1;
+      [0.68, 0.38].forEach((off, fila) => {
+        if(fila && i % 2) return;                    // la fila de dentro, salteada
+        vent += `<ellipse cx="${(p[0] + nx * w * off * lado).toFixed(1)}"
+          cy="${(p[1] + ny * w * off * lado).toFixed(1)}" rx="${rv.toFixed(1)}"
+          ry="${(rv * 0.72).toFixed(1)}" fill="#C3A9A6" opacity=".34"/>`;
+      });
+      if(i % 7 === 0) luces += `<circle cx="${(p[0] - nx * w * 0.64 * lado).toFixed(1)}"
+        cy="${(p[1] - ny * w * 0.64 * lado).toFixed(1)}" r="1.6" fill="${a.c}"
+        opacity=".75"/>`;
+    }
+  });
+  const f = p => `${p[0].toFixed(1)},${p[1].toFixed(1)}`;
+  const contorno = `M${izq.map(f).join("L")}L${der.reverse().map(f).join("L")}Z`;
+  /* volumen: dos contornos más estrechos, desplazados hacia donde da la luz
+     (arriba). Sin filtros: son polígonos, y el brazo pasa de loncha a tubo. */
+  const banda = (anchoRel, desplRel) => {
+    const A = [], B = [];
+    ejes.forEach(({p, nx, ny, w}) => {
+      const s = ny < 0 ? 1 : -1;               // la normal que apunta hacia arriba
+      const cx = p[0] + nx * w * desplRel * s, cy = p[1] + ny * w * desplRel * s;
+      const ww = w * anchoRel;
+      A.push([cx + nx * ww, cy + ny * ww]);
+      B.push([cx - nx * ww, cy - ny * ww]);
+    });
+    return `M${A.map(f).join("L")}L${B.reverse().map(f).join("L")}Z`;
+  };
+  const luz1 = banda(0.62, 0.3), luz2 = banda(0.26, 0.52);
+  // el eje es por donde viajan los impulsos: hasta el objeto, sin la espiral
+  const eje = `M${p0[0]} ${p0[1]} C${p1[0]} ${p1[1]}, ${p2[0]} ${p2[1]}, ${p3[0]} ${p3[1]}`;
+  return {contorno, luz1, luz2, eje, vent, luces};
+}
+
+/* ---- lo que lleva cada punta -------------------------------------------
+   Emblemas holográficos, del tamaño justo para leerse: marco, icono y
+   lámpara. La lámpara es la de siempre —lamp-K— así que se enciende sola. */
 const GLIFO = {
   scan:'<path d="M-13 6 L-5 -4 L2 3 L13 -9" fill="none" stroke="CC" stroke-width="2.4" stroke-linecap="round"/><circle cx="13" cy="-9" r="2" fill="CC"/>',
   tech:'<circle r="7" fill="none" stroke="CC" stroke-width="2.2"/><path d="M0 -13 v4 M0 9 v4 M-13 0 h4 M9 0 h4" stroke="CC" stroke-width="2.2" stroke-linecap="round"/>',
@@ -800,58 +892,146 @@ const GLIFO = {
   apr: '<path d="M-12 8 C-6 8, -6 -8, 0 -8 C6 -8, 6 8, 12 8" fill="none" stroke="CC" stroke-width="2.3" stroke-linecap="round"/><circle cx="12" cy="8" r="2.6" fill="CC"/>',
   exec:'<path d="M2 -12 L-8 2 H0 L-2 12 L9 -2 H1 Z" fill="CC" opacity=".9"/>',
 };
-const NODO_W = 200, NODO_H = 56;
 
-function nodo(a){
-  const W = NODO_W, H = NODO_H, x0 = -W / 2, y0 = -H / 2;
+/* el montón de monedas no es un panel: es oro de verdad, apilado */
+const MONEDAS = `
+  ${[0, -7, -14, -21].map((dy, i) => `
+    <ellipse cx="0" cy="${dy + 6}" rx="17" ry="6.4" fill="#7A5410"/>
+    <ellipse cx="0" cy="${dy + 4}" rx="17" ry="6.4" fill="url(#oro)"/>`).join("")}
+  <text y="-14" text-anchor="middle" font-family="IBM Plex Mono,monospace"
+    font-size="11" font-weight="700" fill="#5B3F08">₿</text>`;
+
+function emblema(a){
+  const dinero = !!a.dinero;
+  const cuerpo = dinero ? MONEDAS : `
+    <rect x="-34" y="-23" width="68" height="46" rx="7" fill="#061626" opacity=".9"/>
+    <rect x="-34" y="-23" width="68" height="46" rx="7" fill="url(#holo-${a.k})"/>
+    <rect x="-34" y="-23" width="68" height="46" rx="7" fill="none"
+      stroke="${a.c}" stroke-width="1.5" opacity=".8"/>
+    <line x1="-34" y1="-14" x2="34" y2="-14" stroke="${a.c}" stroke-width="1" opacity=".4"/>
+    <g transform="translate(0,5) scale(.86)">${(GLIFO[a.k] || "").replaceAll("CC", a.c)}</g>
+    <circle class="lamp" id="lamp-${a.k}" cx="26" cy="-14" r="3.6"
+      fill="var(--sunk)" stroke="#04121E" stroke-width="1.2"/>`;
+  /* dónde cae el rótulo: encima de casi todos, porque el brazo entra por
+     abajo; debajo solo en los dos laterales, donde arriba pasa el brazo. */
+  const dy = (a.k === "scan" || a.k === "risk") ? 50 : -48;
   return `<g class="nodo" id="ag-${a.k}" transform="translate(${a.x},${a.y})">
     <g id="bl-${a.k}" class="ag" data-busy="0">
-      <rect x="${x0}" y="${y0}" width="${W}" height="${H}" rx="14"
-        fill="#071524" opacity=".86"/>
-      <rect x="${x0}" y="${y0}" width="${W}" height="${H}" rx="14"
-        fill="url(#nodoLuz-${a.k})"/>
-      <rect x="${x0}" y="${y0}" width="${W}" height="${H}" rx="14" fill="none"
-        stroke="${a.c}" stroke-width="1.3" opacity=".62"/>
-      <g transform="translate(${x0 + 30},0) scale(.8)">
-        ${GLIFO[a.k] ? GLIFO[a.k].replaceAll("CC", a.c) : ""}</g>
-      <text x="${x0 + 54}" y="-3" font-family="IBM Plex Mono,monospace"
-        font-size="13" font-weight="600" letter-spacing="1.5"
-        fill="${a.c}">${a.rol}</text>
-      <text x="${x0 + 54}" y="15" font-family="IBM Plex Mono,monospace"
-        font-size="10" fill="var(--faint)">${a.sub}</text>
-      <circle class="lamp" id="lamp-${a.k}" cx="${W / 2 - 17}" cy="0" r="4.6"
-        fill="var(--sunk)" stroke="#04121E" stroke-width="1.4"/>
+      <ellipse cx="0" cy="0" rx="52" ry="40" fill="${a.c}" opacity=".13"
+        filter="url(#agSoft)"/>
+      ${cuerpo}
+      <g class="etq">
+        <text y="${dy}" text-anchor="middle" font-family="IBM Plex Mono,monospace"
+          font-size="12" font-weight="600" letter-spacing="1.4"
+          fill="${a.c}">${a.rol}</text>
+        <text y="${dy + 14}" text-anchor="middle" font-family="IBM Plex Mono,monospace"
+          font-size="9.5" fill="var(--faint)">${a.sub}</text>
+      </g>
     </g></g>`;
 }
 
 (function montarEquipo(){
-  /* el cable sale del centro del pulpo y muere en el borde interior del
-     módulo; por ahí viajan los impulsos de sendPulse(), que son votos */
-  const enlaces = KEYS_EQ.map(k => {
-    const a = POR_K[k], izq = a.x < 500;
-    const fin = a.x + (izq ? NODO_W / 2 + 7 : -NODO_W / 2 - 7);
-    const cx1 = 500 + (izq ? -110 : 110);
-    return `<path id="lk-${k}" d="M500 260 C${cx1} ${(260 + a.y) / 2},
-      ${fin + (izq ? 70 : -70)} ${a.y}, ${fin} ${a.y}" fill="none"
-      stroke="${a.c}" stroke-width="1.3" opacity=".3" stroke-dasharray="5 7"/>`;
-  }).join("");
+  const G = BRAZOS.map(a => ({a, g: brazo(a, 42)}));
 
-  const brillos = EQUIPO.filter(a => !a.jefe).map(a =>
-    `<linearGradient id="nodoLuz-${a.k}" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="${a.c}" stop-opacity=".18"/>
-      <stop offset="1" stop-color="${a.c}" stop-opacity=".03"/>
-    </linearGradient>`).join("");
+  /* quién va por delante del cuerpo: sin esto los ocho brazos salen del mismo
+     plano y el bicho se lee como una estrella de mar recortada */
+  const DELANTE = ["apr", "cap"];
+  const pintaBrazo = ({a, g}) => `<g>
+    <path d="${g.contorno}" fill="#16294A" stroke="#04101F"
+      stroke-width="2.2" stroke-linejoin="round"/>
+    <path d="${g.luz1}" fill="#2A4878" opacity=".9"/>
+    <path d="${g.luz2}" fill="#41669E" opacity=".8"/>
+    ${g.vent}${g.luces}</g>`;
+
+  /* el manto: bulbo con hombros, del que salen los brazos por debajo */
+  const manto = "M432 196 C426 118, 456 52, 500 52 C544 52, 574 118, 568 196 "
+              + "C564 240, 540 262, 500 262 C460 262, 436 240, 432 196 Z";
+  // vetas doradas: grietas finas que bajan del manto, como en la referencia
+  const vetas = [
+    "M500 62 C495 82, 506 92, 501 112",
+    "M462 76 C456 96, 466 106, 460 124", "M538 76 C544 96, 534 106, 540 124",
+    "M440 124 C436 142, 444 152, 441 168", "M560 124 C564 142, 556 152, 559 168",
+  ].map(d => `<path d="${d}" fill="none" stroke="url(#veta)" stroke-width="1.6"
+      stroke-linecap="round" opacity=".7"/>`).join("");
+
+  /* el ojo: almendra grande, iris cian encendido y pupila en barra —la forma
+     real de la pupila de un pulpo— con capuchón de piel encima */
+  const ojo = (cx, flip) => `
+    <path d="M${cx - 33} 200 C${cx - 25} 179, ${cx + 25} 179, ${cx + 33} 200
+             C${cx + 24} 219, ${cx - 24} 219, ${cx - 33} 200 Z"
+      fill="#03101C"/>
+    <ellipse cx="${cx}" cy="200" rx="22" ry="12.5" fill="url(#iris)"/>
+    <ellipse cx="${cx}" cy="200" rx="22" ry="12.5" fill="none" stroke="#04121E"
+      stroke-width="2.2" opacity=".85"/>
+    <rect x="${cx - 13}" y="195.5" width="26" height="9" rx="4.5" fill="#04121E"
+      opacity=".94"/>
+    <ellipse cx="${cx + flip * 7}" cy="194.5" rx="5.4" ry="2.6" fill="#EAFBFF"
+      opacity=".8"/>
+    <path d="M${cx - 34} 199 C${cx - 28} 174, ${cx + 28} 174, ${cx + 34} 199
+             C${cx + 22} 189, ${cx - 22} 189, ${cx - 34} 199 Z"
+      fill="url(#piel)"/>
+    <path d="M${cx - 33} 200 C${cx - 23} 189, ${cx + 23} 189, ${cx + 33} 200"
+      fill="none" stroke="#04121E" stroke-width="2.6" stroke-linecap="round"
+      opacity=".8"/>
+`;
+
+  const corona = `<g id="corona" transform="translate(500,52)">
+      <path d="M-64 12 L-64 -12 L-44 2 L-30 -22 L-16 -6 L0 -46 L16 -6 L30 -22
+               L44 2 L64 -12 L64 12 Z" fill="url(#oro)" stroke="#6B4B08"
+        stroke-width="2" stroke-linejoin="round"/>
+      <path d="M-64 12 L64 12" stroke="#FFE9A8" stroke-width="3" opacity=".75"/>
+      <path d="M0 -46 L-7 -26 L0 -20 L7 -26 Z" fill="#FFF0B8" opacity=".9"/>
+      <circle cx="0" cy="2" r="6" fill="#2E7BD6"/>
+      <circle cx="0" cy="2" r="6" fill="url(#gema)"/>
+      <circle cx="-30" cy="-2" r="3" fill="#FFE9A8" opacity=".9"/>
+      <circle cx="30" cy="-2" r="3" fill="#FFE9A8" opacity=".9"/>
+    </g>`;
 
   $("ring").innerHTML = `
     <defs>
-      <filter id="agSoft" x="-50%" y="-50%" width="200%" height="200%">
-        <feGaussianBlur stdDeviation="15"/>
+      <filter id="agSoft" x="-60%" y="-60%" width="220%" height="220%">
+        <feGaussianBlur stdDeviation="14"/>
+      </filter>
+      <filter id="ojoLuz" x="-80%" y="-80%" width="260%" height="260%">
+        <feGaussianBlur stdDeviation="7"/>
       </filter>
       <radialGradient id="agFondo" cx=".5" cy=".18" r=".95">
         <stop offset="0" stop-color="#10365E" stop-opacity=".55"/>
         <stop offset="1" stop-color="#02070F" stop-opacity="0"/>
       </radialGradient>
-      ${brillos}
+      <radialGradient id="piel" cx=".36" cy=".2" r=".95">
+        <stop offset="0" stop-color="#6C90C8"/>
+        <stop offset=".3" stop-color="#3B5C92"/>
+        <stop offset=".7" stop-color="#1B2F55"/>
+        <stop offset="1" stop-color="#08132A"/>
+      </radialGradient>
+      <linearGradient id="brazoP" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#35538A"/>
+        <stop offset=".6" stop-color="#1E3460"/>
+        <stop offset="1" stop-color="#0A1730"/>
+      </linearGradient>
+      <linearGradient id="veta" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#FFE49A" stop-opacity=".95"/>
+        <stop offset="1" stop-color="#C98A16" stop-opacity=".35"/>
+      </linearGradient>
+      <radialGradient id="iris" cx=".4" cy=".3" r=".85">
+        <stop offset="0" stop-color="#7FE6F2"/>
+        <stop offset=".42" stop-color="#1FA6C4"/>
+        <stop offset="1" stop-color="#073C52"/>
+      </radialGradient>
+      <linearGradient id="oro" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#FFE49A"/><stop offset=".5" stop-color="#E0AE2C"/>
+        <stop offset="1" stop-color="#9A6B0C"/>
+      </linearGradient>
+      <radialGradient id="gema" cx=".35" cy=".3" r=".8">
+        <stop offset="0" stop-color="#CFEBFF"/><stop offset="1" stop-color="#1C57A8"/>
+      </radialGradient>
+      ${BRAZOS.map(a => `<linearGradient id="holo-${a.k}" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="${a.c}" stop-opacity=".26"/>
+        <stop offset="1" stop-color="${a.c}" stop-opacity=".05"/>
+      </linearGradient>`).join("")}
+      <clipPath id="clManto"><path d="${manto}"/></clipPath>
+      ${G.map(({a, g}) => `<clipPath id="cl-${a.k}"><path d="${g.contorno}"/></clipPath>`).join("")}
     </defs>
     <rect width="1000" height="560" fill="url(#agFondo)"/>
     <g id="rayos" opacity=".14">
@@ -860,29 +1040,64 @@ function nodo(a){
           fill="#7FC8FF" opacity="${(0.5 - i * 0.06).toFixed(2)}"/>`).join("")}
     </g>
     <g id="burbujas"></g>
-    <g id="enlaces">${enlaces}</g>
     <g id="octoWrap"><g id="octo">
-      <ellipse cx="500" cy="250" rx="190" ry="168" fill="#1C5C96" opacity=".1"
+      <ellipse cx="500" cy="250" rx="250" ry="215" fill="#1C5C96" opacity=".12"
         filter="url(#agSoft)"/>
-      <ellipse class="mantle" id="mantle" cx="500" cy="258" rx="195" ry="190"
+      <ellipse class="mantle" id="mantle" cx="500" cy="240" rx="200" ry="180"
         fill="#3E3F93" opacity="0" filter="url(#agSoft)"/>
-      ${[[398, 150, 54, 44], [604, 168, 50, 40], [500, 392, 66, 42],
-         [330, 330, 44, 38], [676, 348, 42, 36], [500, 86, 46, 30]]
+      ${[[430, 150, 52, 42], [570, 150, 52, 42], [500, 300, 70, 44],
+         [340, 300, 44, 38], [660, 300, 44, 38], [500, 90, 48, 30]]
         .map(([x, y, rx, ry]) => `<ellipse class="blush" cx="${x}" cy="${y}"
           rx="${rx}" ry="${ry}" fill="#5B5FD6" filter="url(#agSoft)" opacity="0"/>`).join("")}
-      <image id="mascota" href="octopus.png" x="260" y="38" width="480" height="408"
-        preserveAspectRatio="xMidYMid meet"/>
-      <text x="500" y="504" text-anchor="middle" font-family="IBM Plex Mono,monospace"
-        font-size="13" font-weight="600" letter-spacing="2.2"
-        fill="#8FC4F0">DIRECTOR</text>
-      <text x="500" y="520" text-anchor="middle" font-family="IBM Plex Mono,monospace"
-        font-size="10" fill="var(--faint)">no calcula · recibe votos y decide</text>
+
+      <g id="brazos">
+        ${G.filter(({a}) => !DELANTE.includes(a.k)).map(pintaBrazo).join("")}
+      </g>
+      <g id="enlaces">
+        ${G.filter(({a}) => !a.dinero).map(({a, g}) =>
+          `<path id="lk-${a.k}" d="${g.eje}" fill="none" stroke="none"/>`).join("")}
+      </g>
+
+      <path d="M420 246 C420 300, 580 300, 580 246 C596 268, 588 300, 546 308
+        C516 314, 484 314, 454 308 C412 300, 404 268, 420 246 Z"
+        fill="#16294A"/>
+      <ellipse cx="500" cy="272" rx="88" ry="42" fill="url(#piel)" opacity=".92"/>
+      <path d="${manto}" fill="url(#piel)" stroke="#04101F" stroke-width="2.4"/>
+      <g clip-path="url(#clManto)">
+        ${[[452,120,26],[548,132,22],[470,182,18],[540,192,20],[420,180,16],
+           [580,168,15],[500,232,24],[436,236,14],[566,240,13]]
+          .map(([x,y,r]) => `<circle cx="${x}" cy="${y}" r="${r}" fill="#000"
+            opacity=".08"/>`).join("")}
+        ${[[470,92],[500,78],[530,92],[446,112],[554,112]]
+          .map(([x,y]) => `<ellipse cx="${x}" cy="${y}" rx="9" ry="5.5"
+            fill="#FFFFFF" opacity=".1"/>`).join("")}
+        <ellipse cx="452" cy="112" rx="46" ry="32" fill="#FFFFFF" opacity=".13"/>
+        ${vetas}
+        <path d="M418 238 C450 270, 550 270, 582 238 L582 278 L418 278 Z"
+          fill="#04101F" opacity=".3"/>
+      </g>
+      <path d="${manto}" fill="none" stroke="#8FB6E8" stroke-width="1.6" opacity=".2"/>
+
+      <ellipse cx="452" cy="200" rx="26" ry="14" fill="#2FD6E8" opacity=".14"
+        filter="url(#ojoLuz)"/>
+      <ellipse cx="548" cy="200" rx="26" ry="14" fill="#2FD6E8" opacity=".14"
+        filter="url(#ojoLuz)"/>
+      ${ojo(452, 1)} ${ojo(548, -1)}
+      <path d="M482 252 C490 257, 510 257, 518 252" fill="none" stroke="#04101F"
+        stroke-width="2.4" stroke-linecap="round" opacity=".3"/>
+      ${corona}
+      <g id="brazosFrente">
+        ${G.filter(({a}) => DELANTE.includes(a.k)).map(pintaBrazo).join("")}
+      </g>
     </g></g>
+    ${BRAZOS.map(emblema).join("")}
+    <g id="pulses"></g>
+    <text x="500" y="330" text-anchor="middle" font-family="IBM Plex Mono,monospace"
+      font-size="11" font-weight="600" letter-spacing="2.4"
+      fill="#7FB0E0" opacity=".8">DIRECTOR</text>
     <text id="chest" x="500" y="548" text-anchor="middle"
       font-family="IBM Plex Mono,monospace" font-size="15" font-weight="600"
-      fill="var(--faint)">· · ·</text>
-    ${EQUIPO.filter(a => !a.jefe).map(nodo).join("")}
-    <g id="pulses"></g>`;
+      fill="var(--faint)">· · ·</text>`;
 
   // burbujas: suben despacio por el fondo, nunca por delante de nadie
   const bs = $("burbujas");
@@ -891,19 +1106,13 @@ function nodo(a){
       opacity="${(0.10 + (i % 3) * 0.05).toFixed(2)}"/>`).join("");
 })();
 
-/* ---- el teléfono ----
-   Una chapa de 200 unidades dentro de un lienzo de 1000 se queda en cinco
-   píxeles de texto: ilegible. En móvil se quitan los módulos —sus valores ya
-   salen en la rejilla de debajo, con más sitio— y el lienzo se ciñe al pulpo,
-   que es lo que se quiere ver en una pantalla estrecha. */
+/* En un teléfono las etiquetas de cada punta se quedan en cuatro píxeles: se
+   ocultan y el bicho se ve entero. Sus valores ya salen en la rejilla. */
 (function cineMovil(){
   const mq = window.matchMedia("(max-width:760px)");
   const aplica = () => {
-    const r = $("ring"); if(!r) return;
     const m = mq.matches;
-    r.setAttribute("viewBox", m ? "268 6 464 556" : "0 0 1000 560");
-    r.style.aspectRatio = m ? "464 / 556" : "";
-    document.querySelectorAll("#ring .nodo, #ring #enlaces").forEach(
+    document.querySelectorAll("#ring .etq").forEach(
       e => { e.style.display = m ? "none" : ""; });
   };
   if(mq.addEventListener) mq.addEventListener("change", aplica); else mq.addListener(aplica);
@@ -922,7 +1131,7 @@ EQUIPO.forEach((a, i) => fase[a.k] = i * 1.7);
       if(!g || !interno) return;
       const ph = fase[a.k];
       const ocupado = interno.dataset.busy === "1";
-      const amp = ocupado ? 7 : 3.4;
+      const amp = ocupado ? 5 : 1.8;
       const dy = Math.sin(t * 0.0011 + ph) * amp;
       const dx = Math.sin(t * 0.0007 + ph * 1.4) * (amp * 0.5);
       const rot = Math.sin(t * 0.0009 + ph) * (ocupado ? 2.6 : 1.2);
